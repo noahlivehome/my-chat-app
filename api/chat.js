@@ -3,21 +3,22 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // 送信元から送られてくる様々なキー名（message, text, prompt, content）に対応
   const body = req.body || {};
   const userMessage = body.message || body.text || body.prompt || body.content || (typeof body === 'string' ? body : '');
-  const apiKey = process.env.GEMINI_API_KEY;
+  
+  // 余計な空白を削除
+  const apiKey = (process.env.GEMINI_API_KEY || '').trim();
 
   if (!apiKey) {
     return res.status(500).json({ error: 'APIキーが設定されていません。' });
   }
 
-  // メッセージがどうしても取れない場合の最終フォールバック
   const finalMessage = userMessage || "こんにちは";
 
   try {
+    // 💡 モデル名を最新の gemini-2.5-flash に修正
     const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
       {
         method: 'POST',
         headers: {
@@ -42,7 +43,7 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Gemini API Error:', JSON.stringify(data, null, 2));
+      console.error('Gemini API Error:', JSON.stringify(data));
       return res.status(500).json({ error: 'API呼び出しエラー', details: data });
     }
 
