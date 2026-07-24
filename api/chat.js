@@ -3,48 +3,47 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const body = req.body || {};
-  const userMessage = body.message || body.text || body.prompt || body.content || (typeof body === 'string' ? body : '');
   const apiKey = (process.env.GEMINI_API_KEY || '').trim();
-
   if (!apiKey) {
-    return res.status(500).json({ error: 'APIキーが設定されていません。' });
+    return res.status(500).json({ error: 'GEMINI_API_KEYが設定されていません。' });
   }
 
-  const finalMessage = userMessage || "こんにちは";
+  const userMessage = req.body?.message || req.body?.prompt || 'こんにちは';
+
+  // Google AI Studioの最新仕様に完全対応したエンドポイント
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
   try {
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: String(finalMessage) }]
-            }
-          ]
-        })
-      }
-    );
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [{ text: String(userMessage) }]
+          }
+        ]
+      })
+    });
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Gemini API Error Detail:', JSON.stringify(data));
-      return res.status(500).json({ error: 'API呼び出しエラー', details: data });
+      console.error('Google API Error:', JSON.stringify(data));
+      // エラーの詳細を画面に返して原因を特定しやすくする
+      return res.status(response.status).json({
+        error: 'Google APIからのエラー',
+        details: data.error?.message || data
+      });
     }
 
     const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '返答を取得できませんでした。';
     return res.status(200).json({ reply });
 
   } catch (error) {
-    console.error('Server Error:', error);
-    return res.status(500).json({ error: 'サーバー内でエラーが発生しました。' });
+    console.error('Server Side Error:', error);
+    return res.status(500).json({ error: 'サーバー通信エラーが発生しました。' });
   }
 }
