@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>不動産 AIチャット</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- アイコン表示用のライブラリ -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="chat-card">
+    <!-- ヘッダー部分 -->
+    <header class="chat-header">
+      <div class="header-left">
+        <i data-lucide="message-square" class="icon-chat"></i>
+        <button class="top-btn">不動産AI TOP <i data-lucide="external-link" class="icon-external"></i></button>
+      </div>
+      <div class="header-right">
+        <button class="icon-btn"><i data-lucide="maximize-2"></i></button>
+        <button class="icon-btn"><i data-lucide="x"></i></button>
+      </div>
+    </header>
+
+    <!-- チャットメッセージ表示エリア -->
+    <main class="chat-body" id="chatBody">
+      <div class="message bot-message">
+        こんにちは！私は不動産のAIアドバイザーです✨<br>
+        お部屋探し（賃貸）、賃貸経営・管理、売却や購入など、何でもお気軽にご相談ください！
+      </div>
+    </main>
+
+    <!-- 入力フォームエリア -->
+    <footer class="chat-footer">
+      <button class="mic-btn"><i data-lucide="mic"></i></button>
+      <div class="input-container">
+        <textarea id="chatInput" placeholder="メッセージを入力..." rows="1"></textarea>
+      </div>
+      <button class="send-btn" id="sendBtn"><i data-lucide="send-horizontal"></i></button>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
