@@ -3,17 +3,17 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // クライアント側から渡される message を取得
-  const { message } = req.body;
+  // 送信元から送られてくる様々なキー名（message, text, prompt, content）に対応
+  const body = req.body || {};
+  const userMessage = body.message || body.text || body.prompt || body.content || (typeof body === 'string' ? body : '');
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
     return res.status(500).json({ error: 'APIキーが設定されていません。' });
   }
 
-  if (!message) {
-    return res.status(400).json({ error: 'メッセージが空です。' });
-  }
+  // メッセージがどうしても取れない場合の最終フォールバック
+  const finalMessage = userMessage || "こんにちは";
 
   try {
     const response = await fetch(
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
               role: 'user',
               parts: [
                 {
-                  text: String(message)
+                  text: String(finalMessage)
                 }
               ]
             }
@@ -46,7 +46,6 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'API呼び出しエラー', details: data });
     }
 
-    // AIからの返答文を取り出す
     const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '返答を取得できませんでした。';
     return res.status(200).json({ reply });
 
