@@ -31,33 +31,30 @@
       </div>
     </main>
 
-    <div id="chat-logs"></div>
+    <!-- 💡 クイック選択ボタンエリア -->
+    <div id="quick-buttons" class="quick-buttons">
+      <button type="button" onclick="sendQuickMessage('賃貸物件を探したい')">🔍 賃貸物件を探したい</button>
+      <button type="button" onclick="sendQuickMessage('貸したい')">🔑 貸したい</button>
+      <button type="button" onclick="sendQuickMessage('売却したい')">🏠 売却したい</button>
+      <button type="button" onclick="sendQuickMessage('購入したい')">💰 購入したい</button>
+    </div>
 
-<!-- 💡 クイック選択ボタンエリア -->
-<div id="quick-buttons" class="quick-buttons">
-  <button type="button" onclick="sendQuickMessage('賃貸物件を探したい')">🔍 賃貸物件を探したい</button>
-    <button type="button" onclick="sendQuickMessage('貸したい')">🔑 貸したい</button>
-  <button type="button" onclick="sendQuickMessage('売却したい')">🏠 売却したい</button>
-  <button type="button" onclick="sendQuickMessage('購入したい')">💰 購入したい</button>
-
-</div>
-
-<!-- 入力フォームエリア -->
-<div class="input-area">
-  <input type="text" id="user-input" placeholder="メッセージを入力..." onkeypress="handleKeyPress(event)">
-  <button type="button" id="send-btn" onclick="sendMessage()">送信</button>
-</div>
-
-    <!-- 入力フォームエリア -->
+    <!-- 入力フォームエリア（1つに統一） -->
     <footer class="chat-footer">
-      <button class="mic-btn"><i data-lucide="mic"></i></button>
+      <button type="button" class="mic-btn"><i data-lucide="mic"></i></button>
       <div class="input-container">
-        <textarea id="chatInput" placeholder="メッセージを入力..." rows="1"></textarea>
+        <input type="text" id="user-input" placeholder="メッセージを入力..." onkeypress="handleKeyPress(event)">
       </div>
-      <button class="send-btn" id="sendBtn"><i data-lucide="send-horizontal"></i></button>
+      <button type="button" class="send-btn" id="send-btn" onclick="sendMessage()">
+        <i data-lucide="send-horizontal"></i>
+      </button>
     </footer>
   </div>
 
   <script src="script.js"></script>
+  <!-- アイコンの初期化 -->
+  <script>
+    lucide.createIcons();
+  </script>
 </body>
 </html>
