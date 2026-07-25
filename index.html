@@ -5,16 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>不動産 AIチャット</title>
   <link rel="stylesheet" href="style.css">
+  <!-- アイコン表示用のライブラリ -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
   <div class="chat-card">
-    <!-- ヘッダー -->
+    <!-- ヘッダー部分 -->
     <header class="chat-header">
       <div class="header-left">
-        <i data-lucide="message-square"></i>
-        <button class="top-btn">不動産AI TOP <i data-lucide="external-link"></i></button>
+        <i data-lucide="message-square" class="icon-chat"></i>
+        <button class="top-btn">不動産AI TOP <i data-lucide="external-link" class="icon-external"></i></button>
       </div>
       <div class="header-right">
         <button class="icon-btn"><i data-lucide="maximize-2"></i></button>
@@ -22,7 +23,7 @@
       </div>
     </header>
 
-    <!-- チャット表示エリア -->
+    <!-- チャットメッセージ表示エリア（ここを script.js が使用します） -->
     <main class="chat-body" id="chatBody">
       <div class="message bot-message">
         こんにちは！ノアリブホームのAIアドバイザーです！<br>
@@ -30,7 +31,7 @@
       </div>
     </main>
 
-    <!-- 2枚目画像風：選択ボタンエリア -->
+    <!-- 💡 クイック選択ボタンエリア -->
     <div id="quick-buttons" class="quick-buttons">
       <button type="button" onclick="sendQuickMessage('賃貸物件を探したい')">🔍 賃貸を探したい</button>
       <button type="button" onclick="sendQuickMessage('貸したい')">🔑 貸したい</button>
@@ -38,12 +39,14 @@
       <button type="button" onclick="sendQuickMessage('購入したい')">💰 購入したい</button>
     </div>
 
-    <!-- 入力フッター -->
+    <!-- 💡 修正版入力フォームエリア（1つに統一） -->
     <footer class="chat-footer">
       <button type="button" class="mic-btn"><i data-lucide="mic"></i></button>
       <div class="input-container">
+        <!-- script.js の sendMessage と連動させるためIDを user-input に変更 -->
         <input type="text" id="user-input" placeholder="メッセージを入力..." onkeypress="handleKeyPress(event)">
       </div>
+      <!-- 送信ボタンにID send-btn とクリックアクション sendMessage() を追加 -->
       <button type="button" class="send-btn" id="send-btn" onclick="sendMessage()">
         <i data-lucide="send-horizontal"></i>
       </button>
@@ -51,6 +54,7 @@
   </div>
 
   <script src="script.js"></script>
+  <!-- Lucideアイコンの初期化 -->
   <script>
     lucide.createIcons();
   </script>
