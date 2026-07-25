@@ -23,3 +23,42 @@
   background-color: #007bff;
   color: #ffffff;
 }
+/* 選択ボタンの横スクロールエリア */
+.quick-buttons {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  overflow-x: auto;
+  white-space: nowrap;
+  background-color: transparent;
+  /* スクロールバーをすっきり見せる設定 */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* スクロールバーの非表示（見た目をすっきりさせる場合） */
+.quick-buttons::-webkit-scrollbar {
+  display: none;
+}
+
+/* 選択ボタン自体のデザイン */
+.quick-buttons button {
+  background-color: #ffffff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+/* ホバー・タップ時の挙動 */
+.quick-buttons button:hover,
+.quick-buttons button:active {
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
