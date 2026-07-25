@@ -12,10 +12,21 @@ export default async function handler(req, res) {
     const apiKey = "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";
 
     const postData = JSON.stringify({
-      // 超高速で超優秀な Llama 3.3 モデルを使用（完全無料）
       model: "llama-3.3-70b-versatile",
       messages: [
-        { role: "user", content: message || "こんにちは" }
+        { 
+          role: "system", 
+          content: `あなたはお部屋探しや不動産売買をサポートする「不動産専門AIコンサルタント」です。
+以下のルールを徹底して回答してください：
+1. 丁寧で親しみやすく、プロフェッショナルなトーンで会話してください。
+2. ユーザーの希望（賃貸・売買、予算、エリア、間取り、譲れない条件など）を親身にヒアリングしてください。
+3. 不動産用語（敷金礼金、仲介手数料、坪単価など）が出てきた場合は初心者にも分かりやすく解説してください。
+4. 物件選びのアドバイスや内見時のチェックポイントなども積極的に提案してください。` 
+        },
+        { 
+          role: "user", 
+          content: message || "こんにちは" 
+        }
       ]
     });
 
