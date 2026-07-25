@@ -5,7 +5,8 @@ export default async function handler(req, res) {
 
   try {
     const { message } = req.body;
-    const apiKey = process.env.GEMINI_API_KEY;
+    // .trim() を追加して前後の余計な空白・改行を自動削除
+    const apiKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.trim() : "";
 
     if (!apiKey) {
       return res.status(500).json({ error: "GEMINI_API_KEY が設定されていません。" });
@@ -30,7 +31,7 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("Gemini API Error:", data);
+      console.error("Gemini API Error:", JSON.stringify(data, null, 2));
       return res.status(500).json({ 
         error: "Google APIエラーが発生しました。", 
         details: data.error?.message || JSON.stringify(data) 
