@@ -8,23 +8,24 @@ export default async function handler(req, res) {
   try {
     const { message } = req.body;
     
-    // STEP 1 でコピーした Default Gemini Project のキー（AQ...）をここに貼り付け
-    const apiKey = "AQ.Ab8RN6K-MGl925WMyNblJ_VVEVQrcmmTXrbqoS1diE0MIFnARw"; 
+    // 👇 ここに Step 1 でコピーした Groq のキー (gsk_...) を貼り付けます
+    const apiKey = "AQ.Ab8RN6J5WNIlCaeAq7qGGsvZCOtaKopo2ZPBVCpTEMR4V3qVmQ";
 
     const postData = JSON.stringify({
-      contents: [
-        {
-          parts: [{ text: message || "こんにちは" }]
-        }
+      // 超高速で超優秀な Llama 3.3 モデルを使用（完全無料）
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "user", content: message || "こんにちは" }
       ]
     });
 
     const options = {
-      hostname: 'generativelanguage.googleapis.com',
-      path: `/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      hostname: 'api.groq.com',
+      path: '/openai/v1/chat/completions',
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Length': Buffer.byteLength(postData)
       }
     };
@@ -48,14 +49,15 @@ export default async function handler(req, res) {
     });
 
     if (apiResponse.statusCode !== 200) {
-      console.error("Gemini API Error:", apiResponse.body);
+      console.error("Groq API Error:", apiResponse.body);
       return res.status(500).json({ 
-        error: "Google APIエラーが発生しました。", 
+        error: "AI APIエラーが発生しました。", 
         details: apiResponse.body.error?.message || JSON.stringify(apiResponse.body) 
       });
     }
 
-    const replyText = apiResponse.body.candidates?.[0]?.content?.parts?.[0]?.text || "返答が得られませんでした。";
+    // AIからの返答テキストを取り出して返却
+    const replyText = apiResponse.body.choices?.[0]?.message?.content || "返答が得られませんでした。";
     return res.status(200).json({ reply: replyText });
 
   } catch (error) {
