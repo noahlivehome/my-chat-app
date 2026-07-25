@@ -1,89 +1,3 @@
-let conversationHistory = [];
-let turnCount = 0; // 会話のラリー回数をカウント
-
-// クイック選択ボタンが押されたとき
-function sendQuickMessage(text) {
-  const inputElement = document.getElementById("user-input");
-  if (inputElement) {
-    inputElement.value = text;
-    sendMessage();
-  }
-}
-
-// Enterキーで送信
-function handleKeyPress(event) {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    sendMessage();
-  }
-}
-
-// 送信メイン処理
-async function sendMessage() {
-  const inputElement = document.getElementById("user-input");
-  if (!inputElement) return;
-
-  const message = inputElement.value.trim();
-  if (!message) return;
-
-  // 1. ユーザーのメッセージを表示
-  appendMessage("user-message", message);
-  inputElement.value = "";
-  turnCount++; // ラリー回数を加算
-
-  try {
-    // 2. APIに送信
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8"
-      },
-      body: JSON.stringify({
-        message: message,
-        history: conversationHistory
-      })
-    });
-
-    const data = await response.json();
-
-    if (response.ok && data.reply) {
-      // 3. AIの返答を表示
-      appendMessage("bot-message", data.reply);
-
-      // 4. 会話履歴を更新
-      conversationHistory.push({ role: "user", content: message });
-      conversationHistory.push({ role: "assistant", content: data.reply });
-
-      // 5. 次の選択肢ボタンを更新
-      updateQuickButtons(message);
-
-    } else {
-      console.error("API Error Details:", data);
-      appendMessage("bot-message", `エラーが発生しました: ${data.error || "通信失敗"}`);
-    }
-
-  } catch (error) {
-    console.error("送信エラー:", error);
-    appendMessage("bot-message", "通信エラーが発生しました。時間を置いて再度お試しください。");
-  }
-}
-
-// メッセージ表示関数
-function appendMessage(senderClass, text) {
-  const chatBody = document.getElementById("chatBody");
-  if (!chatBody) return;
-
-  const messageElement = document.createElement("div");
-  messageElement.className = `message ${senderClass}`;
-  
-  // マークダウン除去＆改行処理
-  const cleanText = text.replace(/\*\*/g, '');
-  messageElement.innerHTML = cleanText.replace(/\n/g, '<br>');
-
-  chatBody.appendChild(messageElement);
-  chatBody.scrollTop = chatBody.scrollHeight;
-}
-
 // 💡 会話の流れや回数に応じて「次のボタン」を動的に更新する関数
 function updateQuickButtons(lastMessage) {
   const quickButtonsDiv = document.getElementById("quick-buttons");
@@ -91,33 +5,30 @@ function updateQuickButtons(lastMessage) {
 
   let newButtons = [];
 
-  // ★ ノアリブホーム様のお問い合わせURLを設定
+  // ★ お問い合わせURL
   const contactUrl = "https://www.noahlivehome.jp/contact/"; 
 
-  // 1. ユーザーが「相談」「問合せ」を求めた、または会話が2ターン以上進んだ場合
-  if (lastMessage.includes("相談したい") || lastMessage.includes("問合せ") || turnCount >= 2) {
+  // 【重要】5回以上ラリーが続いたら、他のボタンを消してお問い合わせボタン1つのみにする！
+  if (turnCount >= 5) {
     newButtons = [
-      { label: "📩 フォームで問い合わせる", action: () => window.open(contactUrl, '_blank') },
-      { label: "💡 質問を続ける", text: "もう少し質問があります" },
-      { label: "🔄 最初に戻る", text: "最初に戻る" }
+      { label: "📩 無料相談・お問い合わせ画面へ進む", action: () => window.open(contactUrl, '_blank'), isPrimary: true }
     ];
   } 
-  // 2. 賃貸・購入など最初のカテゴリ選択直後
-  else if (lastMessage.includes("賃貸") || lastMessage.includes("探したい")) {
-    newButtons = [
-      { label: "📍 おすすめエリア・条件", text: "おすすめのエリアや家賃相場を教えてほしい" },
-      { label: "📝 内見・申し込みの流れ", text: "内見や申し込みの手順はどうなりますか？" },
-      { label: "📩 店舗・ウェブで相談する", action: () => window.open(contactUrl, '_blank') },
-      { label: "🏠 最初に戻る", text: "最初に戻る" }
-    ];
-  } else if (lastMessage.includes("売却")) {
+  // 1〜4回目のラリー中：文脈に合わせた選択肢を表示
+  else if (lastMessage.includes("貸したい") || lastMessage.includes("売却")) {
     newButtons = [
       { label: "📊 無料査定を依頼する", action: () => window.open(contactUrl, '_blank') },
-      { label: "💵 売却にかかる費用", text: "売却にかかる費用や税金について知りたい" },
-      { label: "🏠 最初に戻る", text: "最初に戻る" }
+      { label: "💵 貸し出し・売却の費用を聞く", text: "かかる費用や手数料について知りたい" },
+      { label: "💡 質問を続ける", text: "他にも質問があります" }
+    ];
+  } else if (lastMessage.includes("賃貸") || lastMessage.includes("借りたい") || lastMessage.includes("探したい")) {
+    newButtons = [
+      { label: "📍 おすすめエリア・条件を相談", text: "おすすめのエリアや家賃相場を教えてほしい" },
+      { label: "📝 内見・申し込みの流れを聞く", text: "内見や申し込みの手順はどうなりますか？" },
+      { label: "📩 今すぐ相談する", action: () => window.open(contactUrl, '_blank') }
     ];
   } else {
-    // デフォルト
+    // 途中経過（通常の会話時）
     newButtons = [
       { label: "📩 お問い合わせ画面へ", action: () => window.open(contactUrl, '_blank') },
       { label: "💡 詳しく聞く", text: "もう少し詳しく教えてください" },
@@ -132,10 +43,23 @@ function updateQuickButtons(lastMessage) {
     button.type = "button";
     button.innerText = btn.label;
     
-    // URLを開くボタンとメッセージ送信ボタンで処理を分岐
+    // 5回達成時の目立つメインボタンデザイン
+    if (btn.isPrimary) {
+      button.style.width = "100%";
+      button.style.backgroundColor = "#8fad88"; // テーマカラーのグリーン
+      button.style.color = "#ffffff";
+      button.style.fontWeight = "bold";
+      button.style.padding = "14px";
+      button.style.fontSize = "16px";
+      button.style.border = "none";
+      button.style.borderRadius = "8px";
+      button.style.cursor = "pointer";
+      button.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
+    }
+
+    // URL送信 or テキスト送信の処理分岐
     if (btn.action) {
       button.onclick = btn.action;
-      button.style.fontWeight = "bold"; // 問い合わせを目立たせる
     } else {
       button.onclick = () => sendQuickMessage(btn.text);
     }
