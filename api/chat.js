@@ -8,8 +8,8 @@ export default async function handler(req, res) {
   try {
     const { message } = req.body;
     
-    // ここに取得した AQ.Ab8RN... のキーを直接貼り付けます
-    const apiKey = "AQ.Ab8RN6Kn833X4efnCTAGxtSKGd3rPXA9fjtGLoXTsRPKbBJBKQ";
+    // STEP 1 でコピーした Default Gemini Project のキー（AQ...）をここに貼り付け
+    const apiKey = "AQ.Ab8RN6Kn833X4efnCTAGxtSKGd3rPXA9fjtGLoXTsRPKbBJBKQ"; 
 
     const postData = JSON.stringify({
       contents: [
@@ -19,10 +19,9 @@ export default async function handler(req, res) {
       ]
     });
 
-   const options = {
+    const options = {
       hostname: 'generativelanguage.googleapis.com',
-      // gemini-2.5-flash に変更
-      path: `/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      path: `/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
