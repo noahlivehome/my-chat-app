@@ -9,30 +9,32 @@ export default async function handler(req, res) {
     const { message, history } = req.body;
     const apiKey = "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";
 
-    // 1. システムプロンプト（指示の厳格化）
+    // 不動産コンサルタントの役割指示
     const messages = [
       { 
         role: "system", 
-        content: "あなたはプロの不動産コンサルタントです。ユーザーの直前の発言や過去のやり取りを踏まえて回答してください。途中の会話で「こんにちは」などの自己紹介や最初の挨拶を繰り返すことは絶対に禁止です。「物件探し」と言われたら、即座に「かしこまりました！賃貸・売買どちらでお探しですか？エリアやご予算のご希望も教えてください」のように会話を前に進めてください。" 
+        content: `あなたはノアリブホームのプロの不動産AIコンサルタントです。
+丁寧でわかりやすく相談に乗ってください。
+回答の最後には、ユーザーが次に選択しやすいような「次のアクションや質問の提案」を自然に盛り込んでください。` 
       }
     ];
 
-    // 2. 履歴（history）の形式を整えて追加
+    // 会話履歴の追加
     if (history && Array.isArray(history)) {
       history.forEach(item => {
         messages.push({
           role: item.role === "user" ? "user" : "assistant",
-          content: item.content
+          content: String(item.content)
         });
       });
     }
 
-    // 3. 最新のメッセージを追加
-    messages.push({ role: "user", content: message || "こんにちは" });
+    // 最新のメッセージ追加
+    messages.push({ role: "user", content: String(message || "こんにちは") });
 
-    // 日本語に強いモデル「gemma2-9b-it」に変更
+    // 安定稼働モデル llama-3.3-70b-versatile を使用
     const postData = JSON.stringify({
-      model: "gemma2-9b-it",
+      model: "llama-3.3-70b-versatile",
       messages: messages,
       temperature: 0.6
     });
@@ -57,7 +59,7 @@ export default async function handler(req, res) {
           try {
             resolve({ statusCode: response.statusCode, body: JSON.parse(data) });
           } catch (e) {
-            reject(new Error("レスポンスの解析に失敗しました"));
+            reject(new Error("JSON解析エラー"));
           }
         });
       });
@@ -68,8 +70,9 @@ export default async function handler(req, res) {
     });
 
     if (apiResponse.statusCode !== 200) {
-      console.error("Groq Error:", apiResponse.body);
-      return res.status(500).json({ error: "APIエラーが発生しました。" });
+      console.error("Groq API Error:", apiResponse.body);
+      const errorMsg = apiResponse.body?.error?.message || "API呼び出しエラー";
+      return res.status(500).json({ error: errorMsg });
     }
 
     const replyText = apiResponse.body.choices?.[0]?.message?.content || "返答が得られませんでした。";
@@ -77,6 +80,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Server Error:", error);
-    return res.status(500).json({ error: "サーバーエラーが発生しました。" });
+    return res.status(500).json({ error: error.message || "サーバーエラーが発生しました。" });
   }
 }
