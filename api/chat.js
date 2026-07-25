@@ -6,28 +6,31 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { message } = req.body;
+    const { message, history } = req.body;
     
-    // 👇 ここに Step 1 でコピーした Groq のキー (gsk_...) を貼り付けます
     const apiKey = "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";
+
+    // 1. システムプロンプト（役割設定）
+    const messages = [
+      { 
+        role: "system", 
+        content: `あなたはお部屋探しや不動産売買をサポートする「不動産専門AIコンサルタント」です。
+ユーザーの回答（賃貸を探している、エリアや予算など）に合わせて、自然に会話を続けてください。
+毎回「こんにちは」と自己紹介をやり直すのはやめて、対話の流れを大切にしてください。` 
+      }
+    ];
+
+    // 2. 会話履歴があれば追加（文脈の維持）
+    if (history && Array.isArray(history)) {
+      messages.push(...history);
+    }
+
+    // 3. 今回のユーザーメッセージを追加
+    messages.push({ role: "user", content: message || "こんにちは" });
 
     const postData = JSON.stringify({
       model: "llama-3.3-70b-versatile",
-      messages: [
-        { 
-          role: "system", 
-          content: `あなたはお部屋探しや不動産売買をサポートする「不動産専門AIコンサルタント」です。
-以下のルールを徹底して回答してください：
-1. 丁寧で親しみやすく、プロフェッショナルなトーンで会話してください。
-2. ユーザーの希望（賃貸・売買、予算、エリア、間取り、譲れない条件など）を親身にヒアリングしてください。
-3. 不動産用語（敷金礼金、仲介手数料、坪単価など）が出てきた場合は初心者にも分かりやすく解説してください。
-4. 物件選びのアドバイスや内見時のチェックポイントなども積極的に提案してください。` 
-        },
-        { 
-          role: "user", 
-          content: message || "こんにちは" 
-        }
-      ]
+      messages: messages
     });
 
     const options = {
@@ -35,14 +38,16 @@ export default async function handler(req, res) {
       path: '/openai/v1/chat/completions',
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
         'Authorization': `Bearer ${apiKey}`,
-        'Content-Length': Buffer.byteLength(postData)
+        'Content-Length': Buffer.byteLength(postData, 'utf8')
       }
     };
 
     const apiResponse = await new Promise((resolve, reject) => {
       const request = https.request(options, (response) => {
+        // ★文字化け防止：レスポンスをUTF-8として正しく受信
+        response.setEncoding('utf8');
         let data = '';
         response.on('data', (chunk) => { data += chunk; });
         response.on('end', () => {
@@ -55,7 +60,8 @@ export default async function handler(req, res) {
       });
 
       request.on('error', (error) => { reject(error); });
-      request.write(postData);
+      // ★文字化け防止：UTF-8エンコードで送信
+      request.write(postData, 'utf8');
       request.end();
     });
 
@@ -67,7 +73,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // AIからの返答テキストを取り出して返却
     const replyText = apiResponse.body.choices?.[0]?.message?.content || "返答が得られませんでした。";
     return res.status(200).json({ reply: replyText });
 
