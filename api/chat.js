@@ -1,44 +1,47 @@
-import { GoogleGenerativeAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req, res) {
-  // 1. リクエストメソッドの検証（POSTのみ許可）
+  // 1. POST以外のアクセスを拒否
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    // 2. クライアントからのメッセージを取得
+    // 2. リクエストボディからメッセージを取得
     const { message } = req.body;
 
     if (!message) {
       return res.status(400).json({ error: "メッセージが入力されていません。" });
     }
 
-    // 3. 環境変数からAPIキーを読み込む
+    // 3. 環境変数からAPIキーを取得
     const apiKey = process.env.GEMINI_API_KEY;
+
     if (!apiKey) {
-      return res.status(500).json({ error: "APIキー（GEMINI_API_KEY）が設定されていません。" });
+      return res.status(500).json({ error: "GEMINI_API_KEY がVercelに設定されていません。" });
     }
 
     // 4. Gemini SDK の初期化
     const genAI = new GoogleGenerativeAI(apiKey);
 
-    // 5. モデルの指定（エラー回避のため gemini-2.5-flash を指定）
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    // 5. モデルの指定（現在最も安定して動作する最新モデル）
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    // 6. Gemini API へメッセージを送信して回答を取得
+    // 6. Gemini API へ送信してレスポンスを取得
     const result = await model.generateContent(message);
-    const responseText = result.response.text();
+    const response = await result.response;
+    const text = response.text();
 
-    // 7. クライアント（画面側）へレスポンスを返す
-    return res.status(200).json({ reply: responseText });
+    // 7. 正常レスポンスを返却
+    return res.status(200).json({ reply: text });
 
   } catch (error) {
-    // 8. エラーハンドリング
-    console.error("Gemini API Error:", error);
+    // 8. エラー内容をコンソールと画面側の両方に詳細表示
+    console.error("Gemini API Error Details:", error);
+    
     return res.status(500).json({
-      error: "AIの処理中にエラーが発生しました。",
-      details: error.message
+      error: "通信エラーが発生しました。",
+      details: error.message || String(error)
     });
   }
 }
