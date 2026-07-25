@@ -26,10 +26,27 @@
     <!-- チャットメッセージ表示エリア -->
     <main class="chat-body" id="chatBody">
       <div class="message bot-message">
-        こんにちは！私ノアリブホームのAIアドバイザーです！<br>
+        こんにちは！ノアリブホームのAIアドバイザーです！<br>
         お部屋探し（賃貸）、賃貸経営・管理、売却や購入など、何でもお気軽にご相談ください！
       </div>
     </main>
+
+    <div id="chat-logs"></div>
+
+<!-- 💡 クイック選択ボタンエリア -->
+<div id="quick-buttons" class="quick-buttons">
+  <button type="button" onclick="sendQuickMessage('賃貸物件を探したい')">🔍 賃貸物件を探したい</button>
+    <button type="button" onclick="sendQuickMessage('貸したい')">🔑 貸したい</button>
+  <button type="button" onclick="sendQuickMessage('売却したい')">🏠 売却したい</button>
+  <button type="button" onclick="sendQuickMessage('購入したい')">💰 購入したい</button>
+
+</div>
+
+<!-- 入力フォームエリア -->
+<div class="input-area">
+  <input type="text" id="user-input" placeholder="メッセージを入力..." onkeypress="handleKeyPress(event)">
+  <button type="button" id="send-btn" onclick="sendMessage()">送信</button>
+</div>
 
     <!-- 入力フォームエリア -->
     <footer class="chat-footer">
