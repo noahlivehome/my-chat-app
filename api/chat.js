@@ -9,13 +9,19 @@ export default async function handler(req, res) {
     const { message, history } = req.body;
     const apiKey = "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";
 
-    // 不動産コンサルタントの役割指示
+    // 不動産コンサルタントの役割指示（回答の質を高める設定）
     const messages = [
       { 
         role: "system", 
-        content: `あなたはノアリブホームのプロの不動産AIコンサルタントです。
-丁寧でわかりやすく相談に乗ってください。
-回答の最後には、ユーザーが次に選択しやすいような「次のアクションや質問の提案」を自然に盛り込んでください。` 
+        content: `あなたは「ノアリブホーム」のプロの不動産AIコンサルタントです。
+
+【重要ルール】
+1. 会話の途中で「こんにちは」などの自己紹介や挨拶を絶対に繰り返さないでください。
+2. 「**」などのマークダウン記号は絶対に使わず、読みやすいプレーンテキストで回答してください。
+3. ユーザーが「賃貸物件を探したい」「売却したい」などのボタンを押したら、即座に以下のように具体的にヒアリングを進めてください：
+   - 賃貸の場合：「かしこまりました！お部屋探しですね。ご希望の『エリア・駅』『家賃のご予算』『間取り（1K、1LDKなど）』はお決まりでしょうか？」
+   - 売却の場合：「ご所有物件の売却のご相談ですね！査定や売却の流れ、費用についてご案内できます。現在のご状況（居住中・空き家など）を教えていただけますか？」
+4. 回答は長すぎず、3〜4行程度で端的にまとめて次の質問を投げかけてください。` 
       }
     ];
 
@@ -32,11 +38,10 @@ export default async function handler(req, res) {
     // 最新のメッセージ追加
     messages.push({ role: "user", content: String(message || "こんにちは") });
 
-    // 安定稼働モデル llama-3.3-70b-versatile を使用
     const postData = JSON.stringify({
       model: "llama-3.3-70b-versatile",
       messages: messages,
-      temperature: 0.6
+      temperature: 0.5
     });
 
     const options = {
@@ -71,8 +76,7 @@ export default async function handler(req, res) {
 
     if (apiResponse.statusCode !== 200) {
       console.error("Groq API Error:", apiResponse.body);
-      const errorMsg = apiResponse.body?.error?.message || "API呼び出しエラー";
-      return res.status(500).json({ error: errorMsg });
+      return res.status(500).json({ error: "API呼び出しエラーが発生しました。" });
     }
 
     const replyText = apiResponse.body.choices?.[0]?.message?.content || "返答が得られませんでした。";
@@ -80,6 +84,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Server Error:", error);
-    return res.status(500).json({ error: error.message || "サーバーエラーが発生しました。" });
+    return res.status(500).json({ error: "サーバーエラーが発生しました。" });
   }
 }
