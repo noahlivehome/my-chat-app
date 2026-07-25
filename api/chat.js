@@ -3,38 +3,46 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // APIキーの読み込み（トリム処理）
   const apiKey = (process.env.GEMINI_API_KEY || '').trim();
   if (!apiKey) {
-    return res.status(200).json({ reply: '❌ エラー: Vercelに GEMINI_API_KEY が設定されていません。' });
+    return res.status(200).json({ reply: '❌ エラー: GEMINI_API_KEY が設定されていません。' });
   }
 
   const userMessage = req.body?.message || req.body?.prompt || 'こんにちは';
-  
-  // 安定版のgemini-1.5-flashモデルを使用
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: String(userMessage) }] }]
-      })
-    });
+  // 試行するエンドポイントのリスト（v1 / v1beta × モデル各種）
+  const endpoints = [
+    `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`
+  ];
 
-    const data = await response.json();
+  let lastError = '';
 
-    if (!response.ok) {
-      // エラーの詳細をそのまま返答として画面に送る
-      const errorDetail = data.error?.message || JSON.stringify(data);
-      return res.status(200).json({ reply: `❌ Google APIエラー (${response.status}): ${errorDetail}` });
+  for (const url of endpoints) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: String(userMessage) }] }]
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '返答を取得できませんでした。';
+        return res.status(200).json({ reply });
+      }
+
+      lastError = data.error?.message || JSON.stringify(data);
+    } catch (e) {
+      lastError = String(e.message || e);
     }
-
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '返答を取得できませんでした。';
-    return res.status(200).json({ reply });
-
-  } catch (error) {
-    return res.status(200).json({ reply: `❌ サーバー接続エラー: ${String(error.message || error)}` });
   }
+
+  // すべて失敗した場合のみエラーを表示
+  return res.status(200).json({ reply: `❌ Google APIエラー: ${lastError}` });
 }
