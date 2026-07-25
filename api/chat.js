@@ -7,11 +7,9 @@ export default async function handler(req, res) {
 
   try {
     const { message } = req.body;
-    const apiKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.trim() : "";
-
-    if (!apiKey) {
-      return res.status(500).json({ error: "GEMINI_API_KEY が設定されていません。" });
-    }
+    
+    // ここに取得した AQ.Ab8RN... のキーを直接貼り付けます
+    const apiKey = "AQ.Ab8RN6LCzkW7W3TAnNQgsi84j2hz1FlVihR9RECUM1rzgCkCqQ";
 
     const postData = JSON.stringify({
       contents: [
@@ -31,7 +29,6 @@ export default async function handler(req, res) {
       }
     };
 
-    // fetchを使わず https モジュールで通信を実行
     const apiResponse = await new Promise((resolve, reject) => {
       const request = https.request(options, (response) => {
         let data = '';
