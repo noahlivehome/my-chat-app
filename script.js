@@ -54,7 +54,7 @@ async function sendMessage() {
       conversationHistory.push({ role: "user", content: message });
       conversationHistory.push({ role: "assistant", content: data.reply });
 
-      // 5. 次の選択肢ボタンを更新（会話数に応じて問い合わせも提案）
+      // 5. 次の選択肢ボタンを更新
       updateQuickButtons(message);
 
     } else {
@@ -91,14 +91,13 @@ function updateQuickButtons(lastMessage) {
 
   let newButtons = [];
 
-  // お問い合わせURL（※自社のフォームURL等に書き換えてください）
-  const contactUrl = "https://example.com/contact"; 
+  // ★ ノアリブホーム様のお問い合わせURLを設定
+  const contactUrl = "https://www.noahlivehome.jp/contact/"; 
 
-  // 1. ユーザーが直接「問い合わせ」を求めた、または会話が一定数（2ターン以上）進んだ場合
+  // 1. ユーザーが「相談」「問合せ」を求めた、または会話が2ターン以上進んだ場合
   if (lastMessage.includes("相談したい") || lastMessage.includes("問合せ") || turnCount >= 2) {
     newButtons = [
       { label: "📩 フォームで問い合わせる", action: () => window.open(contactUrl, '_blank') },
-      { label: "📞 担当者に電話で相談", text: "電話で相談したいです" },
       { label: "💡 質問を続ける", text: "もう少し質問があります" },
       { label: "🔄 最初に戻る", text: "最初に戻る" }
     ];
@@ -108,12 +107,12 @@ function updateQuickButtons(lastMessage) {
     newButtons = [
       { label: "📍 おすすめエリア・条件", text: "おすすめのエリアや家賃相場を教えてほしい" },
       { label: "📝 内見・申し込みの流れ", text: "内見や申し込みの手順はどうなりますか？" },
-      { label: "📩 無料で店舗に相談する", action: () => window.open(contactUrl, '_blank') },
+      { label: "📩 店舗・ウェブで相談する", action: () => window.open(contactUrl, '_blank') },
       { label: "🏠 最初に戻る", text: "最初に戻る" }
     ];
   } else if (lastMessage.includes("売却")) {
     newButtons = [
-      { label: "📊 無料で査定を依頼する", action: () => window.open(contactUrl, '_blank') },
+      { label: "📊 無料査定を依頼する", action: () => window.open(contactUrl, '_blank') },
       { label: "💵 売却にかかる費用", text: "売却にかかる費用や税金について知りたい" },
       { label: "🏠 最初に戻る", text: "最初に戻る" }
     ];
@@ -133,7 +132,7 @@ function updateQuickButtons(lastMessage) {
     button.type = "button";
     button.innerText = btn.label;
     
-    // 問い合わせ等でURLを開く場合と、チャット送信の場合で処理を分岐
+    // URLを開くボタンとメッセージ送信ボタンで処理を分岐
     if (btn.action) {
       button.onclick = btn.action;
       button.style.fontWeight = "bold"; // 問い合わせを目立たせる
