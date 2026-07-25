@@ -1,13 +1,15 @@
 let conversationHistory = [];
 
-// 💡 選択ボタンを押した時の処理
+// クイック選択ボタンが押されたとき
 function sendQuickMessage(text) {
   const inputElement = document.getElementById("user-input");
-  inputElement.value = text;
-  sendMessage();
+  if (inputElement) {
+    inputElement.value = text;
+    sendMessage();
+  }
 }
 
-// 💡 Enterキーで送信する処理
+// Enterキーが押されたとき
 function handleKeyPress(event) {
   if (event.key === "Enter") {
     event.preventDefault();
@@ -15,25 +17,20 @@ function handleKeyPress(event) {
   }
 }
 
-// メッセージ送信のメイン処理
+// メッセージ送信メイン処理
 async function sendMessage() {
   const inputElement = document.getElementById("user-input");
-  const sendBtn = document.getElementById("send-btn");
-  const message = inputElement.value.trim();
+  if (!inputElement) return;
 
-  // 空文字なら送信しない
+  const message = inputElement.value.trim();
   if (!message) return;
 
-  // 連打防止のため入力とボタンを一時無効化
-  inputElement.disabled = true;
-  if (sendBtn) sendBtn.disabled = true;
-
-  // 1. ユーザーのメッセージを画面に表示
-  appendMessage("user", message);
+  // 1. ユーザーの吹き出しを画面に追加
+  appendMessage("user-message", message);
   inputElement.value = "";
 
   try {
-    // 2. APIに送信
+    // 2. サーバー（Groq API）に送信
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: {
@@ -49,48 +46,34 @@ async function sendMessage() {
 
     if (data.reply) {
       // 3. AIの返答を表示
-      appendMessage("assistant", data.reply);
+      appendMessage("bot-message", data.reply);
 
-      // 4. 会話履歴に記憶させる
+      // 4. 履歴を蓄積
       conversationHistory.push({ role: "user", content: message });
       conversationHistory.push({ role: "assistant", content: data.reply });
     } else {
-      appendMessage("assistant", "エラーが発生しました。もう一度お試しください。");
+      appendMessage("bot-message", "エラーが発生しました。もう一度お試しください。");
     }
 
   } catch (error) {
     console.error("送信エラー:", error);
-    appendMessage("assistant", "通信エラーが発生しました。");
-  } finally {
-    // 送信完了後に入力とボタンを再有効化
-    inputElement.disabled = false;
-    if (sendBtn) sendBtn.disabled = false;
-    inputElement.focus();
+    appendMessage("bot-message", "通信エラーが発生しました。");
   }
 }
 
-// メッセージを画面に追加表示する関数
-function appendMessage(sender, text) {
-  const chatLogs = document.getElementById("chat-logs");
-  if (!chatLogs) return;
+// 画面にメッセージを表示する補助関数
+function appendMessage(senderClass, text) {
+  const chatBody = document.getElementById("chatBody");
+  if (!chatBody) return;
 
   const messageElement = document.createElement("div");
-  messageElement.className = `message ${sender}`;
-  messageElement.textContent = text;
-
-  chatLogs.appendChild(messageElement);
-  chatLogs.scrollTop = chatLogs.scrollHeight;
-}
-// 💡 クイック選択ボタンが押された時の処理
-function sendQuickMessage(text) {
-  // 入力欄要素の取得（ID名はお使いの要素に合わせて確認してください）
-  const inputElement = document.querySelector('.input-area input') || document.getElementById('user-input');
+  messageElement.className = `message ${senderClass}`;
   
-  if (inputElement) {
-    inputElement.value = text;
-    // 既存の送信関数を実行（関数名が sendMessage の場合）
-    if (typeof sendMessage === 'function') {
-      sendMessage();
-    }
-  }
+  // 改行を <br> に変換
+  messageElement.innerHTML = text.replace(/\n/g, '<br>');
+
+  chatBody.appendChild(messageElement);
+  
+  // 自動スクロール
+  chatBody.scrollTop = chatBody.scrollHeight;
 }
