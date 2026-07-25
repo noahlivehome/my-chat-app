@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     const { message } = req.body;
     
     // STEP 1 でコピーした Default Gemini Project のキー（AQ...）をここに貼り付け
-    const apiKey = "AQ.Ab8RN6Kn833X4efnCTAGxtSKGd3rPXA9fjtGLoXTsRPKbBJBKQ"; 
+    const apiKey = "AQ.Ab8RN6K-MGl925WMyNblJ_VVEVQrcmmTXrbqoS1diE0MIFnARw"; 
 
     const postData = JSON.stringify({
       contents: [
