@@ -9,20 +9,25 @@ export default async function handler(req, res) {
     const { message, history } = req.body;
     const apiKey = "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";
 
-    // 不動産コンサルタントの役割指示（回答の質を高める設定）
-    const messages = [
-      { 
-        role: "system", 
-        content: `あなたは「ノアリブホーム」のプロの不動産AIコンサルタントです。
+    // 現在のやり取りのターン数を判定 (historyの長さ / 2)
+    const turnCount = history && Array.isArray(history) ? Math.floor(history.length / 2) + 1 : 1;
+
+    let systemInstruction = `あなたは「ノアリブホーム」の親切でプロフェッショナルな不動産AIコンサルタントです。
 
 【重要ルール】
-1. 会話の途中で「こんにちは」などの自己紹介や挨拶を絶対に繰り返さないでください。
-2. 「**」などのマークダウン記号は絶対に使わず、読みやすいプレーンテキストで回答してください。
-3. ユーザーが「賃貸物件を探したい」「売却したい」などのボタンを押したら、即座に以下のように具体的にヒアリングを進めてください：
-   - 賃貸の場合：「かしこまりました！お部屋探しですね。ご希望の『エリア・駅』『家賃のご予算』『間取り（1K、1LDKなど）』はお決まりでしょうか？」
-   - 売却の場合：「ご所有物件の売却のご相談ですね！査定や売却の流れ、費用についてご案内できます。現在のご状況（居住中・空き家など）を教えていただけますか？」
-4. 回答は長すぎず、3〜4行程度で端的にまとめて次の質問を投げかけてください。` 
-      }
+1. 自然で丁寧な日本の接客言葉（敬語・丁寧語）で話してください。不自然な直訳風表現（「〜したいと思いますか？」「〜することができますか。」など）は禁止です。
+2. 会話の途中で「こんにちは」などの自己紹介や挨拶を重複して繰り返さないでください。
+3. 「**」や「#」などのマークダウン記号は絶対に使わず、読みやすいプレーンテキストで回答してください。`;
+
+    if (turnCount >= 5) {
+      // 5ラリー目以降は質問を禁止し、お問い合わせへ完璧に誘導
+      systemInstruction += `\n4. 【重要】今回はユーザーとの会話の締めくくり（5回目のご案内）です。これ以上新たな質問は絶対にしないでください。ユーザーの入力に対して要点を簡潔にお答えした上で、詳しいご相談・査定・内見・お問い合わせは、画面下部のお問い合わせボタンから案内するよう丁寧にお伝えして締めくくってください。`;
+    } else {
+      systemInstruction += `\n4. ユーザーから「条件（エリア、家賃、間取りなど）」を受け取ったら、自然に答えて必要に応じて次の質問をするか、ご案内を続けてください。`;
+    }
+
+    const messages = [
+      { role: "system", content: systemInstruction }
     ];
 
     // 会話履歴の追加
@@ -41,7 +46,7 @@ export default async function handler(req, res) {
     const postData = JSON.stringify({
       model: "llama-3.3-70b-versatile",
       messages: messages,
-      temperature: 0.5
+      temperature: 0.3
     });
 
     const options = {
