@@ -19,9 +19,10 @@ export default async function handler(req, res) {
       ]
     });
 
-    const options = {
+   const options = {
       hostname: 'generativelanguage.googleapis.com',
-     path: `/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      // gemini-2.5-flash に変更
+      path: `/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
