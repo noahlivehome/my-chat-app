@@ -14,15 +14,15 @@
     <header class="chat-header">
       <div class="header-left">
         <i data-lucide="message-square"></i>
-        <button class="top-btn">不動産AI TOP <i data-lucide="external-link"></i></button>
+        <button class="top-btn" type="button">不動産AI TOP <i data-lucide="external-link"></i></button>
       </div>
       <div class="header-right">
-        <button class="icon-btn"><i data-lucide="maximize-2"></i></button>
-        <button class="icon-btn"><i data-lucide="x"></i></button>
+        <button class="icon-btn" type="button"><i data-lucide="maximize-2"></i></button>
+        <button class="icon-btn" type="button"><i data-lucide="x"></i></button>
       </div>
     </header>
 
-    <!-- チャット本文エリア -->
+    <!-- チャット表示エリア -->
     <main class="chat-body" id="chatBody">
       <div class="message bot-message">
         こんにちは！ノアリブホームのAIアドバイザーです！<br>
@@ -30,7 +30,7 @@
       </div>
     </main>
 
-    <!-- 選択ボタン -->
+    <!-- 選択ボタンエリア -->
     <div id="quick-buttons" class="quick-buttons">
       <button type="button" onclick="sendQuickMessage('賃貸物件を探したい')">🔍 賃貸を探したい</button>
       <button type="button" onclick="sendQuickMessage('貸したい')">🔑 貸したい</button>
@@ -38,13 +38,13 @@
       <button type="button" onclick="sendQuickMessage('購入したい')">💰 購入したい</button>
     </div>
 
-    <!-- 入力フッター -->
+    <!-- 入力エリア -->
     <footer class="chat-footer">
       <button type="button" class="mic-btn"><i data-lucide="mic"></i></button>
       <div class="input-container">
-        <input type="text" id="user-input" placeholder="メッセージを入力..." onkeypress="handleKeyPress(event)">
+        <input type="text" id="user-input" placeholder="メッセージを入力..." autocomplete="off">
       </div>
-      <button type="button" class="send-btn" id="send-btn" onclick="sendMessage()">
+      <button type="button" class="send-btn" id="send-btn">
         <i data-lucide="send-horizontal"></i>
       </button>
     </footer>
