@@ -6,12 +6,10 @@ document.addEventListener("DOMContentLoaded", function() {
   const sendBtn = document.getElementById("send-btn");
   const userInput = document.getElementById("user-input");
 
-  // 送信ボタンのクリックイベント
   if (sendBtn) {
     sendBtn.addEventListener("click", sendMessage);
   }
 
-  // Enterキーでの送信イベント
   if (userInput) {
     userInput.addEventListener("keypress", function(event) {
       if (event.key === "Enter") {
@@ -37,12 +35,12 @@ async function sendMessage() {
   if (!userInput) return;
 
   const message = userInput.value.trim();
-  if (!message) return; // 空文字なら送信しない
+  if (!message) return;
 
   // 1. ユーザーのメッセージを表示
   appendMessage("user-message", message);
   userInput.value = "";
-  turnCount++; // ラリー回数をカウントアップ
+  turnCount++; // ラリー回数を加算
 
   try {
     // 2. APIに送信
@@ -67,7 +65,7 @@ async function sendMessage() {
       conversationHistory.push({ role: "user", content: message });
       conversationHistory.push({ role: "assistant", content: data.reply });
 
-      // 5. ボタンの更新（5回ラリーで問い合わせのみに）
+      // 5. ボタンと入力欄の更新
       updateQuickButtons(message);
 
     } else {
@@ -89,7 +87,6 @@ function appendMessage(senderClass, text) {
   const messageElement = document.createElement("div");
   messageElement.className = `message ${senderClass}`;
   
-  // マークダウン除去＆改行処理
   const cleanText = text.replace(/\*\*/g, '');
   messageElement.innerHTML = cleanText.replace(/\n/g, '<br>');
 
@@ -97,19 +94,33 @@ function appendMessage(senderClass, text) {
   chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-// ボタン表示制御関数
+// ボタン表示制御および入力制御関数
 function updateQuickButtons(lastMessage) {
   const quickButtonsDiv = document.getElementById("quick-buttons");
+  const userInput = document.getElementById("user-input");
+  const sendBtn = document.getElementById("send-btn");
   if (!quickButtonsDiv) return;
 
   const contactUrl = "https://www.noahlivehome.jp/contact/"; 
   let newButtons = [];
 
-  // ★ 5回以上のラリーで「無料相談・お問い合わせ」単一ボタン化
+  // ★ 5回以上のラリー達成時の処理
   if (turnCount >= 5) {
     newButtons = [
       { label: "📩 無料相談・お問い合わせ画面へ進む", url: contactUrl, isPrimary: true }
     ];
+
+    // 入力エリアを無効化（案内完了のため）
+    if (userInput) {
+      userInput.placeholder = "お問い合わせ画面へお進みください";
+      userInput.disabled = true;
+    }
+    if (sendBtn) {
+      sendBtn.disabled = true;
+      sendBtn.style.opacity = "0.5";
+      sendBtn.style.cursor = "not-allowed";
+    }
+
   } 
   // 1〜4回目のラリー中
   else if (lastMessage.includes("貸したい") || lastMessage.includes("売却")) {
