@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     const { message } = req.body;
     
     // 👇 ここに Step 1 でコピーした Groq のキー (gsk_...) を貼り付けます
-    const apiKey = "AQ.Ab8RN6J5WNIlCaeAq7qGGsvZCOtaKopo2ZPBVCpTEMR4V3qVmQ";
+    const apiKey = "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";
 
     const postData = JSON.stringify({
       // 超高速で超優秀な Llama 3.3 モデルを使用（完全無料）
