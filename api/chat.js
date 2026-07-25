@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     const { message } = req.body;
     
     // ここに取得した AQ.Ab8RN... のキーを直接貼り付けます
-    const apiKey = "AQ.Ab8RN6LCzkW7W3TAnNQgsi84j2hz1FlVihR9RECUM1rzgCkCqQ";
+    const apiKey = "AQ.Ab8RN6Kn833X4efnCTAGxtSKGd3rPXA9fjtGLoXTsRPKbBJBKQ";
 
     const postData = JSON.stringify({
       contents: [
