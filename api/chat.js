@@ -9,29 +9,32 @@ export default async function handler(req, res) {
     const { message, history } = req.body;
     const apiKey = "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";
 
-    // 不動産AIの厳密な指示（自己紹介のリセットを完全に禁止）
+    // 1. システムプロンプト（指示の厳格化）
     const messages = [
       { 
         role: "system", 
-        content: `あなたはプロの不動産コンサルタントです。
-【重要ルール】
-- ユーザーとの会話の流れ（文脈）をしっかり把握して応答してください。
-- 途中の会話で「こんにちは」「不動産AIコンサルタントです」といった自己紹介や冒頭の挨拶を繰り返すことは絶対に禁止です。
-- ユーザーが「物件探し」「賃貸物件」「借りたい」などの希望を出したら、即座に「かしこまりました！物件探しですね。ご希望のエリアや家賃のご予算、間取り（1K、1LDKなど）はお決まりですか？」のように具体的に会話を進めてください。` 
+        content: "あなたはプロの不動産コンサルタントです。ユーザーの直前の発言や過去のやり取りを踏まえて回答してください。途中の会話で「こんにちは」などの自己紹介や最初の挨拶を繰り返すことは絶対に禁止です。「物件探し」と言われたら、即座に「かしこまりました！賃貸・売買どちらでお探しですか？エリアやご予算のご希望も教えてください」のように会話を前に進めてください。" 
       }
     ];
 
-    // 会話履歴があれば追加（過去のやり取りを認識させる）
+    // 2. 履歴（history）の形式を整えて追加
     if (history && Array.isArray(history)) {
-      messages.push(...history);
+      history.forEach(item => {
+        messages.push({
+          role: item.role === "user" ? "user" : "assistant",
+          content: item.content
+        });
+      });
     }
 
-    // 最新のメッセージを追加
+    // 3. 最新のメッセージを追加
     messages.push({ role: "user", content: message || "こんにちは" });
 
+    // 日本語に強いモデル「gemma2-9b-it」に変更
     const postData = JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      messages: messages
+      model: "gemma2-9b-it",
+      messages: messages,
+      temperature: 0.6
     });
 
     const options = {
@@ -65,6 +68,7 @@ export default async function handler(req, res) {
     });
 
     if (apiResponse.statusCode !== 200) {
+      console.error("Groq Error:", apiResponse.body);
       return res.status(500).json({ error: "APIエラーが発生しました。" });
     }
 
@@ -72,6 +76,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ reply: replyText });
 
   } catch (error) {
+    console.error("Server Error:", error);
     return res.status(500).json({ error: "サーバーエラーが発生しました。" });
   }
 }
