@@ -81,3 +81,16 @@ function appendMessage(sender, text) {
   chatLogs.appendChild(messageElement);
   chatLogs.scrollTop = chatLogs.scrollHeight;
 }
+// 💡 クイック選択ボタンが押された時の処理
+function sendQuickMessage(text) {
+  // 入力欄要素の取得（ID名はお使いの要素に合わせて確認してください）
+  const inputElement = document.querySelector('.input-area input') || document.getElementById('user-input');
+  
+  if (inputElement) {
+    inputElement.value = text;
+    // 既存の送信関数を実行（関数名が sendMessage の場合）
+    if (typeof sendMessage === 'function') {
+      sendMessage();
+    }
+  }
+}
