@@ -1,69 +1,63 @@
-// アイコンの初期化（Lucide icons）
-lucide.createIcons();
-
-const chatBody = document.getElementById('chatBody');
-const chatInput = document.getElementById('chatInput');
-const sendBtn = document.getElementById('sendBtn');
-
-// 会話の履歴を保持する配列
+// 会話の履歴を保存しておくための配列（変数は一番上で定義）
 let conversationHistory = [];
 
-// メッセージを画面（UI）に追加する関数
-function addMessageToUI(senderClass, text) {
-  const msgDiv = document.createElement('div');
-  msgDiv.className = `message ${senderClass}`;
-  msgDiv.innerHTML = text.replace(/\n/g, '<br>');
-  chatBody.appendChild(msgDiv);
-  
-  // 自動スクロール（最新メッセージへ）
-  chatBody.scrollTop = chatBody.scrollHeight;
-  return msgDiv;
-}
-
-// AIへの送信処理
+// チャット送信処理の関数
 async function sendMessage() {
-  const text = chatInput.value.trim();
-  if (!text) return;
+  const inputElement = document.getElementById("user-input"); // 入力欄のID（お使いのIDに合わせて変更してください）
+  const message = inputElement.value.trim();
 
-  // 1. ユーザーの入力内容を画面に表示
-  addMessageToUI('user-message', text);
-  chatInput.value = '';
-  
-  // 会話履歴に追加
-  conversationHistory.push({ role: 'user', content: text });
+  // 空文字の場合は送信しない
+  if (!message) return;
 
-  // 2. 「回答を作成中...」の仮メッセージを表示
-  const loadingMsg = addMessageToUI('bot-message', '回答を作成中...');
+  // 1. ユーザーのメッセージを画面に表示
+  appendMessage("user", message);
+  inputElement.value = ""; // 入力欄をクリア
 
   try {
-    // 3. VercelのAPI（/api/chat）に送信してGeminiからの返答を取得
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: conversationHistory })
+    // 2. バックエンド API にリクエストを送信
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8"
+      },
+      // ★ここが重要：現在のメッセージと一緒に過去の会話履歴 (history) を送る
+      body: JSON.stringify({
+        message: message,
+        history: conversationHistory
+      })
     });
 
     const data = await response.json();
 
     if (data.reply) {
-      loadingMsg.innerHTML = data.reply.replace(/\n/g, '<br>');
-      conversationHistory.push({ role: 'assistant', content: data.reply });
+      // 3. AIの返答を画面に表示
+      appendMessage("assistant", data.reply);
+
+      // 4. ★最重要：今回のやり取りを会話履歴に追加して記憶させる
+      conversationHistory.push({ role: "user", content: message });
+      conversationHistory.push({ role: "assistant", content: data.reply });
+
     } else {
-      loadingMsg.textContent = 'エラーが発生しました。';
+      appendMessage("assistant", "エラーが発生しました。もう一度お試しください。");
     }
 
   } catch (error) {
-    console.error('Error:', error);
-    loadingMsg.textContent = '通信エラーが発生しました。';
+    console.error("送信エラー:", error);
+    appendMessage("assistant", "通信エラーが発生しました。");
   }
 }
 
-// イベントの設定（ボタンクリック ＆ Enterキーで送信）
-sendBtn.addEventListener('click', sendMessage);
+// 画面にメッセージを追加表示するための補助関数
+function appendMessage(sender, text) {
+  const chatLogs = document.getElementById("chat-logs"); // チャット表示領域のID
+  if (!chatLogs) return;
 
-chatInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-});
+  const messageElement = document.createElement("div");
+  messageElement.className = `message ${sender}`;
+  messageElement.textContent = text;
+
+  chatLogs.appendChild(messageElement);
+  
+  // 常に一番下まで自動スクロール
+  chatLogs.scrollTop = chatLogs.scrollHeight;
+}
