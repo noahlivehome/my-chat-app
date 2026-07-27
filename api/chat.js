@@ -16,11 +16,12 @@ export default async function handler(req, res) {
 
   try {
     const { message, history } = req.body || {};
+    // Vercelの環境変数 GROQ_API_KEY を使用
     const apiKey = process.env.GROQ_API_KEY;
 
     if (!apiKey) {
       console.error("GROQ_API_KEY is missing in environment variables.");
-      return res.status(500).json({ error: "サーバー側でAPIキーが設定されていません。" });
+      return res.status(500).json({ error: "サーバー側でGROQ_API_KEYが設定されていません。" });
     }
 
     // ラリー回数の判定
@@ -71,7 +72,7 @@ export default async function handler(req, res) {
       { role: "system", content: systemInstruction }
     ];
 
-    // 会話履歴の追加（直近6件に制限してトークンエラー防止）
+    // 会話履歴の追加（直近6件に制限してトークン制限を回避）
     if (history && Array.isArray(history)) {
       const recentHistory = history.slice(-6);
       recentHistory.forEach(item => {
@@ -85,7 +86,7 @@ export default async function handler(req, res) {
     // 最新メッセージ追加
     messages.push({ role: "user", content: String(message || "こんにちは") });
 
-    // ★ 爆速・軽量モデルを指定してトークン・レート制限エラーを回避
+    // llama-3.1-8b-instant を使用して超高速・トークン制限回避
     const postData = JSON.stringify({
       model: "llama-3.1-8b-instant",
       messages: messages,
@@ -125,7 +126,7 @@ export default async function handler(req, res) {
     if (apiResponse.statusCode !== 200) {
       console.error("Groq API Error:", apiResponse.body);
       return res.status(apiResponse.statusCode).json({ 
-        error: apiResponse.body?.error?.message || "API呼び出しエラーが発生しました。" 
+        error: apiResponse.body?.error?.message || "Groq API呼び出しエラーが発生しました。" 
       });
     }
 
