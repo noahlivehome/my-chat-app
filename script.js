@@ -129,7 +129,7 @@ function updateQuickButtons(lastMessage) {
     ];
   } 
   // 3. 🔍 賃貸を探したい（お部屋探し）
-  else if (lastMessage.includes("賃貸") || lastMessage.includes("借りたい") || lastMessage.includes("探したい")) {
+  else if (lastMessage.includes("賃貸") || lastMessage.includes("借りたい") || lastMessage.includes("探したい") || lastMessage.includes("部屋")) {
     newButtons = [
       { label: "📅 無料で内見予約・物件問合せをする", url: contactUrl, isPrimary: true },
       { label: "📍 おすすめエリア・家賃相場を相談", text: "おすすめのエリアや家賃相場を教えてほしい" },
@@ -144,11 +144,12 @@ function updateQuickButtons(lastMessage) {
       { label: "🏡 物件選びのポイントを知りたい", text: "失敗しない物件選びのポイントは何ですか？" }
     ];
   } 
-  // 初期・その他
+  // 途中会話（条件入力中など）
   else {
     newButtons = [
-      { label: "📩 お問い合わせ画面へ", url: contactUrl, isPrimary: true },
-      { label: "💡 詳しく聞く", text: "もう少し詳しく教えてください" }
+      { label: "💡 詳しく聞く", text: "もう少し詳しく教えてください" },
+      { label: "📩 お問い合わせ画面へ", url: contactUrl },
+      { label: "🔄 最初に戻る", text: "最初に戻る" }
     ];
   }
 
