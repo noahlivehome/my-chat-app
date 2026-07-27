@@ -1,179 +1,142 @@
-let conversationHistory = [];
-let turnCount = 0; // ラリー回数
+import https from 'https';
 
-// ページ読み込み完了時にイベントを確実にバインド
-window.addEventListener("DOMContentLoaded", () => {
-  const sendBtn = document.getElementById("send-btn");
-  const userInput = document.getElementById("user-input");
-
-  if (sendBtn) {
-    sendBtn.onclick = (e) => {
-      e.preventDefault();
-      sendMessage();
-    };
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
-
-  if (userInput) {
-    userInput.onkeypress = (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        sendMessage();
-      }
-    };
-  }
-});
-
-// クイック選択ボタン押下時
-function sendQuickMessage(text) {
-  const userInput = document.getElementById("user-input");
-  if (userInput) {
-    userInput.value = text;
-    sendMessage();
-  }
-}
-
-// 送信メイン処理
-async function sendMessage() {
-  const userInput = document.getElementById("user-input");
-  if (!userInput) return;
-
-  const message = userInput.value.trim();
-  if (!message) return; // 空文字送信防止
-
-  // 1. ユーザーメッセージ表示
-  appendMessage("user-message", message);
-  userInput.value = "";
-  turnCount++; // ラリー数加算
 
   try {
-    // 2. API送信
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8"
-      },
-      body: JSON.stringify({
-        message: message,
-        history: conversationHistory
-      })
+    const { message, history } = req.body;
+    
+    // APIキーは Vercel の Environment Variables (GROQ_API_KEY) から読み込みます
+    const apiKey = process.env.GROQ_API_KEY || "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";
+
+    // 会話のターン数を計算
+    const turnCount = history && Array.isArray(history) ? Math.floor(history.length / 2) + 1 : 1;
+
+    // 1. システムプロンプトの定義（統合完全版）
+    let systemInstruction = `あなたは「ノアリブホーム」の親切でプロフェッショナルな不動産AIコンサルタントです。
+
+【役割と目的】
+Webサイトを訪れたお客様のニーズ（①借りる、②貸す、③売る、④購入する）を素早く特定し、丁寧なヒアリングを行ったうえで、適切な内見予約・査定・問い合わせフォームへスムーズに誘導すること。
+
+【共通の応対方針】
+- プロのアドバイザーとして丁寧で誠実、かつ分かりやすい日本の敬語を徹底する。
+- ユーザーを疲れさせないため、1回のメッセージで尋ねるヒアリング項目は【最大1〜2つ】にとどめる。
+- スマホ画面で読みやすいよう、1回の返答は【100〜150文字程度】とし、適度に改行を入れる。
+- 「こんにちは」等の挨拶を会話の途中で繰り返さないこと。
+- 電話番号や詳細な住所などの個人情報は、相談や予約が具体化した段階でのみ確認する。
+- 専門的すぎる質問やトラブル対応は「専門スタッフより詳しくご案内いたします」と告げて人間へ誘導する。
+
+【ニーズ別・会話シナリオ】
+ユーザーが「〜したい」と選択した1回目の会話では、いきなり「条件を受け止めました」「お問い合わせください」と締めくくらず、まずご希望内容を優しく質問してください。
+
+1. 賃貸を探したい（借りたい）：
+   - 初回発話例：「ご希望のエリア、間取り、ご予算、ペット飼育などのこだわり条件はございますか？差し支えない範囲で教えていただけますと幸いです！」
+   - ヒアリング：エリア、予算（家賃）、間取り、時期、こだわり条件（バストイレ別等）。
+   - ゴール：条件の確認後、内見予約・店舗相談予約への誘導。
+
+2. 貸したい（オーナー様）：
+   - 初回発話例：「所有されている物件のエリアや種別（マンション・戸建てなど）、現在お困りのこと（空室対策、管理会社の変更など）について教えていただけますか？」
+   - ヒアリング：物件種別、所在地（市区町村）、現在の状況（空室/退去予定/初めて等）。
+   - ゴール：想定賃料の試算・募集管理の無料相談予約への誘導。
+
+3. 売却したい（売りたい）：
+   - 初回発話例：「ご売却をご検討中の物件エリアや時期、現状のお悩みなどについて教えていただけますか？」
+   - ヒアリング：物件種別・エリア、売却希望時期・理由。
+   - ゴール：簡易相場（机上査定）または正確な価格（訪問査定）の提案、査定フォームへの誘導。
+
+4. 購入したい：
+   - 初回発話例：「ご希望のエリアや種別（新築・中古戸建て・マンションなど）、ご検討のきっかけなどを教えていただけますか？」
+   - ヒアリング：希望エリア、種別、総予算、時期・ローンの状況。
+   - ゴール：物件提案、非公開物件の案内、来店・オンライン相談予約への誘導。
+
+【絶・対・禁・止・事・項】
+★ 架空の物件情報（「〇〇駅から徒歩〇分、家賃〇万円の物件があります」など）は絶対につくらないでください。
+★ 家賃、査定額、費用、手数料などの具体的な数字（〇〇万円、〇％など）や試算は一切出さないでください。
+★ 条件を聞いていない段階で「条件を受け止めました」と言わないでください。
+★ 「**」や「#」などのマークダウン記号は絶対に使わず、プレーンテキストで回答してください。
+
+【選択肢ボタンの出力ルール】
+ユーザーのタップ操作を助けるため、メッセージの末尾には必ず次に押しやすい選択肢（2〜4個）を以下のフォーマットで出力してください。
+
+（回答本文テキスト）
+
+[OPTIONS]
+- 選択肢1
+- 選択肢2
+- 選択肢3`;
+
+    // 2. 5ターン目以降の締めくくりルール追加
+    if (turnCount >= 5) {
+      systemInstruction += `\n\n【5回目の案内ルール】
+ユーザーとの会話の締めくくりです。新たな質問や[OPTIONS]の出力は絶対にせず、ご希望に応じた無料相談・査定・物件問合せ等のご案内を、画面下部のお問い合わせボタンから進んでいただくよう丁寧にお伝えして締めくくってください。`;
+    }
+
+    // 3. メッセージ配列の組み立て
+    const messages = [
+      { role: "system", content: systemInstruction }
+    ];
+
+    if (history && Array.isArray(history)) {
+      history.forEach(item => {
+        messages.push({
+          role: item.role === "user" ? "user" : "assistant",
+          content: String(item.content)
+        });
+      });
+    }
+
+    messages.push({ role: "user", content: String(message || "こんにちは") });
+
+    // 4. Groq API へのリクエストボディ作成
+    const postData = JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: messages,
+      temperature: 0.1
     });
 
-    const data = await response.json();
-
-    if (response.ok && data.reply) {
-      // 3. AIの返答を表示
-      appendMessage("bot-message", data.reply);
-
-      // 4. 会話履歴更新
-      conversationHistory.push({ role: "user", content: message });
-      conversationHistory.push({ role: "assistant", content: data.reply });
-
-      // 5. ボタン群を更新
-      updateQuickButtons(message);
-
-    } else {
-      console.error("API Error:", data);
-      appendMessage("bot-message", `エラーが発生しました: ${data.error || "通信失敗"}`);
-    }
-
-  } catch (error) {
-    console.error("送信エラー:", error);
-    appendMessage("bot-message", "通信エラーが発生しました。時間を置いて再度お試しください。");
-  }
-}
-
-// メッセージ描画
-function appendMessage(senderClass, text) {
-  const chatBody = document.getElementById("chatBody");
-  if (!chatBody) return;
-
-  const messageElement = document.createElement("div");
-  messageElement.className = `message ${senderClass}`;
-  
-  // マークダウン記号除去＆改行適用
-  const cleanText = text.replace(/\*\*/g, '');
-  messageElement.innerHTML = cleanText.replace(/\n/g, '<br>');
-
-  chatBody.appendChild(messageElement);
-  chatBody.scrollTop = chatBody.scrollHeight;
-}
-
-// 💡 動的ボタン更新処理
-function updateQuickButtons(lastMessage) {
-  const quickButtonsDiv = document.getElementById("quick-buttons");
-  if (!quickButtonsDiv) return;
-
-  const contactUrl = "https://www.noahlivehome.jp/contact/"; 
-  let newButtons = [];
-
-  // ★ 5回以上のラリー達成時（お問い合わせ専用ボタンに統一）
-  if (turnCount >= 5) {
-    newButtons = [
-      { label: "📩 無料相談・お問い合わせ画面へ進む", url: contactUrl, isPrimary: true }
-    ];
-  } 
-  // 1. 🔑 貸したい（オーナー様向け）
-  else if (lastMessage.includes("貸したい") || lastMessage.includes("賃貸経営") || lastMessage.includes("管理")) {
-    newButtons = [
-      { label: "📊 無料で賃料査定・管理相談を申込む", url: contactUrl, isPrimary: true },
-      { label: "🏠 ノアリブホームの管理サポートを聞く", text: "どんな管理サポートや空室対策がありますか？" },
-      { label: "💡 貸し出しまでの全体の流れを知りたい", text: "賃貸として貸し出すまでの流れを教えてください" }
-    ];
-  } 
-  // 2. 🏠 売却したい（売主様向け）
-  else if (lastMessage.includes("売却") || lastMessage.includes("売りたい")) {
-    newButtons = [
-      { label: "📊 無料で売却査定を依頼する", url: contactUrl, isPrimary: true },
-      { label: "🤝 売却・預かり（媒介）の流れを聞く", text: "売却の手順や売却活動の流れについて教えてください" },
-      { label: "💡 売却時のサポート内容を知りたい", text: "ノアリブホームの売却サポートの特徴は何ですか？" }
-    ];
-  } 
-  // 3. 🔍 賃貸を探したい（お部屋探し）
-  else if (lastMessage.includes("賃貸") || lastMessage.includes("借りたい") || lastMessage.includes("探したい") || lastMessage.includes("部屋")) {
-    newButtons = [
-      { label: "📅 無料で内見予約・物件問合せをする", url: contactUrl, isPrimary: true },
-      { label: "📍 おすすめエリア・家賃相場を相談", text: "おすすめのエリアや家賃相場を教えてほしい" },
-      { label: "📝 内見から契約までの流れを聞く", text: "内見や申し込みの手順はどうなりますか？" }
-    ];
-  } 
-  // 4. 💰 購入したい（住宅購入）
-  else if (lastMessage.includes("購入") || lastMessage.includes("買いたい") || lastMessage.includes("マイホーム")) {
-    newButtons = [
-      { label: "💬 個別提案・購入のご相談（予約）", url: contactUrl, isPrimary: true },
-      { label: "🏦 住宅ローンの進め方・資金計画を聞く", text: "住宅ローンや資金計画の進め方について教えてください" },
-      { label: "🏡 物件選びのポイントを知りたい", text: "失敗しない物件選びのポイントは何ですか？" }
-    ];
-  } 
-  // 途中会話（条件入力中など）
-  else {
-    newButtons = [
-      { label: "💡 詳しく聞く", text: "もう少し詳しく教えてください" },
-      { label: "📩 お問い合わせ画面へ", url: contactUrl },
-      { label: "🔄 最初に戻る", text: "最初に戻る" }
-    ];
-  }
-
-  // ボタン再描画
-  quickButtonsDiv.innerHTML = "";
-  
-  newButtons.forEach(btn => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.innerText = btn.label;
-    
-    if (btn.isPrimary) {
-      button.className = "primary-action-btn";
-    }
-
-    button.onclick = (e) => {
-      e.preventDefault();
-      if (btn.url) {
-        window.open(btn.url, '_blank');
-      } else if (btn.text) {
-        sendQuickMessage(btn.text);
+    const options = {
+      hostname: 'api.groq.com',
+      path: '/openai/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Length': Buffer.byteLength(postData, 'utf8')
       }
     };
-    
-    quickButtonsDiv.appendChild(button);
-  });
+
+    // 5. HTTPSリクエストの実行
+    const apiResponse = await new Promise((resolve, reject) => {
+      const request = https.request(options, (response) => {
+        response.setEncoding('utf8');
+        let data = '';
+        response.on('data', (chunk) => { data += chunk; });
+        response.on('end', () => {
+          try {
+            resolve({ statusCode: response.statusCode, body: JSON.parse(data) });
+          } catch (e) {
+            reject(new Error("JSON解析エラー"));
+          }
+        });
+      });
+
+      request.on('error', (error) => { reject(error); });
+      request.write(postData, 'utf8');
+      request.end();
+    });
+
+    if (apiResponse.statusCode !== 200) {
+      console.error("Groq API Error:", apiResponse.body);
+      return res.status(500).json({ error: "API呼び出しエラーが発生しました。" });
+    }
+
+    const replyText = apiResponse.body.choices?.[0]?.message?.content || "返答が得られませんでした。";
+    return res.status(200).json({ reply: replyText });
+
+  } catch (error) {
+    console.error("Server Error:", error);
+    return res.status(500).json({ error: "サーバーエラーが発生しました。" });
+  }
 }
