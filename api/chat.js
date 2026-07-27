@@ -21,39 +21,34 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "GROQ_API_KEY が設定されていません。" });
     }
 
-    // 会話ラリー数のカウント（往復数）
     const turnCount = history && Array.isArray(history) ? Math.floor(history.length / 2) + 1 : 1;
 
     let systemInstruction = `あなたは不動産会社「ノアリブホーム」の親切でプロフェッショナルなAIコンサルタントです。
 対応エリア：東京都北区（赤羽・王子等）、板橋区、埼玉県（東武東上線・埼京線沿線）。
 
-【全体会話設計（重要：5ラリーで丁寧に対応する）】
-・1〜4ラリー目：ユーザーのご希望条件やお悩みを深掘り・共感し、1つずつ丁寧に深掘り質問を行ってください。すぐにお問い合わせへ促すのは厳禁です。
-・5ラリー目：会話の締めくくりです。これまでのヒアリング内容を踏まえ、画面下部のお問い合わせボタンから専門スタッフへの相談・査定・来店予約へ進むよう丁寧に案内してください。
+【全体会話設計（5ラリーで丁寧に対応）】
+・1〜4ラリー目：ユーザーのご希望条件やお悩みを共感し、ひとつずつ丁寧に質問を行ってください。
+・5ラリー目：会話の締めくくりです。ヒアリング内容をまとめ、画面下部のお問い合わせボタンから専門スタッフへの相談・査定・来店予約へ進むよう案内してください。
 
-【各カテゴリーのヒアリング進め方（1〜4ラリー目）】
-1. 貸したい（オーナー様）：
-   所有物件のエリア・種別、空室状況、賃料の悩み、希望する管理体制（集金代行やサブリースなど）を順番にお聞きしてください。
-2. 賃貸を探したい（部屋探し）：
-   ご希望エリア、間取り・ご予算、入居時期、こだわり条件（ペット可、2階以上など）を順番にお聞きしてください。
-3. 売却したい：
-   物件エリア・種別、ご売却の時期、お住み替えか即現金化かなどのお悩みを順番にお聞きしてください。
-4. 購入したい：
-   ご希望エリア、種別（新築/中古・戸建て/マンション）、ご予算やローン・ご検討のきっかけを順番にお聞きしてください。
+【選択肢ボタン（OPTIONS）の出力ルール】
+1〜4ラリー目のメッセージの「最後」には、必ずユーザーがタップで返答できる選択肢（2〜4個）を、以下のフォーマットで付与してください。
+フォーマット例：
+[OPTIONS: ペット可希望, 2階以上希望, 特になし]
 
-【言葉遣い・絶対禁止ルール】
-・丁寧な接客用敬語（「〜です」「〜ます」「〜でしょうか？」）を使用し、「〜存じます」「〜ですね」などの不自然な語尾は禁止。
+【言葉遣い・NGルール（厳守）】
+・「〜をご存じですか」「〜に関しまして」「〜かと存じます」などの不自然な日本語は絶対禁止です。
+・自然で親切な敬語（「〜でしょうか？」「〜はございますか？」「〜ですね」）を使用してください。
+・一度にたくさんの質問を詰め込まず、1〜2個の質問に絞ってください。
 ・物件の周辺環境や街の解説、架空の金額（〇〇万円等）や試算・解説は絶対に行わないでください。
 ・「**」「#」等のマークダウン記号は絶対に使わず、プレーンテキストのみで出力してください。`;
 
     if (turnCount >= 5) {
       systemInstruction += `\n\n【現在5ラリー目です（締めくくり）】
-これまでのご相談・ご条件をお伺いしたまとめを伝え、「詳細な査定・最新空室確認・個別ご提案については、画面下部のお問い合わせボタンよりお気軽にお進みください」と丁寧に伝えて会話を終了してください。新たな質問はしないでください。`;
+これまでのヒアリング内容を簡単にまとめ、「詳細な査定・最新空室確認・個別ご提案については、画面下部のお問い合わせボタンよりお気軽にお進みください」と丁寧に伝えて会話を終了してください。[OPTIONS: ...] は付与しないでください。`;
     }
 
     const messages = [{ role: "system", content: systemInstruction }];
 
-    // 会話を覚えるために直近8件（約4往復分）の履歴を送信
     if (history && Array.isArray(history)) {
       const recentHistory = history.slice(-8);
       recentHistory.forEach(item => {
@@ -72,7 +67,7 @@ export default async function handler(req, res) {
       temperature: 0.3,
       presence_penalty: 0.2,
       frequency_penalty: 0.2,
-      max_tokens: 350
+      max_tokens: 400
     });
 
     const options = {
@@ -112,8 +107,22 @@ export default async function handler(req, res) {
       });
     }
 
-    const replyText = apiResponse.body.choices?.[0]?.message?.content || "返答が得られませんでした。";
-    return res.status(200).json({ reply: replyText });
+    const rawText = apiResponse.body.choices?.[0]?.message?.content || "返答が得られませんでした。";
+
+    // OPTIONSタグを抽出してレスポンスを分離
+    let replyText = rawText;
+    let buttonOptions = [];
+
+    const optionsMatch = rawText.match(/\[OPTIONS:\s*(.*?)\]/);
+    if (optionsMatch) {
+      replyText = rawText.replace(/\[OPTIONS:\s*.*?\]/, '').trim();
+      buttonOptions = optionsMatch[1].split(',').map(s => s.trim());
+    }
+
+    return res.status(200).json({ 
+      reply: replyText,
+      options: buttonOptions 
+    });
 
   } catch (error) {
     console.error("Server Error:", error);
