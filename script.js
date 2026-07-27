@@ -77,7 +77,7 @@ async function sendMessage(textFromButton) {
       conversationHistory.push({ role: "user", content: message });
       conversationHistory.push({ role: "assistant", content: data.reply });
 
-      // 5. カテゴリ判定して固定ボタンを表示
+      // 5. カテゴリ・ステップ判定して固定ボタンを表示
       renderCategoryFixedButtons(message);
 
     } else {
@@ -112,7 +112,7 @@ function appendMessage(senderClass, text) {
   chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-// 💡 ★ カテゴリごとの固定ボタン制御関数 ★
+// 💡 ★ カテゴリごとの固定ボタン制御関数（ステップ対応・重複防止版） ★
 function renderCategoryFixedButtons(lastMessage) {
   const quickButtonsDiv = document.getElementById("quick-buttons");
   if (!quickButtonsDiv) return;
@@ -125,8 +125,16 @@ function renderCategoryFixedButtons(lastMessage) {
       { label: "📩 無料相談・お問い合わせ画面へ進む", url: contactUrl, isPrimary: true }
     ];
   } 
-  // 2. 🔍 賃貸を探したい（お部屋探しの固定選択肢）
-  else if (lastMessage.includes("賃貸") || lastMessage.includes("借りたい") || lastMessage.includes("探したい") || lastMessage.includes("部屋")) {
+  // 2-A. 🏙️ すでに東京・埼玉等のエリアを選択した後のボタン（次のステップへ進める）
+  else if (lastMessage.includes("東京都内") || lastMessage.includes("埼玉県内")) {
+    newButtons = [
+      { label: "📍 具体的におすすめの駅・エリアを聞く", text: "おすすめの駅やエリアを提案してください" },
+      { label: "💬 条件（ペット・間取り・予算等）を伝える", text: "ペット可などの希望条件について相談したい" },
+      { label: "📅 無料で内見予約・物件問合せをする", url: contactUrl, isPrimary: true }
+    ];
+  }
+  // 2-B. 🔍 賃貸を探したい（初回メッセージ時のみ表示）
+  else if (lastMessage.includes("賃貸") || lastMessage.includes("借りたい") || lastMessage.includes("部屋")) {
     newButtons = [
       { label: "🏙️ 東京都内で探したい", text: "東京都内で探したい" },
       { label: "埼玉 県内で探したい", text: "埼玉県内で探したい" },
@@ -135,7 +143,7 @@ function renderCategoryFixedButtons(lastMessage) {
     ];
   } 
   // 3. 🔑 貸したい（オーナー様向けの固定選択肢）
-  else if (lastMessage.includes("貸したい") || lastMessage.includes("賃貸経営") || lastMessage.includes("管理")) {
+  else if (lastMessage.includes("貸したい") || lastMessage.includes("賃賃経営") || lastMessage.includes("管理")) {
     newButtons = [
       { label: "🏠 ノアリブホームの管理サポートを聞く", text: "どんな管理サポートや空室対策がありますか？" },
       { label: "💡 貸し出しまでの流れを知りたい", text: "賃貸として貸し出すまでの流れを教えてください" },
@@ -158,11 +166,11 @@ function renderCategoryFixedButtons(lastMessage) {
       { label: "💬 個別提案・購入のご相談（予約）", url: contactUrl, isPrimary: true }
     ];
   } 
-  // デフォルト（上記以外）
+  // デフォルト（会話が進んできた場合）
   else {
     newButtons = [
       { label: "💡 詳しく聞く", text: "もう少し詳しく教えてください" },
-      { label: "📩 お問い合わせ画面へ", url: contactUrl, isPrimary: true }
+      { label: "📩 お問い合わせ画面へ進む", url: contactUrl, isPrimary: true }
     ];
   }
 
