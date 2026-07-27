@@ -37,6 +37,8 @@ async function sendMessage(textFromButton) {
   if (isSending) return; // 処理中なら弾く
 
   const userInput = document.getElementById("user-input");
+  const sendBtn = document.getElementById("send-btn");
+  const quickButtonsDiv = document.getElementById("quick-buttons");
   
   // ボタンからのテキスト、または入力欄のテキストを取得
   let message = "";
@@ -51,11 +53,16 @@ async function sendMessage(textFromButton) {
   // ★ 押されたテキストを記録（一度押したボタンを除外するため）
   usedButtonTexts.push(message);
 
-  // 送信中フラグをオン
+  // 送信中フラグをオン＆UI無効化
   isSending = true;
+  if (userInput) {
+    userInput.value = "";
+    userInput.disabled = true; // ★ 入力不可にする
+  }
+  if (sendBtn) sendBtn.disabled = true;
 
-  // 入力欄をクリア
-  if (userInput) userInput.value = "";
+  // ★ 送信直後にボタン群を消去（または非活性化）して連打を防ぐ
+  if (quickButtonsDiv) quickButtonsDiv.innerHTML = "";
 
   // 1. ユーザーメッセージ表示
   appendMessage("user-message", message);
@@ -96,8 +103,13 @@ async function sendMessage(textFromButton) {
     console.error("送信通信エラー:", error);
     appendMessage("bot-message", "通信エラーが発生しました。時間を置いて再度お試しください。");
   } finally {
-    // 処理完了後にフラグ解除
+    // 処理完了後にフラグ解除＆UI有効化
     isSending = false;
+    if (userInput) {
+      userInput.disabled = false;
+      userInput.focus(); // ★ 送信後に入力欄にフォーカスを戻す
+    }
+    if (sendBtn) sendBtn.disabled = false;
   }
 }
 
@@ -185,13 +197,13 @@ function renderCategoryFixedButtons(lastMessage) {
     ];
   }
 
-  // ★ 過去に押されたテキストを持つボタンを除外する（URLボタンは除外しない）
+  // ★ 過去に押されたテキストを持つボタンを除外する（trimして厳密に比較）
   const filteredButtons = candidateButtons.filter(btn => {
     if (btn.url) return true; // お問い合わせリンク等は常に残す
-    return !usedButtonTexts.includes(btn.text);
+    return !usedButtonTexts.some(usedText => usedText.trim() === btn.text.trim());
   });
 
-  // もし通常テキストのボタンが全滅したらお問い合わせボタンを出す
+  // もし通常ボタンが全滅したら、お問い合わせリンクのみ残す
   if (filteredButtons.length === 0) {
     filteredButtons.push({ label: "📩 お問い合わせ画面へ進む", url: contactUrl, isPrimary: true });
   }
