@@ -48,7 +48,7 @@ async function sendMessage(textFromButton) {
 
   if (!message) return; // 空文字送信防止
 
-  // 押されたテキストを記録（一度押したボタンを除外するため）
+  // ★ 押されたテキストを記録（一度押したボタンを除外するため）
   usedButtonTexts.push(message);
 
   // 送信中フラグをオン
@@ -84,17 +84,20 @@ async function sendMessage(textFromButton) {
       conversationHistory.push({ role: "user", content: message });
       conversationHistory.push({ role: "assistant", content: data.reply });
 
-      // 5. ★ AIの返答内容(data.reply)とユーザーメッセージ(message)を見て動的にボタン表示 ★
+      // 5. AIの返答内容とユーザーメッセージを見て動的にボタン表示
       renderAdaptiveButtons(message, data.reply);
 
     } else {
       console.error("API Error Response:", data);
-      appendMessage("bot-message", `エラーが発生しました: ${data.error || "通信失敗"}`);
+      appendMessage("bot-message", `エラーが発生しました: ${data.error || "API呼び出しエラーが発生しました。"}`);
+      // エラー時でもユーザーの次のアクション用にボタンを更新
+      renderAdaptiveButtons(message, "");
     }
 
   } catch (error) {
     console.error("送信通信エラー:", error);
     appendMessage("bot-message", "通信エラーが発生しました。時間を置いて再度お試しください。");
+    renderAdaptiveButtons(message, "");
   } finally {
     // 処理完了後にフラグ解除
     isSending = false;
@@ -122,7 +125,7 @@ function appendMessage(senderClass, text) {
   chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-// 💡 ★ AIの返答内容に適応した動的ボタン生成関数（カテゴリ優先度調整版） ★
+// 💡 ★ AIの返答内容に適応した動的ボタン生成関数 ★
 function renderAdaptiveButtons(userMsg, aiReply) {
   const quickButtonsDiv = document.getElementById("quick-buttons");
   if (!quickButtonsDiv) return;
