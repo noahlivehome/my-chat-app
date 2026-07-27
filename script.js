@@ -1,5 +1,6 @@
 let conversationHistory = [];
 let turnCount = 0; // ラリー回数
+const contactUrl = "https://www.noahlivehome.jp/contact/"; 
 
 // ページ読み込み完了時にイベントを確実にバインド
 window.addEventListener("DOMContentLoaded", () => {
@@ -61,15 +62,31 @@ async function sendMessage() {
     const data = await response.json();
 
     if (response.ok && data.reply) {
-      // 3. AIの返答を表示
-      appendMessage("bot-message", data.reply);
+      let fullText = data.reply;
+      let chatText = fullText;
+      let options = [];
 
-      // 4. 会話履歴更新
+      // ★ [OPTIONS] タグが含まれていればテキストと選択肢を分解する
+      if (fullText.includes("[OPTIONS]")) {
+        const parts = fullText.split("[OPTIONS]");
+        chatText = parts[0].trim(); // チャットバブルに表示する本文
+        
+        // 選択肢テキストを配列化（「- 」や空白を除去）
+        options = parts[1]
+          .split("\n")
+          .map(line => line.replace(/^-\s*/, '').trim())
+          .filter(line => line.length > 0);
+      }
+
+      // 3. AIの返答（本文のみ）を表示
+      appendMessage("bot-message", chatText);
+
+      // 4. 会話履歴更新（AIにはフルテキストを記憶させる）
       conversationHistory.push({ role: "user", content: message });
-      conversationHistory.push({ role: "assistant", content: data.reply });
+      conversationHistory.push({ role: "assistant", content: fullText });
 
-      // 5. ボタン群を更新
-      updateQuickButtons(message);
+      // 5. ボタン群を動的に描画
+      renderDynamicButtons(options);
 
     } else {
       console.error("API Error:", data);
@@ -98,71 +115,45 @@ function appendMessage(senderClass, text) {
   chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-// 💡 動的ボタン更新処理
-function updateQuickButtons(lastMessage) {
+// 💡 動的ボタン生成処理
+function renderDynamicButtons(aiOptions) {
   const quickButtonsDiv = document.getElementById("quick-buttons");
   if (!quickButtonsDiv) return;
 
-  const contactUrl = "https://www.noahlivehome.jp/contact/"; 
+  quickButtonsDiv.innerHTML = "";
   let newButtons = [];
 
-  // ★ 5回以上のラリー達成時（お問い合わせ専用ボタンに統一）
+  // ★ 5回以上のラリー達成時は強制でお問い合わせ専用ボタンのみに
   if (turnCount >= 5) {
     newButtons = [
       { label: "📩 無料相談・お問い合わせ画面へ進む", url: contactUrl, isPrimary: true }
     ];
   } 
-  // 1. 🔑 貸したい（オーナー様向け）
-  else if (lastMessage.includes("貸したい") || lastMessage.includes("賃貸経営") || lastMessage.includes("管理")) {
-    newButtons = [
-      { label: "📊 無料で賃料査定・管理相談を申込む", url: contactUrl, isPrimary: true },
-      { label: "🏠 ノアリブホームの管理サポートを聞く", text: "どんな管理サポートや空室対策がありますか？" },
-      { label: "💡 貸し出しまでの全体の流れを知りたい", text: "賃貸として貸し出すまでの流れを教えてください" }
-    ];
+  // ★ AIから選択肢(options)が生成されている場合
+  else if (aiOptions && aiOptions.length > 0) {
+    // AIの提案をそのままテキスト送信用のボタンにする
+    newButtons = aiOptions.map(opt => {
+      return { label: opt, text: opt };
+    });
+    // AIの提案に関わらず、いつでもお問い合わせに飛べるボタンを最後に一つ添えておく（離脱防止）
+    newButtons.push({ label: "📩 お問い合わせ画面へ", url: contactUrl, isPrimary: true });
   } 
-  // 2. 🏠 売却したい（売主様向け）
-  else if (lastMessage.includes("売却") || lastMessage.includes("売りたい")) {
-    newButtons = [
-      { label: "📊 無料で売却査定を依頼する", url: contactUrl, isPrimary: true },
-      { label: "🤝 売却・預かり（媒介）の流れを聞く", text: "売却の手順や売却活動の流れについて教えてください" },
-      { label: "💡 売却時のサポート内容を知りたい", text: "ノアリブホームの売却サポートの特徴は何ですか？" }
-    ];
-  } 
-  // 3. 🔍 賃貸を探したい（お部屋探し）
-  else if (lastMessage.includes("賃貸") || lastMessage.includes("借りたい") || lastMessage.includes("探したい") || lastMessage.includes("部屋")) {
-    newButtons = [
-      { label: "📅 無料で内見予約・物件問合せをする", url: contactUrl, isPrimary: true },
-      { label: "📍 おすすめエリア・家賃相場を相談", text: "おすすめのエリアや家賃相場を教えてほしい" },
-      { label: "📝 内見から契約までの流れを聞く", text: "内見や申し込みの手順はどうなりますか？" }
-    ];
-  } 
-  // 4. 💰 購入したい（住宅購入）
-  else if (lastMessage.includes("購入") || lastMessage.includes("買いたい") || lastMessage.includes("マイホーム")) {
-    newButtons = [
-      { label: "💬 個別提案・購入のご相談（予約）", url: contactUrl, isPrimary: true },
-      { label: "🏦 住宅ローンの進め方・資金計画を聞く", text: "住宅ローンや資金計画の進め方について教えてください" },
-      { label: "🏡 物件選びのポイントを知りたい", text: "失敗しない物件選びのポイントは何ですか？" }
-    ];
-  } 
-  // 途中会話（条件入力中など）
+  // ★ 万が一AIが選択肢を生成しなかった場合のデフォルトフォールバック
   else {
     newButtons = [
       { label: "💡 詳しく聞く", text: "もう少し詳しく教えてください" },
-      { label: "📩 お問い合わせ画面へ", url: contactUrl },
-      { label: "🔄 最初に戻る", text: "最初に戻る" }
+      { label: "📩 お問い合わせ画面へ", url: contactUrl, isPrimary: true }
     ];
   }
 
-  // ボタン再描画
-  quickButtonsDiv.innerHTML = "";
-  
+  // ボタンを画面に追加
   newButtons.forEach(btn => {
     const button = document.createElement("button");
     button.type = "button";
     button.innerText = btn.label;
     
     if (btn.isPrimary) {
-      button.className = "primary-action-btn";
+      button.className = "primary-action-btn"; // CSSで目立たせる用のクラス
     }
 
     button.onclick = (e) => {
