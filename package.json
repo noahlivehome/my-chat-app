@@ -1,8 +1,0 @@
-{
-  "name": "noahlivehome-chat",
-  "version": "1.0.0",
-  "type": "module",
-  "dependencies": {
-    "groq-sdk": "^0.8.0"
-  }
-}
