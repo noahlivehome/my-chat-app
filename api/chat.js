@@ -1,13 +1,30 @@
-import https from 'https';
+import Groq from "groq-sdk";
 
 export default async function handler(req, res) {
+  // CORS 対策
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const { message, history } = req.body;
-    const apiKey = "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";
+    // 環境変数からAPIキーを取得（直書きを防ぐ）
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      console.error("GROQ_API_KEY is not set.");
+      return res.status(500).json({ error: "サーバー側でAPIキーが設定されていません。" });
+    }
+
+    const groq = new Groq({ apiKey: apiKey });
+
+    const { message, history } = req.body || {};
 
     // ラリー回数の判定
     const turnCount = history && Array.isArray(history) ? Math.floor(history.length / 2) + 1 : 1;
@@ -53,69 +70,39 @@ export default async function handler(req, res) {
 ユーザーとの会話の締めくくりです。新たな質問は絶対にせず、ご希望に応じた無料相談・査定・物件問合せ等のご案内を、画面下部のお問い合わせボタンから進んでいただくよう丁寧にお伝えして締めくくってください。`;
     }
 
+    // 会話履歴の追加（トークン超過防止のため直近6件に制限）
+    const formattedHistory = Array.isArray(history)
+      ? history.slice(-6).map(item => ({
+          role: item.role === "user" ? "user" : "assistant",
+          content: String(item.content || "")
+        }))
+      : [];
+
     const messages = [
-      { role: "system", content: systemInstruction }
+      { role: "system", content: systemInstruction },
+      ...formattedHistory,
+      { role: "user", content: String(message || "こんにちは") }
     ];
 
-    // 会話履歴の追加
-    if (history && Array.isArray(history)) {
-      history.forEach(item => {
-        messages.push({
-          role: item.role === "user" ? "user" : "assistant",
-          content: String(item.content)
-        });
-      });
-    }
-
-    // 最新メッセージ追加
-    messages.push({ role: "user", content: String(message || "こんにちは") });
-
-    const postData = JSON.stringify({
-      model: "llama-3.3-70b-versatile",
+    // Groq API 呼び出し（軽量モデルでレート制限を回避＆超高速応答）
+    const completion = await groq.chat.completions.create({
       messages: messages,
+      model: "llama-3.1-8b-instant", // ★ 無料枠の上限がゆるく高速なモデルに変更
       temperature: 0.1
     });
 
-    const options = {
-      hostname: 'api.groq.com',
-      path: '/openai/v1/chat/completions',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Length': Buffer.byteLength(postData, 'utf8')
-      }
-    };
-
-    const apiResponse = await new Promise((resolve, reject) => {
-      const request = https.request(options, (response) => {
-        response.setEncoding('utf8');
-        let data = '';
-        response.on('data', (chunk) => { data += chunk; });
-        response.on('end', () => {
-          try {
-            resolve({ statusCode: response.statusCode, body: JSON.parse(data) });
-          } catch (e) {
-            reject(new Error("JSON解析エラー"));
-          }
-        });
-      });
-
-      request.on('error', (error) => { reject(error); });
-      request.write(postData, 'utf8');
-      request.end();
-    });
-
-    if (apiResponse.statusCode !== 200) {
-      console.error("Groq API Error:", apiResponse.body);
-      return res.status(500).json({ error: "API呼び出しエラーが発生しました。" });
-    }
-
-    const replyText = apiResponse.body.choices?.[0]?.message?.content || "返答が得られませんでした。";
+    const replyText = completion.choices[0]?.message?.content || "返答が得られませんでした。";
     return res.status(200).json({ reply: replyText });
 
   } catch (error) {
-    console.error("Server Error:", error);
-    return res.status(500).json({ error: "サーバーエラーが発生しました。" });
+    console.error("Groq API Execution Error:", error);
+
+    if (error?.status === 429 || error?.message?.includes("rate_limit")) {
+      return res.status(429).json({ 
+        error: "一時的にアクセスが集中しています。1〜2分ほど置いてから再度お試しください。" 
+      });
+    }
+
+    return res.status(500).json({ error: "API呼び出しエラーが発生しました。" });
   }
 }
