@@ -1,7 +1,7 @@
 let conversationHistory = [];
 let turnCount = 0; // ラリー回数
 let isSending = false; // 二重送信・フリーズ防止用フラグ
-let usedButtonTexts = []; // 押されたボタンのテキストを記録する配列
+let usedButtonTexts = []; // ★ 押されたボタンのテキストを記録する配列
 const contactUrl = "https://www.noahlivehome.jp/contact/"; 
 
 // ページ読み込み完了時にイベントを確実にバインド
@@ -48,7 +48,7 @@ async function sendMessage(textFromButton) {
 
   if (!message) return; // 空文字送信防止
 
-  // 押されたテキストを記録（一度押したボタンを除外するため）
+  // ★ 押されたテキストを記録（一度押したボタンを除外するため）
   usedButtonTexts.push(message);
 
   // 送信中フラグをオン
@@ -84,8 +84,8 @@ async function sendMessage(textFromButton) {
       conversationHistory.push({ role: "user", content: message });
       conversationHistory.push({ role: "assistant", content: data.reply });
 
-      // 5. ★ AIの返答内容(data.reply)とユーザーメッセージ(message)を見て動的にボタン表示 ★
-      renderAdaptiveButtons(message, data.reply);
+      // 5. カテゴリ・ステップ判定して固定ボタンを表示
+      renderCategoryFixedButtons(message);
 
     } else {
       console.error("API Error Response:", data);
@@ -122,92 +122,78 @@ function appendMessage(senderClass, text) {
   chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-// 💡 ★ AIの返答内容に適応した動的ボタン生成関数 ★
-function renderAdaptiveButtons(userMsg, aiReply) {
+// 💡 ★ カテゴリごとの固定ボタン制御関数（重複除外機能付き） ★
+function renderCategoryFixedButtons(lastMessage) {
   const quickButtonsDiv = document.getElementById("quick-buttons");
   if (!quickButtonsDiv) return;
 
   let candidateButtons = [];
 
-  // ----------------------------------------------------
-  // AIの回答テキスト (aiReply) や ユーザー入力 (userMsg) からコンテキストを判別
-  // ----------------------------------------------------
-
-  // 1. 5回以上のラリー（お問い合わせへの誘導を最優先）
-  if (turnCount >= 5) {
+  // 1. 4回以上のラリー達成時（お問い合わせへ固定）
+  if (turnCount >= 4) {
     candidateButtons = [
-      { label: "💬 条件や日程について相談する", text: "希望の条件や相談したい日程があります" },
+      { label: "💬 条件（予算・間取り等）について相談する", text: "希望条件について相談したいです" },
       { label: "📩 無料相談・お問い合わせ画面へ進む", url: contactUrl, isPrimary: true }
     ];
   } 
-  // 2. AIが「エリア・場所・駅」について聞いている・答えている場合
-  else if (aiReply.includes("エリア") || aiReply.includes("地域") || aiReply.includes("駅") || userMsg.includes("東京都内") || userMsg.includes("埼玉県内")) {
+  // 2-A. 🏙️ すでに東京・埼玉等のエリアを選択した後のボタン
+  else if (lastMessage.includes("東京都内") || lastMessage.includes("埼玉県内")) {
     candidateButtons = [
-      { label: "📍 具体的におすすめの駅を聞く", text: "通勤・通学に便利なおすすめの駅を提案してください" },
-      { label: "💰 家賃相場について確認する", text: "このエリアの家賃相場を教えてください" },
-      { label: "💬 条件（ペット・間取り等）を伝える", text: "ペット可や希望の間取りについて相談したい" },
+      { label: "📍 具体的におすすめの駅・エリアを聞く", text: "おすすめの駅やエリアを提案してください" },
+      { label: "💬 条件（ペット・間取り・予算等）を伝える", text: "ペット可などの希望条件について相談したい" },
       { label: "📅 無料で内見予約・物件問合せをする", url: contactUrl, isPrimary: true }
     ];
   }
-  // 3. AIが「費用・家賃・予算・初期費用」について答えている場合
-  else if (aiReply.includes("費用") || aiReply.includes("家賃") || aiReply.includes("予算") || aiReply.includes("敷金") || aiReply.includes("ローン")) {
-    candidateButtons = [
-      { label: "💡 初期費用を抑えるポイントを聞く", text: "初期費用を少しでも安く抑えるコツはありますか？" },
-      { label: "📊 必要なトータル概算費用を聞く", text: "契約時に必要な費用の目安を教えてください" },
-      { label: "📩 詳しい見積もり・ご相談はこちら", url: contactUrl, isPrimary: true }
-    ];
-  }
-  // 4. AIが「流れ・手続・必要書類」について答えている場合
-  else if (aiReply.includes("流れ") || aiReply.includes("手順") || aiReply.includes("書類") || aiReply.includes("審査")) {
-    candidateButtons = [
-      { label: "⏱ 入居/契約までにかかる期間を聞く", text: "申し込みから契約・入居までどれくらいかかりますか？" },
-      { label: "📄 審査に必要な書類について聞く", text: "審査に必要な書類にはどんなものがありますか？" },
-      { label: "📩 個別のご相談・お問合せはこちら", url: contactUrl, isPrimary: true }
-    ];
-  }
-  // 5. 🔑 オーナー様向け（貸したい・管理・査定の文脈）
-  else if (aiReply.includes("管理") || aiReply.includes("空室") || userMsg.includes("貸したい")) {
-    candidateButtons = [
-      { label: "🏠 ノアリブホームの管理サポートを聞く", text: "どんな管理サポートや空室対策がありますか？" },
-      { label: "💡 賃貸として貸し出す流れを聞く", text: "賃貸として貸し出すまでの流れを教えてください" },
-      { label: "📊 無料で賃料査定・管理相談を申込む", url: contactUrl, isPrimary: true }
-    ];
-  } 
-  // 6. 🏠 売主様向け（売却・査定の文脈）
-  else if (aiReply.includes("査定") || userMsg.includes("売却") || userMsg.includes("売りたい")) {
-    candidateButtons = [
-      { label: "🤝 売却の手順や費用を聞く", text: "売却の手順や手数料などの費用について教えてください" },
-      { label: "💡 ノアリブホームの強みを聞く", text: "ノアリブホームの売却サポートの特徴は何ですか？" },
-      { label: "📊 無料で売却査定を依頼する", url: contactUrl, isPrimary: true }
-    ];
-  }
-  // 7. 🔍 初回の「探したい・借りたい」カテゴリ
-  else if (userMsg.includes("賃貸") || userMsg.includes("借りたい") || userMsg.includes("部屋")) {
+  // 2-B. 🔍 賃貸を探したい（初回）
+  else if (lastMessage.includes("賃貸") || lastMessage.includes("借りたい") || lastMessage.includes("部屋")) {
     candidateButtons = [
       { label: "🏙️ 東京都内で探したい", text: "東京都内で探したい" },
       { label: "埼玉 県内で探したい", text: "埼玉県内で探したい" },
       { label: "💬 条件（ペット・間取り等）を相談", text: "ペット可などのこだわり条件について相談したい" },
       { label: "📅 無料で内見予約・問合せをする", url: contactUrl, isPrimary: true }
     ];
-  }
-  // 8. デフォルト（AIの返答に対する汎用ボタン）
+  } 
+  // 3. 🔑 貸したい（オーナー様向け）
+  else if (lastMessage.includes("貸したい") || lastMessage.includes("賃貸経営") || lastMessage.includes("管理")) {
+    candidateButtons = [
+      { label: "🏠 ノアリブホームの管理サポートを聞く", text: "どんな管理サポートや空室対策がありますか？" },
+      { label: "💡 貸し出しまでの流れを知りたい", text: "賃貸として貸し出すまでの流れを教えてください" },
+      { label: "📊 無料で賃料査定・管理相談を申込む", url: contactUrl, isPrimary: true }
+    ];
+  } 
+  // 4. 🏠 売却したい（売主様向け）
+  else if (lastMessage.includes("売却") || lastMessage.includes("売りたい")) {
+    candidateButtons = [
+      { label: "🤝 売却の流れや手順を聞く", text: "売却の手順や流れについて教えてください" },
+      { label: "💡 売却時のサポート特徴を聞く", text: "ノアリブホームの売却サポートの特徴は何ですか？" },
+      { label: "📊 無料で売却査定を依頼する", url: contactUrl, isPrimary: true }
+    ];
+  } 
+  // 5. 💰 購入したい（住宅購入向け）
+  else if (lastMessage.includes("購入") || lastMessage.includes("買いたい") || lastMessage.includes("マイホーム")) {
+    candidateButtons = [
+      { label: "🏦 住宅ローン・資金計画について聞く", text: "住宅ローンや資金計画の進め方について教えてください" },
+      { label: "🏡 物件選びのポイントを聞く", text: "失敗しない物件選びのポイントは何ですか？" },
+      { label: "💬 個別提案・購入のご相談（予約）", url: contactUrl, isPrimary: true }
+    ];
+  } 
+  // デフォルト
   else {
     candidateButtons = [
-      { label: "💡 具体的におすすめ物件・提案を聞く", text: "おすすめの条件や物件の選び方を教えてください" },
-      { label: "💬 条件について詳しく相談する", text: "希望条件やお悩みについて直接相談したいです" },
+      { label: "💬 希望条件を直接相談する", text: "希望の条件やお悩みについて詳しく相談したいです" },
       { label: "📩 お問い合わせ画面へ進む", url: contactUrl, isPrimary: true }
     ];
   }
 
-  // ★ 過去に押されたテキストを持つボタンを除外（URLボタンは常に残す）
+  // ★ 過去に押されたテキストを持つボタンを除外する（URLボタンは除外しない）
   const filteredButtons = candidateButtons.filter(btn => {
-    if (btn.url) return true;
+    if (btn.url) return true; // お問い合わせリンク等は常に残す
     return !usedButtonTexts.includes(btn.text);
   });
 
-  // 万が一テキスト系ボタンが全滅した場合はお問い合わせボタンを補填
+  // もし通常テキストのボタンが全滅したらお問い合わせボタンを出す
   if (filteredButtons.length === 0) {
-    filteredButtons.push({ label: "📩 無料相談・お問い合わせ画面へ進む", url: contactUrl, isPrimary: true });
+    filteredButtons.push({ label: "📩 お問い合わせ画面へ進む", url: contactUrl, isPrimary: true });
   }
 
   // ボタン描画処理
