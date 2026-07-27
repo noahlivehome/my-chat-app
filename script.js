@@ -1,6 +1,7 @@
 let conversationHistory = [];
 let turnCount = 0; // ラリー回数
 let isSending = false; // 二重送信・フリーズ防止用フラグ
+let usedButtonTexts = []; // ★ 押されたボタンのテキストを記録する配列
 const contactUrl = "https://www.noahlivehome.jp/contact/"; 
 
 // ページ読み込み完了時にイベントを確実にバインド
@@ -46,6 +47,9 @@ async function sendMessage(textFromButton) {
   }
 
   if (!message) return; // 空文字送信防止
+
+  // ★ 押されたテキストを記録（一度押したボタンを除外するため）
+  usedButtonTexts.push(message);
 
   // 送信中フラグをオン
   isSending = true;
@@ -118,23 +122,23 @@ function appendMessage(senderClass, text) {
   chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-// 💡 ★ カテゴリごとの固定ボタン制御関数 ★
+// 💡 ★ カテゴリごとの固定ボタン制御関数（重複除外機能付き） ★
 function renderCategoryFixedButtons(lastMessage) {
   const quickButtonsDiv = document.getElementById("quick-buttons");
   if (!quickButtonsDiv) return;
 
-  let newButtons = [];
+  let candidateButtons = [];
 
-  // 1. 4回以上のラリー、または「詳しく」「相談」等で進んだ場合（お問い合わせへ誘導）
-  if (turnCount >= 4 || lastMessage.includes("詳しく") || lastMessage.includes("提案")) {
-    newButtons = [
-      { label: "💬 希望条件（予算・間取り等）を相談する", text: "希望条件について相談したいです" },
+  // 1. 4回以上のラリー達成時（お問い合わせへ固定）
+  if (turnCount >= 4) {
+    candidateButtons = [
+      { label: "💬 条件（予算・間取り等）について相談する", text: "希望条件について相談したいです" },
       { label: "📩 無料相談・お問い合わせ画面へ進む", url: contactUrl, isPrimary: true }
     ];
   } 
   // 2-A. 🏙️ すでに東京・埼玉等のエリアを選択した後のボタン
   else if (lastMessage.includes("東京都内") || lastMessage.includes("埼玉県内")) {
-    newButtons = [
+    candidateButtons = [
       { label: "📍 具体的におすすめの駅・エリアを聞く", text: "おすすめの駅やエリアを提案してください" },
       { label: "💬 条件（ペット・間取り・予算等）を伝える", text: "ペット可などの希望条件について相談したい" },
       { label: "📅 無料で内見予約・物件問合せをする", url: contactUrl, isPrimary: true }
@@ -142,7 +146,7 @@ function renderCategoryFixedButtons(lastMessage) {
   }
   // 2-B. 🔍 賃貸を探したい（初回）
   else if (lastMessage.includes("賃貸") || lastMessage.includes("借りたい") || lastMessage.includes("部屋")) {
-    newButtons = [
+    candidateButtons = [
       { label: "🏙️ 東京都内で探したい", text: "東京都内で探したい" },
       { label: "埼玉 県内で探したい", text: "埼玉県内で探したい" },
       { label: "💬 条件（ペット・間取り等）を相談", text: "ペット可などのこだわり条件について相談したい" },
@@ -151,7 +155,7 @@ function renderCategoryFixedButtons(lastMessage) {
   } 
   // 3. 🔑 貸したい（オーナー様向け）
   else if (lastMessage.includes("貸したい") || lastMessage.includes("賃貸経営") || lastMessage.includes("管理")) {
-    newButtons = [
+    candidateButtons = [
       { label: "🏠 ノアリブホームの管理サポートを聞く", text: "どんな管理サポートや空室対策がありますか？" },
       { label: "💡 貸し出しまでの流れを知りたい", text: "賃貸として貸し出すまでの流れを教えてください" },
       { label: "📊 無料で賃料査定・管理相談を申込む", url: contactUrl, isPrimary: true }
@@ -159,7 +163,7 @@ function renderCategoryFixedButtons(lastMessage) {
   } 
   // 4. 🏠 売却したい（売主様向け）
   else if (lastMessage.includes("売却") || lastMessage.includes("売りたい")) {
-    newButtons = [
+    candidateButtons = [
       { label: "🤝 売却の流れや手順を聞く", text: "売却の手順や流れについて教えてください" },
       { label: "💡 売却時のサポート特徴を聞く", text: "ノアリブホームの売却サポートの特徴は何ですか？" },
       { label: "📊 無料で売却査定を依頼する", url: contactUrl, isPrimary: true }
@@ -167,7 +171,7 @@ function renderCategoryFixedButtons(lastMessage) {
   } 
   // 5. 💰 購入したい（住宅購入向け）
   else if (lastMessage.includes("購入") || lastMessage.includes("買いたい") || lastMessage.includes("マイホーム")) {
-    newButtons = [
+    candidateButtons = [
       { label: "🏦 住宅ローン・資金計画について聞く", text: "住宅ローンや資金計画の進め方について教えてください" },
       { label: "🏡 物件選びのポイントを聞く", text: "失敗しない物件選びのポイントは何ですか？" },
       { label: "💬 個別提案・購入のご相談（予約）", url: contactUrl, isPrimary: true }
@@ -175,16 +179,27 @@ function renderCategoryFixedButtons(lastMessage) {
   } 
   // デフォルト
   else {
-    newButtons = [
+    candidateButtons = [
       { label: "💬 希望条件を直接相談する", text: "希望の条件やお悩みについて詳しく相談したいです" },
       { label: "📩 お問い合わせ画面へ進む", url: contactUrl, isPrimary: true }
     ];
   }
 
+  // ★ 過去に押されたテキストを持つボタンを除外する（URLボタンは除外しない）
+  const filteredButtons = candidateButtons.filter(btn => {
+    if (btn.url) return true; // お問い合わせリンク等は常に残す
+    return !usedButtonTexts.includes(btn.text);
+  });
+
+  // もし通常テキストのボタンが全滅したらお問い合わせボタンを出す
+  if (filteredButtons.length === 0) {
+    filteredButtons.push({ label: "📩 お問い合わせ画面へ進む", url: contactUrl, isPrimary: true });
+  }
+
   // ボタン描画処理
   quickButtonsDiv.innerHTML = "";
   
-  newButtons.forEach(btn => {
+  filteredButtons.forEach(btn => {
     const button = document.createElement("button");
     button.type = "button";
     button.innerText = btn.label;
@@ -193,7 +208,6 @@ function renderCategoryFixedButtons(lastMessage) {
       button.className = "primary-action-btn";
     }
 
-    // イベントバインドの強化
     button.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
