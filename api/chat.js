@@ -21,7 +21,6 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "GROQ_API_KEY が設定されていません。" });
     }
 
-    // 正確なラリー数を計算（ユーザー発話数 + 1）
     const userMessageCount = Array.isArray(history) 
       ? history.filter(item => item.role === "user").length 
       : 0;
@@ -31,25 +30,24 @@ export default async function handler(req, res) {
 丁寧、誠実、かつ分かりやすい日本の敬語を徹底してください。スマホで見やすいよう100〜150文字程度で簡潔に返答してください。
 
 【会話進行ルール】
-現在のラリー数：${turnCount}回目
+現在のターン数：${turnCount}ターン目
 
-1〜4ラリー目：
+1〜4ターン目：
 ・ユーザーの目的に合わせて、1回のメッセージで質問は「1つだけ」にしてください。
-・質問の選択肢は、必ずメッセージの【一番最後】に [OPTIONS: 選択肢1, 選択肢2, 選択肢3] という形式でのみ出力してください。
+・質問の選択肢（2〜4個）を、必ずメッセージの【一番最後】に [OPTIONS: 選択肢1, 選択肢2, 選択肢3] という形式でのみ出力してください。
+・本文中に選択肢のリスト（箇条書き等）を直接書き出すことは絶対禁止です。
 
 【絶対禁止事項】
-・本文中に選択肢のリスト（箇条書きや改行での選択肢一覧）を書き出すこと。
-・「貸したい」人に「家賃上限」を聞くなどニーズとズレた質問。
-・「1人あたりの〜」「以下のオプションから〜」などのシステム用語。
+・本文中に選択肢の一覧（箇条書き等）をテキストで書くこと。
+・「貸したい」人に「家賃上限」を聞くような文脈無視の質問。
 ・マークダウン記号（** や # 等）を使うこと。`;
 
-    // 5ラリー目の締めくくり指示
     if (turnCount >= 5) {
-      systemInstruction += `\n\n【現在5ラリー目です（完了指示）】
+      systemInstruction += `\n\n【現在5ターン目です（完了指示）】
 これ以上の質問（「〜でしょうか？」等）は一切禁止です。
 これまでのやり取りを簡単に整理・確認した上で、
 「詳細なご案内やご相談につきましては、画面下部のアクションボタンよりお進みください。」
-と案内して丁寧に締めくくってください。[OPTIONS: ...] は絶対に付与しないでください。`;
+と案内して締めくくってください。[OPTIONS: ...] は絶対に付与しないでください。`;
     }
 
     const messages = [{ role: "system", content: systemInstruction }];
@@ -106,7 +104,6 @@ export default async function handler(req, res) {
     });
 
     if (apiResponse.statusCode !== 200) {
-      console.error("Groq API Error:", apiResponse.body);
       return res.status(apiResponse.statusCode).json({ error: "一時的なエラーが発生しました。" });
     }
 
@@ -130,7 +127,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ 
       reply: replyText,
       options: buttonOptions,
-      isFinished: isFinished // 5ラリー完了フラグ
+      isFinished: isFinished
     });
 
   } catch (error) {
