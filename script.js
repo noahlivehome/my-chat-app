@@ -122,16 +122,12 @@ function appendMessage(senderClass, text) {
   chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-// 💡 ★ AIの返答内容に適応した動的ボタン生成関数 ★
+// 💡 ★ AIの返答内容に適応した動的ボタン生成関数（カテゴリ優先度調整版） ★
 function renderAdaptiveButtons(userMsg, aiReply) {
   const quickButtonsDiv = document.getElementById("quick-buttons");
   if (!quickButtonsDiv) return;
 
   let candidateButtons = [];
-
-  // ----------------------------------------------------
-  // AIの回答テキスト (aiReply) や ユーザー入力 (userMsg) からコンテキストを判別
-  // ----------------------------------------------------
 
   // 1. 5回以上のラリー（お問い合わせへの誘導を最優先）
   if (turnCount >= 5) {
@@ -140,48 +136,31 @@ function renderAdaptiveButtons(userMsg, aiReply) {
       { label: "📩 無料相談・お問い合わせ画面へ進む", url: contactUrl, isPrimary: true }
     ];
   } 
-  // 2. AIが「エリア・場所・駅」について聞いている・答えている場合
-  else if (aiReply.includes("エリア") || aiReply.includes("地域") || aiReply.includes("駅") || userMsg.includes("東京都内") || userMsg.includes("埼玉県内")) {
-    candidateButtons = [
-      { label: "📍 具体的におすすめの駅を聞く", text: "通勤・通学に便利なおすすめの駅を提案してください" },
-      { label: "💰 家賃相場について確認する", text: "このエリアの家賃相場を教えてください" },
-      { label: "💬 条件（ペット・間取り等）を伝える", text: "ペット可や希望の間取りについて相談したい" },
-      { label: "📅 無料で内見予約・物件問合せをする", url: contactUrl, isPrimary: true }
-    ];
-  }
-  // 3. AIが「費用・家賃・予算・初期費用」について答えている場合
-  else if (aiReply.includes("費用") || aiReply.includes("家賃") || aiReply.includes("予算") || aiReply.includes("敷金") || aiReply.includes("ローン")) {
-    candidateButtons = [
-      { label: "💡 初期費用を抑えるポイントを聞く", text: "初期費用を少しでも安く抑えるコツはありますか？" },
-      { label: "📊 必要なトータル概算費用を聞く", text: "契約時に必要な費用の目安を教えてください" },
-      { label: "📩 詳しい見積もり・ご相談はこちら", url: contactUrl, isPrimary: true }
-    ];
-  }
-  // 4. AIが「流れ・手続・必要書類」について答えている場合
-  else if (aiReply.includes("流れ") || aiReply.includes("手順") || aiReply.includes("書類") || aiReply.includes("審査")) {
-    candidateButtons = [
-      { label: "⏱ 入居/契約までにかかる期間を聞く", text: "申し込みから契約・入居までどれくらいかかりますか？" },
-      { label: "📄 審査に必要な書類について聞く", text: "審査に必要な書類にはどんなものがありますか？" },
-      { label: "📩 個別のご相談・お問合せはこちら", url: contactUrl, isPrimary: true }
-    ];
-  }
-  // 5. 🔑 オーナー様向け（貸したい・管理・査定の文脈）
-  else if (aiReply.includes("管理") || aiReply.includes("空室") || userMsg.includes("貸したい")) {
+  // 2. 🔑 オーナー様向け（「貸したい」「管理」「空室」「オーナー」など）
+  else if (userMsg.includes("貸したい") || userMsg.includes("管理") || aiReply.includes("オーナー") || aiReply.includes("賃料査定")) {
     candidateButtons = [
       { label: "🏠 ノアリブホームの管理サポートを聞く", text: "どんな管理サポートや空室対策がありますか？" },
-      { label: "💡 賃貸として貸し出す流れを聞く", text: "賃貸として貸し出すまでの流れを教えてください" },
+      { label: "💡 貸し出しまでの流れを聞く", text: "賃貸として貸し出すまでの流れを教えてください" },
       { label: "📊 無料で賃料査定・管理相談を申込む", url: contactUrl, isPrimary: true }
     ];
   } 
-  // 6. 🏠 売主様向け（売却・査定の文脈）
-  else if (aiReply.includes("査定") || userMsg.includes("売却") || userMsg.includes("売りたい")) {
+  // 3. 🏠 売主様向け（「売却」「売りたい」「売却査定」など）
+  else if (userMsg.includes("売却") || userMsg.includes("売りたい") || aiReply.includes("ご売却")) {
     candidateButtons = [
       { label: "🤝 売却の手順や費用を聞く", text: "売却の手順や手数料などの費用について教えてください" },
       { label: "💡 ノアリブホームの強みを聞く", text: "ノアリブホームの売却サポートの特徴は何ですか？" },
       { label: "📊 無料で売却査定を依頼する", url: contactUrl, isPrimary: true }
     ];
   }
-  // 7. 🔍 初回の「探したい・借りたい」カテゴリ
+  // 4. 💰 購入検討者様向け（「購入」「買いたい」「マイホーム」「住宅ローン」など）
+  else if (userMsg.includes("購入") || userMsg.includes("買いたい") || userMsg.includes("マイホーム") || aiReply.includes("ご購入")) {
+    candidateButtons = [
+      { label: "🏦 住宅ローン・資金計画について聞く", text: "住宅ローンや資金計画の進め方について教えてください" },
+      { label: "🏡 物件選びのポイントを聞く", text: "失敗しない物件選びのポイントは何ですか？" },
+      { label: "💬 個別提案・購入のご相談（予約）", url: contactUrl, isPrimary: true }
+    ];
+  }
+  // 5. 🔍 賃貸「お部屋探し」初回の選択時
   else if (userMsg.includes("賃貸") || userMsg.includes("借りたい") || userMsg.includes("部屋")) {
     candidateButtons = [
       { label: "🏙️ 東京都内で探したい", text: "東京都内で探したい" },
@@ -190,10 +169,27 @@ function renderAdaptiveButtons(userMsg, aiReply) {
       { label: "📅 無料で内見予約・問合せをする", url: contactUrl, isPrimary: true }
     ];
   }
-  // 8. デフォルト（AIの返答に対する汎用ボタン）
+  // 6. 賃貸の会話内で「エリア・場所・駅」の話題の場合
+  else if (aiReply.includes("エリア") || aiReply.includes("地域") || aiReply.includes("駅") || userMsg.includes("東京都内") || userMsg.includes("埼玉県内")) {
+    candidateButtons = [
+      { label: "📍 具体的におすすめの駅を聞く", text: "通勤・通学に便利なおすすめの駅を提案してください" },
+      { label: "💰 家賃相場について確認する", text: "このエリアの家賃相場を教えてください" },
+      { label: "💬 条件（ペット・間取り等）を伝える", text: "ペット可や希望の間取りについて相談したい" },
+      { label: "📅 無料で内見予約・物件問合せをする", url: contactUrl, isPrimary: true }
+    ];
+  }
+  // 7. 会話内で「費用・家賃・予算・手続き」の話題が出ている場合
+  else if (aiReply.includes("費用") || aiReply.includes("家賃") || aiReply.includes("予算") || aiReply.includes("初期費用")) {
+    candidateButtons = [
+      { label: "💡 初期費用を抑えるポイントを聞く", text: "初期費用を少しでも安く抑えるコツはありますか？" },
+      { label: "📊 必要なトータル概算費用を聞く", text: "契約時に必要な費用の目安を教えてください" },
+      { label: "📩 詳しい見積もり・ご相談はこちら", url: contactUrl, isPrimary: true }
+    ];
+  }
+  // 8. デフォルト
   else {
     candidateButtons = [
-      { label: "💡 具体的におすすめ物件・提案を聞く", text: "おすすめの条件や物件の選び方を教えてください" },
+      { label: "💡 具体的におすすめや選び方を聞く", text: "おすすめの選択肢やポイントを教えてください" },
       { label: "💬 条件について詳しく相談する", text: "希望条件やお悩みについて直接相談したいです" },
       { label: "📩 お問い合わせ画面へ進む", url: contactUrl, isPrimary: true }
     ];
