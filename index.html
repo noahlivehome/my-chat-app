@@ -3,56 +3,137 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>不動産 AIチャット</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <title>ノアリブホーム AIチャット</title>
+  <style>
+    /* チャット画面デザイン */
+    body { font-family: sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; }
+    .chat-container { max-width: 450px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; }
+    .chat-header { background: #8ba388; color: white; padding: 15px; text-align: center; font-weight: bold; }
+    .chat-box { height: 400px; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+    
+    .msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; line-height: 1.5; font-size: 14px; }
+    .msg.user { align-self: flex-end; background: #8ba388; color: white; border-bottom-right-radius: 2px; }
+    .msg.assistant { align-self: flex-start; background: #f0f0f0; color: #333; border-bottom-left-radius: 2px; }
+
+    /* 🔥 ボタン選択肢用スタイリング */
+    .options-area { padding: 10px 15px; display: flex; flex-wrap: wrap; gap: 8px; background: #fafafa; border-top: 1px solid #eee; }
+    .option-btn {
+      background: white; border: 1px solid #8ba388; color: #5a7357; 
+      padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: bold;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .option-btn:hover { background: #8ba388; color: white; }
+
+    .input-area { display: flex; padding: 10px; background: #fff; border-top: 1px solid #eee; }
+    .input-area input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
+    .input-area button { margin-left: 8px; padding: 10px 16px; background: #8ba388; color: white; border: none; border-radius: 6px; cursor: pointer; }
+  </style>
 </head>
 <body>
 
-  <div class="chat-card">
-    <!-- ヘッダー -->
-    <header class="chat-header">
-      <div class="header-left">
-        <i data-lucide="message-square"></i>
-        <button class="top-btn" type="button">不動産AI TOP <i data-lucide="external-link"></i></button>
-      </div>
-      <div class="header-right">
-        <button class="icon-btn" type="button"><i data-lucide="maximize-2"></i></button>
-        <button class="icon-btn" type="button"><i data-lucide="x"></i></button>
-      </div>
-    </header>
-
-    <!-- チャット表示エリア -->
-    <main class="chat-body" id="chatBody">
-      <div class="message bot-message">
-        こんにちは！ノアリブホームのAIアドバイザーです！<br>
-        お部屋探し（賃貸）、賃貸経営・管理、売却や購入など、何でもお気軽にご相談ください！
-      </div>
-    </main>
-
-    <!-- 選択ボタンエリア -->
-    <div id="quick-buttons" class="quick-buttons">
-      <button type="button" onclick="sendQuickMessage('賃貸物件を探したい')">🔍 賃貸を探したい</button>
-      <button type="button" onclick="sendQuickMessage('貸したい')">🔑 貸したい</button>
-      <button type="button" onclick="sendQuickMessage('売却したい')">🏠 売却したい</button>
-      <button type="button" onclick="sendQuickMessage('購入したい')">💰 購入したい</button>
-    </div>
-
-    <!-- 入力エリア -->
-    <footer class="chat-footer">
-      <button type="button" class="mic-btn"><i data-lucide="mic"></i></button>
-      <div class="input-container">
-        <input type="text" id="user-input" placeholder="メッセージを入力..." autocomplete="off">
-      </div>
-      <button type="button" class="send-btn" id="send-btn">
-        <i data-lucide="send-horizontal"></i>
-      </button>
-    </footer>
+<div class="chat-container">
+  <div class="chat-header">ノアリブホーム AIサポート</div>
+  <div class="chat-box" id="chatBox">
+    <div class="msg assistant">こんにちは！ノアリブホームです。お部屋探しやご売却・賃貸管理など、どのようなご相談でしょうか？</div>
+  </div>
+  
+  <!-- 🔥 選択肢ボタン描画エリア -->
+  <div class="options-area" id="optionsArea">
+    <button class="option-btn" onclick="sendOption('部屋を探したい')">部屋を探したい</button>
+    <button class="option-btn" onclick="sendOption('貸したい（オーナー）')">貸したい（オーナー）</button>
+    <button class="option-btn" onclick="sendOption('売りたい（売却）')">売りたい（売却）</button>
   </div>
 
-  <script src="script.js"></script>
-  <script>
-    lucide.createIcons();
-  </script>
+  <div class="input-area">
+    <input type="text" id="userInput" placeholder="メッセージを入力..." onkeypress="handleKeyPress(event)">
+    <button onclick="sendUserMessage()">送信</button>
+  </div>
+</div>
+
+<script>
+  // 会話履歴を保持する配列
+  let chatHistory = [];
+
+  // メッセージ画面追加関数
+  function appendMessage(role, text) {
+    const chatBox = document.getElementById("chatBox");
+    const msgDiv = document.createElement("div");
+    msgDiv.className = `msg ${role}`;
+    msgDiv.innerText = text;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  // 🔥 動的ボタン描画関数
+  function renderOptions(options) {
+    const optionsArea = document.getElementById("optionsArea");
+    optionsArea.innerHTML = ""; // 過去のボタンを消去
+
+    if (!options || options.length === 0) return;
+
+    options.forEach(optText => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.innerText = optText;
+      btn.onclick = () => sendOption(optText);
+      optionsArea.appendChild(btn);
+    });
+  }
+
+  // ボタンがクリックされたときの処理
+  function sendOption(text) {
+    document.getElementById("optionsArea").innerHTML = ""; // 連打防止のために一旦ボタンを消す
+    sendMessage(text);
+  }
+
+  // 入力フォームから送信されたときの処理
+  function sendUserMessage() {
+    const input = document.getElementById("userInput");
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    document.getElementById("optionsArea").innerHTML = "";
+    sendMessage(text);
+  }
+
+  function handleKeyPress(e) {
+    if (e.key === "Enter") sendUserMessage();
+  }
+
+  // API通信本体
+  async function sendMessage(userText) {
+    appendMessage("user", userText);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userText,
+          history: chatHistory
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.reply) {
+        appendMessage("assistant", data.reply);
+        
+        // 🔥 返ってきた options データを元にボタンを画面上に生成
+        renderOptions(data.options);
+
+        // 会話履歴の更新
+        chatHistory.push({ role: "user", content: userText });
+        chatHistory.push({ role: "assistant", content: data.reply });
+      } else {
+        appendMessage("assistant", "申し訳ございません。エラーが発生しました。");
+      }
+    } catch (err) {
+      console.error(err);
+      appendMessage("assistant", "通信エラーが発生しました。");
+    }
+  }
+</script>
+
 </body>
 </html>
