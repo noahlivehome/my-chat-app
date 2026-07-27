@@ -1,14 +1,134 @@
-// 💡 ★ カテゴリごとの固定ボタン制御関数（ループ防止・進行最適化版） ★
+let conversationHistory = [];
+let turnCount = 0; // ラリー回数
+let isSending = false; // 二重送信・フリーズ防止用フラグ
+const contactUrl = "https://www.noahlivehome.jp/contact/"; 
+
+// ページ読み込み完了時にイベントを確実にバインド
+window.addEventListener("DOMContentLoaded", () => {
+  const sendBtn = document.getElementById("send-btn");
+  const userInput = document.getElementById("user-input");
+
+  if (sendBtn) {
+    sendBtn.onclick = (e) => {
+      e.preventDefault();
+      sendMessage();
+    };
+  }
+
+  if (userInput) {
+    userInput.onkeypress = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+      }
+    };
+  }
+});
+
+// クイック選択ボタン押下時
+function sendQuickMessage(text) {
+  if (isSending) return; // 送信中なら連打防止
+  sendMessage(text);
+}
+
+// 送信メイン処理
+async function sendMessage(textFromButton) {
+  if (isSending) return; // 処理中なら弾く
+
+  const userInput = document.getElementById("user-input");
+  
+  // ボタンからのテキスト、または入力欄のテキストを取得
+  let message = "";
+  if (typeof textFromButton === "string" && textFromButton.trim() !== "") {
+    message = textFromButton.trim();
+  } else if (userInput && userInput.value.trim() !== "") {
+    message = userInput.value.trim();
+  }
+
+  if (!message) return; // 空文字送信防止
+
+  // 送信中フラグをオン
+  isSending = true;
+
+  // 入力欄をクリア
+  if (userInput) userInput.value = "";
+
+  // 1. ユーザーメッセージ表示
+  appendMessage("user-message", message);
+  turnCount++; // ラリー数加算
+
+  try {
+    // 2. API送信
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8"
+      },
+      body: JSON.stringify({
+        message: message,
+        history: conversationHistory
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.reply) {
+      // 3. AIの返答を表示
+      appendMessage("bot-message", data.reply);
+
+      // 4. 会話履歴更新
+      conversationHistory.push({ role: "user", content: message });
+      conversationHistory.push({ role: "assistant", content: data.reply });
+
+      // 5. カテゴリ・ステップ判定して固定ボタンを表示
+      renderCategoryFixedButtons(message);
+
+    } else {
+      console.error("API Error Response:", data);
+      appendMessage("bot-message", `エラーが発生しました: ${data.error || "通信失敗"}`);
+    }
+
+  } catch (error) {
+    console.error("送信通信エラー:", error);
+    appendMessage("bot-message", "通信エラーが発生しました。時間を置いて再度お試しください。");
+  } finally {
+    // 処理完了後にフラグ解除
+    isSending = false;
+  }
+}
+
+// メッセージ描画
+function appendMessage(senderClass, text) {
+  const chatBody = document.getElementById("chatBody");
+  if (!chatBody) return;
+
+  const messageElement = document.createElement("div");
+  messageElement.className = `message ${senderClass}`;
+  
+  // 万が一 [OPTIONS] が含まれていた場合、本文だけを抽出して表示
+  let cleanText = String(text);
+  if (cleanText.includes("[OPTIONS]")) {
+    cleanText = cleanText.split("[OPTIONS]")[0];
+  }
+
+  cleanText = cleanText.replace(/\*\*/g, '').trim();
+  messageElement.innerHTML = cleanText.replace(/\n/g, '<br>');
+
+  chatBody.appendChild(messageElement);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+// 💡 ★ カテゴリごとの固定ボタン制御関数 ★
 function renderCategoryFixedButtons(lastMessage) {
   const quickButtonsDiv = document.getElementById("quick-buttons");
   if (!quickButtonsDiv) return;
 
   let newButtons = [];
 
-  // 1. 5回以上のラリー、または「詳しく聞く」等で会話が進んだ場合（お問い合わせへの誘導を強める）
+  // 1. 4回以上のラリー、または「詳しく」「相談」等で進んだ場合（お問い合わせへ誘導）
   if (turnCount >= 4 || lastMessage.includes("詳しく") || lastMessage.includes("提案")) {
     newButtons = [
-      { label: "💬 条件（予算・間取り等）について相談する", text: "詳しい条件や希望について相談したいです" },
+      { label: "💬 希望条件（予算・間取り等）を相談する", text: "希望条件について相談したいです" },
       { label: "📩 無料相談・お問い合わせ画面へ進む", url: contactUrl, isPrimary: true }
     ];
   } 
@@ -73,14 +193,16 @@ function renderCategoryFixedButtons(lastMessage) {
       button.className = "primary-action-btn";
     }
 
-    button.onclick = (e) => {
+    // イベントバインドの強化
+    button.addEventListener("click", (e) => {
       e.preventDefault();
+      e.stopPropagation();
       if (btn.url) {
         window.open(btn.url, '_blank');
       } else if (btn.text) {
         sendQuickMessage(btn.text);
       }
-    };
+    });
     
     quickButtonsDiv.appendChild(button);
   });
