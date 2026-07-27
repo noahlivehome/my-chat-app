@@ -1,24 +1,37 @@
-const Groq = require("groq-sdk");
+import Groq from "groq-sdk";
 
-// Vercelの環境変数からAPIキーを取得
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY
-});
+export default async function handler(req, res) {
+  // CORS 対策 & OPTIONS リクエスト（プリフライト）対応
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-module.exports = async function handler(req, res) {
-  // POST以外のメソッドは拒否
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   try {
-    const { message, history } = req.body;
+    // 環境変数チェック
+    if (!process.env.GROQ_API_KEY) {
+      console.error("GROQ_API_KEY is not defined in environment variables.");
+      return res.status(500).json({ error: "サーバー側でAPIキーが設定されていません。" });
+    }
+
+    const groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY
+    });
+
+    const { message, history } = req.body || {};
 
     if (!message) {
       return res.status(400).json({ error: "メッセージが空です" });
     }
 
-    // 会話履歴（history）のフォーマット整形（トークン節約のため直近6件に制限）
+    // 会話履歴（history）のフォーマット整形（直近6件に制限してトークン節約）
     const formattedHistory = Array.isArray(history) 
       ? history.slice(-6).map(item => ({
           role: item.role === "user" ? "user" : "assistant",
@@ -42,7 +55,7 @@ module.exports = async function handler(req, res) {
       { role: "user", content: message }
     ];
 
-    // Groq API 呼び出し（軽量・爆速モデル指定でレート制限を回避）
+    // Groq API 呼び出し（軽量・爆速モデル「llama-3.1-8b-instant」）
     const completion = await groq.chat.completions.create({
       messages: messages,
       model: "llama-3.1-8b-instant",
@@ -57,7 +70,6 @@ module.exports = async function handler(req, res) {
   } catch (error) {
     console.error("Groq API Execution Error:", error);
     
-    // レート制限（429）の場合のハンドリング
     if (error?.status === 429 || error?.message?.includes("rate_limit")) {
       return res.status(429).json({ 
         error: "一時的にアクセスが集中しています。1〜2分ほど置いてから再度お試しください。" 
@@ -65,7 +77,7 @@ module.exports = async function handler(req, res) {
     }
 
     return res.status(500).json({ 
-      error: "API呼び出しエラーが発生しました。" 
+      error: `API呼び出しエラー: ${error.message || "不明なエラー"}` 
     });
   }
-};
+}
