@@ -5,37 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ノアリブホーム AIチャット</title>
   <style>
-    /* 全体デザイン */
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; }
     .chat-container { max-width: 450px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); overflow: hidden; display: flex; flex-direction: column; height: 600px; }
     .chat-header { background: #8da288; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 16px; }
     .chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: #fdfdfd; }
     
-    /* メッセージ吹き出し */
     .msg { max-width: 80%; padding: 12px 16px; border-radius: 16px; line-height: 1.5; font-size: 14px; }
     .msg.user { align-self: flex-end; background: #8da288; color: white; border-bottom-right-radius: 4px; }
     .msg.assistant { align-self: flex-start; background: #f0f2f0; color: #333; border-bottom-left-radius: 4px; }
 
-    /* 1〜4ラリー目：通常の単体選択肢ボタン */
-    .options-area { padding: 10px 15px; display: flex; flex-wrap: wrap; gap: 8px; background: #fafafa; }
-    .option-btn {
-      background: #ffffff; border: 1px solid #8da288; color: #5a7357; 
-      padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: bold;
-      cursor: pointer; transition: all 0.2s;
-    }
-    .option-btn:hover { background: #8da288; color: white; }
-
-    /* 🔥 5ラリー目：画像再現用のアクションボタンエリア */
-    .final-cta-container { padding: 12px 15px; background: #fafafa; border-top: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 10px; }
-    .cta-grid { display: flex; gap: 8px; }
+    /* 🔥 画像スタイルのボタンエリア */
+    .button-container { padding: 12px 15px; background: #fafafa; border-top: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 10px; }
     
-    /* 上段の枠線付きボタン */
+    /* 毎ターン動的に変化する選択肢ボタン（グリッド配置） */
+    .cta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+    
+    /* 画像を模した白背景・緑枠線のボタン */
     .cta-sub-btn {
-      flex: 1;
       background: #ffffff;
       border: 1px solid #7c9878;
       color: #333333;
-      padding: 12px 8px;
+      padding: 12px 10px;
       border-radius: 16px;
       font-size: 13px;
       font-weight: 500;
@@ -46,7 +36,7 @@
     }
     .cta-sub-btn:hover { background: #f0f4f0; }
 
-    /* 下段のメイン緑ボタン */
+    /* 5ターン目（最終ターン）の緑色メインボタン */
     .cta-main-btn {
       width: 100%;
       background-color: #8da288;
@@ -58,11 +48,8 @@
       font-weight: bold;
       cursor: pointer;
       text-align: center;
-      transition: opacity 0.2s;
     }
-    .cta-main-btn:hover { opacity: 0.9; }
 
-    /* 入力エリア */
     .input-area { display: flex; padding: 12px; background: #fff; border-top: 1px solid #eee; align-items: center; gap: 8px; }
     .input-area input { flex: 1; padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 20px; outline: none; font-size: 14px; }
     .input-area button { padding: 10px 16px; background: #8da288; color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; }
@@ -77,13 +64,14 @@
     <div class="msg assistant">こんにちは！ノアリブホームです。お部屋探しやご売却・賃貸管理など、どのようなご相談でしょうか？</div>
   </div>
   
-  <!-- ボタン表示エリア -->
+  <!-- 🔥 ボタンエリア（1ターン目〜毎ターン適応） -->
   <div id="actionArea">
-    <!-- 初期表示選択肢 -->
-    <div class="options-area">
-      <button class="option-btn" onclick="sendOption('部屋を探したい')">部屋を探したい</button>
-      <button class="option-btn" onclick="sendOption('貸したい（オーナー）')">貸したい（オーナー）</button>
-      <button class="option-btn" onclick="sendOption('売りたい（売却）')">売りたい（売却）</button>
+    <div class="button-container">
+      <div class="cta-grid">
+        <button class="cta-sub-btn" onclick="sendOption('部屋を探したい')">🏠 部屋を探したい</button>
+        <button class="cta-sub-btn" onclick="sendOption('貸したい（オーナー）')">💡 貸したい（オーナー）</button>
+        <button class="cta-sub-btn" onclick="sendOption('売りたい（売却）')">📊 売りたい（売却）</button>
+      </div>
     </div>
   </div>
 
@@ -105,32 +93,36 @@
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
-  // 1〜4ラリー目用の通常選択肢ボタンの描画
-  function renderOptions(options) {
+  // 🔥 毎ターン適応：AIが返した選択肢を画像スタイルのボタン群にして描画する関数
+  function renderTurnButtons(options) {
     const actionArea = document.getElementById("actionArea");
     actionArea.innerHTML = "";
 
     if (!options || options.length === 0) return;
 
-    const optionsDiv = document.createElement("div");
-    optionsDiv.className = "options-area";
+    const container = document.createElement("div");
+    container.className = "button-container";
+
+    const grid = document.createElement("div");
+    grid.className = "cta-grid";
 
     options.forEach(optText => {
       const btn = document.createElement("button");
-      btn.className = "option-btn";
+      btn.className = "cta-sub-btn";
       btn.innerText = optText;
       btn.onclick = () => sendOption(optText);
-      optionsDiv.appendChild(btn);
+      grid.appendChild(btn);
     });
 
-    actionArea.appendChild(optionsDiv);
+    container.appendChild(grid);
+    actionArea.appendChild(container);
   }
 
-  // 🔥 5ラリー目用：画像のデザインを再現したボタン群の描画
+  // 5ターン目（会話終了時）専用のボタン描画
   function renderFinalCTAButtons() {
     const actionArea = document.getElementById("actionArea");
     actionArea.innerHTML = `
-      <div class="final-cta-container">
+      <div class="button-container">
         <div class="cta-grid">
           <button class="cta-sub-btn" onclick="sendOption('ノアリブホームの管理サポートを聞く')">
             🏠 ノアリブホームの管理サポートを聞く
@@ -164,7 +156,6 @@
     if (e.key === "Enter") sendUserMessage();
   }
 
-  // API通信
   async function sendMessage(userText) {
     appendMessage("user", userText);
 
@@ -183,11 +174,11 @@
       if (data.reply) {
         appendMessage("assistant", data.reply);
         
-        // 🔥 5ラリー目に達した場合は画像デザインのボタン群を表示
+        // 🔥 毎ターンの状況に応じてボタンを適応
         if (data.isFinished) {
-          renderFinalCTAButtons();
+          renderFinalCTAButtons(); // 最終ターン
         } else {
-          renderOptions(data.options);
+          renderTurnButtons(data.options); // 毎ターンのボタン生成
         }
 
         chatHistory.push({ role: "user", content: userText });
