@@ -1,188 +1,215 @@
+/* ==========================================
+   ベース設定
+   ========================================== */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 body {
-  background-color: #f2f4f1;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #f4f6f8;
+  color: #333;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  padding: 16px;
 }
 
-.chat-card {
+/* チャットコンテナ全体 */
+.chat-container {
   width: 100%;
-  max-width: 380px;
-  height: 650px;
+  max-width: 480px; /* スマホ・モバイルファーストな幅設定 */
+  height: 100vh;
+  max-height: 840px;
   background-color: #ffffff;
-  border-radius: 28px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
   overflow: hidden;
-  border: 1px solid rgba(170, 184, 160, 0.2);
 }
 
+/* ==========================================
+   ヘッダー
+   ========================================== */
 .chat-header {
-  background-color: #AAB8A0;
+  background: linear-gradient(135deg, #005bac, #0082e6);
   color: #ffffff;
   padding: 16px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  text-align: left;
 }
 
-.header-left {
+.header-info {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.top-btn {
-  background: rgba(255, 255, 255, 0.25);
-  border: none;
-  color: #ffffff;
-  padding: 6px 14px;
-  border-radius: 14px;
-  font-size: 13px;
+.status-badge {
+  width: 10px;
+  height: 10px;
+  background-color: #4caf50;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.chat-header h2 {
+  font-size: 1.1rem;
   font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 
-.icon-btn {
-  background: none;
-  border: none;
-  color: #ffffff;
-  cursor: pointer;
-  opacity: 0.9;
+.header-sub {
+  font-size: 0.75rem;
+  opacity: 0.85;
+  margin-top: 4px;
 }
 
+/* ==========================================
+   チャットログ表示エリア
+   ========================================== */
 .chat-body {
   flex: 1;
-  padding: 20px 16px;
+  padding: 16px;
   overflow-y: auto;
-  background-color: #f7f9f6;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  background-color: #f9fbff;
 }
 
 .message {
-  max-width: 82%;
+  max-width: 80%;
   padding: 12px 16px;
-  border-radius: 18px;
-  font-size: 14px;
-  line-height: 1.6;
-  word-wrap: break-word;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  word-break: break-word;
 }
 
+/* AI返答吹き出し */
 .bot-message {
-  background-color: #ffffff;
-  color: #333333;
   align-self: flex-start;
-  border-bottom-left-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  background-color: #ffffff;
+  color: #2c3e50;
+  border: 1px solid #e2e8f0;
+  border-top-left-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
+/* ユーザー送信吹き出し */
 .user-message {
-  background-color: #AAB8A0;
-  color: #ffffff;
   align-self: flex-end;
-  border-bottom-right-radius: 4px;
+  background-color: #005bac;
+  color: #ffffff;
+  border-top-right-radius: 4px;
+}
+
+/* ==========================================
+   クイックボタンエリア
+   ========================================== */
+.quick-buttons-wrapper {
+  padding: 8px 16px;
+  background-color: #ffffff;
+  border-top: 1px solid #edf2f7;
 }
 
 .quick-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 8px 16px 12px;
-  background-color: #f7f9f6;
 }
 
 .quick-buttons button {
-  flex: 1 1 calc(50% - 8px);
-  background-color: #ffffff;
-  border: 1px solid #AAB8A0;
-  color: #556050;
-  padding: 10px 8px;
-  border-radius: 14px;
-  font-size: 12.5px;
-  font-weight: 600;
+  background-color: #f0f4f8;
+  color: #005bac;
+  border: 1px solid #d0dfef;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 0.825rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  text-align: left;
 }
 
 .quick-buttons button:hover {
-  background-color: #AAB8A0;
-  color: #ffffff;
+  background-color: #e1edf9;
 }
 
-/* 5回達成時の特大お問い合わせボタン */
+/* コンバージョン（お問い合わせ等）用の目立つボタン */
 .quick-buttons button.primary-action-btn {
-  flex: 1 1 100% !important;
-  background-color: #8fad88 !important;
-  color: #ffffff !important;
-  font-size: 15px !important;
-  font-weight: bold !important;
-  padding: 14px !important;
-  border: none !important;
-  border-radius: 12px !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+  background-color: #ff6b00;
+  color: #ffffff;
+  border-color: #e05e00;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(255, 107, 0, 0.25);
 }
 
+.quick-buttons button.primary-action-btn:hover {
+  background-color: #e56000;
+}
+
+/* ==========================================
+   入力エリア
+   ========================================== */
 .chat-footer {
   padding: 12px 16px;
   background-color: #ffffff;
-  border-top: 1px solid #eaeaea;
+  border-top: 1px solid #e2e8f0;
+}
+
+.input-form {
   display: flex;
-  align-items: center;
   gap: 8px;
 }
 
-.mic-btn {
-  background: none;
-  border: none;
-  color: #8a9683;
-  cursor: pointer;
-  padding: 6px;
-}
-
-.input-container {
+.input-form input {
   flex: 1;
-}
-
-.input-container input {
-  width: 100%;
-  border: 1px solid #e0e5de;
-  background-color: #f4f6f3;
-  border-radius: 20px;
-  padding: 10px 16px;
-  font-size: 14px;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 24px;
+  font-size: 0.9rem;
   outline: none;
-  color: #333333;
+  transition: border-color 0.2s;
 }
 
-.input-container input:focus {
-  border-color: #AAB8A0;
-  background-color: #ffffff;
+.input-form input:focus {
+  border-color: #005bac;
 }
 
-.send-btn {
-  background-color: #AAB8A0;
+.input-form input:disabled {
+  background-color: #f1f5f9;
+  cursor: not-allowed;
+}
+
+.input-form button {
+  width: 42px;
+  height: 42px;
+  background-color: #005bac;
+  color: #ffffff;
   border: none;
-  color: white;
-  width: 38px;
-  height: 38px;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.input-form button:hover {
+  background-color: #004483;
+}
+
+.input-form button:disabled {
+  background-color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+/* PC等大画面時の表示調整 */
+@media (min-height: 850px) {
+  body {
+    padding: 20px 0;
+  }
 }
