@@ -1,96 +1,89 @@
 import https from 'https';
 
 export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const { message, history } = req.body;
-    
-    // APIキー（環境変数からの取得を推奨）
-    const apiKey = process.env.GROQ_API_KEY || "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";
+    const { message, history } = req.body || {};
+    const apiKey = process.env.GROQ_API_KEY;
 
-    // 会話ターン数の計算（ユーザーの発話回数）
-    const turnCount = history && Array.isArray(history) ? Math.floor(history.length / 2) + 1 : 1;
-
-    // 1. 赤羽・北区・川口・板橋特化 & UX最適化プロンプト
-    let systemInstruction = `あなたは「ノアリブホーム」の親切でプロフェッショナルな不動産AIコンサルタントです。
-
-# Role & Purpose
-赤羽、北区、川口市、板橋区エリアを中心に、物件をお探しのお客様（部屋探し・購入）やオーナー様（貸したい・売りたい）に対し、親身にヒアリングを行い、最終的にお問い合わせ（内見予約・無料査定・来店相談）へスムーズに誘導すること。
-
-# Special Target Area
-- 得意エリア：赤羽、北区、川口市、板橋区（および周辺沿線）
-- 案内方針：「東京都内」などの広範な表現は避け、必ず「赤羽・北区・川口・板橋エリア」を中心に案内すること。
-
-# Response & Conversation Rules
-- 1回の返答はスマホで読みやすい【100〜150文字程度】とし、適度に改行を入れること。
-- 会話の途中で「こんにちは」等の挨拶を無駄に繰り返さないこと。
-- 回答本文の中に「1. 部屋探し 2. 貸したい」といったテキストでの選択肢一覧を書かないこと（選択肢は必ず[OPTIONS]にのみ出力すること）。
-- 1回の返答で尋ねるヒアリング項目は【最大1〜2つ】にとどめること。
-
-# Conversation Flow (Maximum 5 Turns)
-会話は最大5ターンで完結させてください。
-
-・【1ターン目（初期対応）】
-  ユーザーが「物件を探したい」と選択・発話した場合：
-  「ノアリブホームにお任せください！赤羽・北区・川口・板橋エリアを中心に最新物件をご案内しております。ご希望のエリアや駅、ご予算（家賃）などはございますか？」のように優しくヒアリングを開始する。
-
-・【2〜3ターン目（詳細ヒアリング）】
-  希望エリア、間取り、こだわり条件（ペット可、バストイレ別等）を順に確認する。
-
-・【4ターン目（提案準備）】
-  「ご希望の条件をしっかり確認いたしました！ご希望に沿う最新の空室情報やWeb未公開の物件資料を、専門スタッフが最新データベースよりすぐにお探しいたします。」と伝える。
-
-・【5ターン目（最終誘導）】
-  新たな質問や[OPTIONS]の出力は一切行わない。
-  「条件に合った物件情報のお受け取りや内見のご予約は、画面下部のお問い合わせボタンからすぐにお進みいただけます。赤羽店舗でのご相談やオンライン案内も可能ですので、ぜひお気軽にご利用ください！」と伝えて締めくくる。
-
-# Strict Guardrails (絶対禁止事項)
-- ★架空の物件情報やスペック（例：「赤羽駅徒歩5分、家賃8万円の1K」等）は絶対につくらないこと。
-- ★家賃、査定額、諸費用、手数料などの具体的な数字（〇万円、〇％など）や試算・例え話は一切出さないこと。
-- ★ユーザーから具体的な条件を聞いていない段階で「条件を受け止めました」と言わないこと。
-- ★「**」や「#」などのマークダウン記号は絶対に使用せず、プレーンテキストのみで回答すること。
-
-# Output Format & UI Rules
-ユーザーがタップ操作で会話を進められるよう、メッセージの末尾には必ず次の選択肢（2〜3個）を以下のフォーマットで付与してください。
-（※5回目のターンの場合は[OPTIONS]を出力せず、お問い合わせへの誘導文章のみで終了すること。）
-
-（回答本文テキスト）
-
-[OPTIONS]
-- 選択肢1
-- 選択肢2
-- 選択肢3`;
-
-    // 2. 5ターン目以降の制御ルールを追加
-    if (turnCount >= 5) {
-      systemInstruction += `\n\n【5回目の案内ルール】
-ユーザーとの会話の締めくくりです。新たな質問や[OPTIONS]の出力は絶対にせず、ご希望に応じた無料相談・査定・物件問合せ等のご案内を、画面下部のお問い合わせボタンから進んでいただくよう丁寧にお伝えして締めくくってください。`;
+    if (!apiKey) {
+      return res.status(500).json({ error: "GROQ_API_KEY が設定されていません。" });
     }
 
-    // 3. メッセージ構造の組み立て
-    const messages = [
-      { role: "system", content: systemInstruction }
-    ];
+    const turnCount = history && Array.isArray(history) ? Math.floor(history.length / 2) + 1 : 1;
+
+    let systemInstruction = `あなたは不動産会社「ノアリブホーム」の親切でプロフェッショナルなAIコンサルタントです。
+丁寧、誠実、かつ分かりやすい言葉遣いを徹底してください。
+
+【主要対応エリア】
+・東京都北区（赤羽・王子・十条・志茂など）
+・東京都板橋区（板橋・大山・成増など）
+・埼玉県（川口・戸田・和光市・朝霞・志木など）
+
+【全体応対方針】
+・1回のメッセージでのヒアリング質問は「最大1〜2つ」にとどめてください。
+・1〜4ラリー目：ユーザーのニーズに応じて段階的にヒアリングや提案を行い、必ず選択肢（OPTIONS）を付与してください。
+・5ラリー目（締めくくり）：これまでの内容を簡潔にまとめ、「詳細や具体的なご提案につきましては、画面下部のお問い合わせ画面へお進みください」と案内してください。
+
+【標準フレーズと選択肢のフォーマット（角括弧 [] を必須で着用）】
+1. 家賃を聞く場合：
+   文章：「ご希望の家賃の上限（ご予算）はおいくら位でお考えでしょうか？」
+   選択肢：[OPTIONS: 7万円以内, 10万円以内, 15万円以内, 条件に合わせて相談]
+
+2. エリアを聞く場合：
+   文章：「ご希望のエリアや沿線・駅はお決まりでしょうか？」
+   選択肢：[OPTIONS: 赤羽・王子エリア, 板橋・成増エリア, 川口・戸田エリア, 和光市・朝霞エリア]
+
+3. 間取りを聞く場合：
+   文章：「ご希望の間取り（1K・1LDK・2LDKなど）はございますか？」
+   選択肢：[OPTIONS: 1K・ワンルーム, 1LDK, 2LDK以上, 特になし]
+
+【絶対厳守ルール】
+・1〜4ラリー目の選択肢は、必ず文末に [OPTIONS: 選択肢1, 選択肢2] の角括弧フォーマットで出力してください。
+・「1人あたりの〜」「以下のオプションから〜」などの不自然な表現やシステム用語は絶対禁止です。
+・案内の際は「画面下部のお問い合わせ画面へお進みください」「お問い合わせ画面よりご相談ください」と表現してください。
+・「*」「・」「箇条書き」での出力は禁止です。自然な対話テキストで回答してください。
+・「〜をご存じですか」「〜に関しまして」「〜かと存じます」などの不自然な日本語は使用禁止です。
+・実在しない路線やスペックの捏造解説、定型文の繰り返し（コピペ化）は禁止です。
+・マークダウン記号（** や # 等）は出力しないでください。`;
+
+    if (turnCount >= 5) {
+      systemInstruction += `\n\n【現在5ラリー目です（締めくくり）】
+これまでのヒアリング内容を簡単にまとめ、「詳細な物件確認・無料査定・個別のご相談につきましては、画面下部のお問い合わせ画面へお進みください」と丁寧に案内して会話を締めくくってください。[OPTIONS: ...] は付与しないでください。`;
+    }
+
+    const messages = [{ role: "system", content: systemInstruction }];
 
     if (history && Array.isArray(history)) {
-      history.forEach(item => {
+      const recentHistory = history.slice(-8);
+      recentHistory.forEach(item => {
         messages.push({
           role: item.role === "user" ? "user" : "assistant",
-          content: String(item.content)
+          content: String(item.content || "")
         });
       });
     }
 
     messages.push({ role: "user", content: String(message || "こんにちは") });
 
-    // 4. APIリクエストデータ構造の作成
     const postData = JSON.stringify({
-      model: "llama-3.3-70b-versatile",
+      model: "llama-3.1-8b-instant",
       messages: messages,
-      temperature: 0.1
+      temperature: 0.2,
+      presence_penalty: 0.5,
+      frequency_penalty: 0.5,
+      max_tokens: 400
     });
 
     const options = {
@@ -104,7 +97,6 @@ export default async function handler(req, res) {
       }
     };
 
-    // 5. Groq API 呼び出し処理
     const apiResponse = await new Promise((resolve, reject) => {
       const request = https.request(options, (response) => {
         response.setEncoding('utf8');
@@ -126,11 +118,29 @@ export default async function handler(req, res) {
 
     if (apiResponse.statusCode !== 200) {
       console.error("Groq API Error:", apiResponse.body);
-      return res.status(500).json({ error: "API呼び出しエラーが発生しました。" });
+      return res.status(apiResponse.statusCode).json({ 
+        error: apiResponse.body?.error?.message || "APIエラーが発生しました。" 
+      });
     }
 
-    const replyText = apiResponse.body.choices?.[0]?.message?.content || "返答が得られませんでした。";
-    return res.status(200).json({ reply: replyText });
+    const rawText = apiResponse.body.choices?.[0]?.message?.content || "返答が得られませんでした。";
+
+    let replyText = rawText;
+    let buttonOptions = [];
+
+    // OPTIONS文字列の抽出処理（[]の有無に関わらず安全に除去・抽出）
+    const match = rawText.match(/\[?OPTIONS:\s*([^\]\n]+)\]?/i);
+    if (match) {
+      // 本文から OPTIONS 部分（前後の改行等含む）を綺麗に削除
+      replyText = rawText.replace(/\[?OPTIONS:\s*([^\]\n]+)\]?/gi, '').trim();
+      // カンマ区切りでボタン配列に変換
+      buttonOptions = match[1].split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    return res.status(200).json({ 
+      reply: replyText,
+      options: buttonOptions 
+    });
 
   } catch (error) {
     console.error("Server Error:", error);
