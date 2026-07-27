@@ -21,6 +21,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "GROQ_API_KEY が設定されていません。" });
     }
 
+    // 正確なラリー数を計算（ユーザー発話数 + 1）
     const userMessageCount = Array.isArray(history) 
       ? history.filter(item => item.role === "user").length 
       : 0;
@@ -35,17 +36,20 @@ export default async function handler(req, res) {
 1〜4ラリー目：
 ・ユーザーの目的に合わせて、1回のメッセージで質問は「1つだけ」にしてください。
 ・質問の選択肢は、必ずメッセージの【一番最後】に [OPTIONS: 選択肢1, 選択肢2, 選択肢3] という形式でのみ出力してください。
-・本文中に選択肢のリスト（箇条書き等）を書き出すことは絶対禁止です。
 
 【絶対禁止事項】
-・不自然な表現やマークダウン記号（** や # 等）を使うこと。`;
+・本文中に選択肢のリスト（箇条書きや改行での選択肢一覧）を書き出すこと。
+・「貸したい」人に「家賃上限」を聞くなどニーズとズレた質問。
+・「1人あたりの〜」「以下のオプションから〜」などのシステム用語。
+・マークダウン記号（** や # 等）を使うこと。`;
 
-    // 5ラリー目の締めくくり命令
+    // 5ラリー目の締めくくり指示
     if (turnCount >= 5) {
-      systemInstruction += `\n\n【現在5ラリー目です（締めくくり）】
-追加の質問（「〜でしょうか？」など）は一切せず、これまでのヒアリング内容を軽くまとめた上で、
-「詳細なご案内につきましては、下部のアクションボタンよりお進みください。」
-と案内して締めくくってください。[OPTIONS: ...] は絶対に付与しないでください。`;
+      systemInstruction += `\n\n【現在5ラリー目です（完了指示）】
+これ以上の質問（「〜でしょうか？」等）は一切禁止です。
+これまでのやり取りを簡単に整理・確認した上で、
+「詳細なご案内やご相談につきましては、画面下部のアクションボタンよりお進みください。」
+と案内して丁寧に締めくくってください。[OPTIONS: ...] は絶対に付与しないでください。`;
     }
 
     const messages = [{ role: "system", content: systemInstruction }];
@@ -102,6 +106,7 @@ export default async function handler(req, res) {
     });
 
     if (apiResponse.statusCode !== 200) {
+      console.error("Groq API Error:", apiResponse.body);
       return res.status(apiResponse.statusCode).json({ error: "一時的なエラーが発生しました。" });
     }
 
@@ -110,13 +115,13 @@ export default async function handler(req, res) {
     let replyText = rawText;
     let buttonOptions = [];
 
+    // [OPTIONS: ...] の抽出と本文からの除外
     const match = rawText.match(/\[?OPTIONS:\s*([^\]\n]+)\]?/i);
     if (match) {
       replyText = rawText.replace(/\[?OPTIONS:\s*([^\]\n]+)\]?/gi, '').trim();
       buttonOptions = match[1].split(',').map(s => s.trim()).filter(Boolean);
     }
 
-    // 5ラリー目完了フラグを返却
     const isFinished = turnCount >= 5;
     if (isFinished) {
       buttonOptions = [];
@@ -125,7 +130,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ 
       reply: replyText,
       options: buttonOptions,
-      isFinished: isFinished // 5ラリー完了判定フラグ
+      isFinished: isFinished // 5ラリー完了フラグ
     });
 
   } catch (error) {
