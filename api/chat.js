@@ -21,17 +21,20 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "GROQ_API_KEY が設定されていません。" });
     }
 
-    const turnCount = history && Array.isArray(history) ? Math.floor(history.length / 2) + 1 : 1;
+    // 会話履歴からユーザーの発話をカウントしてラリー数を正確に算出（今回のユーザー発話も含めて+1）
+    const userMessageCount = Array.isArray(history) 
+      ? history.filter(item => item.role === "user").length 
+      : 0;
+    const turnCount = userMessageCount + 1;
 
     let systemInstruction = `あなたは不動産会社「ノアリブホーム」の親切でプロフェッショナルなAIコンサルタントです。
 プロのアドバイザーとして丁寧で誠実、かつ分かりやすい日本の敬語を徹底してください。
 スマホ画面での視認性を高めるため、1回の返答は【100〜150文字程度】とし、適度に改行を入れること。
-1回の返答で尋ねるヒアリング項目は【最大1〜2つ】にとどめること。
 
 【主要対応エリア】
 ・東京都北区（赤羽・王子・十条など）、板橋区（板橋・大山・成増など）、埼玉県（川口・戸田・和光市・朝霞など）
 
-【ユーザーのニーズに応じた質問と選択肢（最重要）】
+【ユーザーのニーズに応じた質問と選択肢】
 ユーザーの目的に合わせて必ず適切な質問と選択肢を出力してください。
 
 ①「借りたい」の場合：
@@ -47,31 +50,32 @@ export default async function handler(req, res) {
 ・物件種別：「ご売却をお考えの物件種別を教えていただけますか？」 [OPTIONS: マンション, 戸建て, 土地, その他]
 ・ご希望時期：「いつ頃までの売却をお考えでしょうか？」 [OPTIONS: 急ぎで売りたい, 3ヶ月〜半年以内, 相場次第で検討, 住み替え予定]
 
-④「購入したい」の場合：
-・ご予算：「ご検討されている購入予算（総額）はおいくら位でしょうか？」 [OPTIONS: 3000万円以内, 5000万円以内, 7000万円以内, 未定・相談]
-・種別：「ご希望の物件種別を教えていただけますか？」 [OPTIONS: 新築/中古マンション, 新築/中古一戸建て, 建築用土地]
+【会話進行ルール（重要）】
+現在のラリー数：${turnCount}回目
 
-【全体応対方針】
-・1〜4ラリー目：上記ニーズに合わせて段階的にヒアリングし、必ず選択肢（[OPTIONS: ...]）を文末に付与してください。
-・5ラリー目（締めくくり）：内容を簡潔にまとめ、「詳細な物件確認・無料査定・個別のご相談につきましては、画面下部のお問い合わせ画面へお進みください」と案内してください。[OPTIONS]は不要です。
+・1〜4ラリー目：上記ニーズに合わせて段階的にヒアリングし、文末に必ず選択肢（[OPTIONS: ...]）を付与してください。
+・同じ質問や同じ文章を1回の返答内で2度繰り返すことは絶対に禁止です。
 
 【絶対厳守ルール】
 ・「貸したい」人に対して「家賃上限」を聞くなど、ニーズと噛み合わない質問は絶対に禁止です。
 ・「1人あたりの〜」「以下のオプションから〜」などの不自然な表現やシステム用語は絶対禁止です。
 ・案内の際は「画面下部のお問い合わせ画面へお進みください」と表現してください。
-・「*」「・」「箇条書き」での出力は禁止です。自然な対話テキストで回答してください。
-・マークダウン記号（** や # 等）は出力しないでください。`;
+・「*」「・」「箇条書き」およびマークダウン記号（** や # 等）の出力は禁止です。`;
 
+    // 5ラリー目以降の完全固定締めくくり命令
     if (turnCount >= 5) {
-      systemInstruction += `\n\n【現在5ラリー目です（締めくくり）】
-これまでのヒアリング内容を簡単にまとめ、「詳細な物件確認・無料査定・個別のご相談につきましては、画面下部のお問い合わせ画面へお進みください」と丁寧に案内して会話を締めくくってください。[OPTIONS: ...] は付与しないでください。`;
+      systemInstruction += `\n\n【警告：現在${turnCount}ラリー目です（最終完了）】
+これ以上の追加質問（「〜でしょうか？」など）は絶対に禁止です。
+これまでのヒアリング内容（エリア、家賃、間取り等）を短く整理・確認した上で、
+「詳細な物件情報のご案内やご相談につきましては、画面下部のお問い合わせ画面よりお進みください。」
+とだけ伝えて丁寧に会話を締めくくってください。[OPTIONS: ...] は絶対に付与しないでください。`;
     }
 
     const messages = [{ role: "system", content: systemInstruction }];
 
-    // レートリミット防止のため過去履歴は直近4件（2往復）に削減
     if (history && Array.isArray(history)) {
-      const recentHistory = history.slice(-4);
+      // 過去履歴は直近6件取得（ラリーカウントは全体件数から正確に算出済み）
+      const recentHistory = history.slice(-6);
       recentHistory.forEach(item => {
         messages.push({
           role: item.role === "user" ? "user" : "assistant",
@@ -85,9 +89,9 @@ export default async function handler(req, res) {
     const postData = JSON.stringify({
       model: "llama-3.1-8b-instant",
       messages: messages,
-      temperature: 0.2,
-      presence_penalty: 0.5,
-      frequency_penalty: 0.5,
+      temperature: 0.1,         // ランダム性を下げて命令遵守率を強化
+      presence_penalty: 0.8,    // 同じフレーズ・質問の重複を強力に防止
+      frequency_penalty: 0.8,   // 繰り返しを抑制
       max_tokens: 300
     });
 
@@ -144,6 +148,11 @@ export default async function handler(req, res) {
     if (match) {
       replyText = rawText.replace(/\[?OPTIONS:\s*([^\]\n]+)\]?/gi, '').trim();
       buttonOptions = match[1].split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    // 5ラリー目以降なら念のためボタン選択肢を強制空配列にする
+    if (turnCount >= 5) {
+      buttonOptions = [];
     }
 
     return res.status(200).json({ 
