@@ -1,10 +1,10 @@
-import Groq from "groq-sdk";
+const Groq = require("groq-sdk");
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY
 });
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
@@ -16,8 +16,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "メッセージが空です" });
     }
 
-    // 会話履歴（history）のフォーマット整形・制限
-    // トークン節約のため、直近6件（3往復）程度に絞り込みます
+    // 会話履歴（history）のフォーマット整形・直近6件に制限（トークン節約・エラー防止）
     const formattedHistory = Array.isArray(history) 
       ? history.slice(-6).map(item => ({
           role: item.role === "user" ? "user" : "assistant",
@@ -41,10 +40,10 @@ export default async function handler(req, res) {
       { role: "user", content: message }
     ];
 
-    // Groq API 呼び出し（軽量・爆速の 8b-instant に変更してトークンエラーを回避）
+    // Groq API 呼び出し（軽量・高速モデル「llama-3.1-8b-instant」）
     const completion = await groq.chat.completions.create({
       messages: messages,
-      model: "llama-3.1-8b-instant", // ★ エラー回避のため軽量モデルに変更
+      model: "llama-3.1-8b-instant",
       temperature: 0.7,
       max_tokens: 512
     });
@@ -56,10 +55,10 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error("Groq API Execution Error:", error);
     
-    // 万が一レート制限に引っかかった場合の親切なエラーメッセージ
+    // レート制限エラー（429）の場合
     if (error?.status === 429 || error?.message?.includes("rate_limit")) {
       return res.status(429).json({ 
-        error: "一時的にアクセスが集中しています。恐れ入りますが1〜2分ほど置いてから再度お試しください。" 
+        error: "一時的にアクセスが集中しています。1〜2分ほど置いてから再度お試しください。" 
       });
     }
 
@@ -67,4 +66,4 @@ export default async function handler(req, res) {
       error: "API呼び出しエラーが発生しました。" 
     });
   }
-}
+};
