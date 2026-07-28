@@ -38,7 +38,10 @@
       <button type="button" class="send-icon-btn" id="send-btn" onclick="sendMessage()">➤</button>
     </form>
   </div>
-
- <script src="api/chat.js"></script>
+<form class="chat-input-area" id="chat-form" onsubmit="return false;">
+      <input type="text" id="user-input" placeholder="メッセージを入力..." autocomplete="off">
+      <button type="button" class="send-icon-btn" id="send-btn" onclick="sendMessage()">➤</button>
+    </form>
+  </div>
 </body>
 </html>
