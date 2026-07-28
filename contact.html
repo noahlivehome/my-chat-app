@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お問い合わせフォーム</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: #f4f6f8; padding: 20px; display: flex; justify-content: center; }
+        .form-container { width: 100%; max-width: 600px; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h2 { margin-bottom: 20px; color: #333; font-size: 20px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; color: #555; }
+        input[type="text"], input[type="email"], textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        textarea { height: 120px; resize: vertical; }
+        .chat-summary-box { background: #f0f7ef; border: 1px solid #8da287; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
+        .submit-btn { width: 100%; background: #8da287; color: #fff; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        .submit-btn:hover { background: #7a8f74; }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>お問い合わせ・ご相談フォーム</h2>
+
+    <!-- ① チャット条件の確認用表示エリア -->
+    <div class="chat-summary-box" id="chatSummary">
+        <strong>🤖 チャットでご入力いただいたご希望条件：</strong>
+        <p id="summaryText">読み込み中...</p>
+    </div>
+
+    <form action="#" method="POST">
+        <!-- ユーザー情報入力 -->
+        <div class="form-group">
+            <label for="userName">お名前 <span style="color:red;">*</span></label>
+            <input type="text" id="userName" name="userName" required placeholder="山田 太郎">
+        </div>
+
+        <div class="form-group">
+            <label for="userEmail">メールアドレス <span style="color:red;">*</span></label>
+            <input type="email" id="userEmail" name="userEmail" required placeholder="example@email.com">
+        </div>
+
+        <!-- ② 自動反映されるご相談内容テキストエリア -->
+        <div class="form-group">
+            <label for="contactMessage">ご相談内容・引き継ぎ条件</label>
+            <textarea id="contactMessage" name="contactMessage"></textarea>
+        </div>
+
+        <!-- ③ サーバー送信用の隠し項目（hidden） -->
+        <input type="hidden" id="hiddenChatLog" name="chatLogData">
+
+        <button type="submit" class="submit-btn">送信する</button>
+    </form>
+</div>
+
+<!-- データ引き継ぎ処理用JavaScript -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // --- 1. URLパラメータからデータを取得（方法A） ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get("mode") || "";
+    const area = urlParams.get("area") || "";
+    let details = {};
+    
+    try {
+        if (urlParams.get("details")) {
+            details = JSON.parse(urlParams.get("details"));
+        }
+    } catch(e) { console.error("URLパラメータ解析エラー", e); }
+
+    // --- 2. localStorageから会話履歴全体を取得（方法B） ---
+    const localDataRaw = localStorage.getItem("realEstateChatData");
+    let localData = null;
+    if (localDataRaw) {
+        try { localData = JSON.parse(localDataRaw); } catch(e) {}
+    }
+
+    // --- 3. 相談種別の日本語変換 ---
+    const modeNames = {
+        rent: "お部屋探し（賃貸希望）",
+        owner: "物件の賃貸管理（貸主希望）",
+        sell: "物件の売却（売却希望）",
+        buy: "物件の購入（購入希望）"
+    };
+    const modeJP = modeNames[mode] || localData?.mode || "お問い合わせ";
+
+    // --- 4. 画面・テキストエリアへ条件を自動セット ---
+    let summaryString = `ご相談区分：${modeJP}\n`;
+    if (area) summaryString += `希望エリア：${area}\n`;
+    
+    // ヒアリング詳細データがあれば追加
+    Object.keys(details).forEach(key => {
+        summaryString += `・${key} : ${details[key]}\n`;
+    });
+
+    // ① 確認用エリア（緑の枠）へ表示
+    const summaryEl = document.getElementById("summaryText");
+    if (summaryEl) {
+        summaryEl.innerText = summaryString || "チャット条件なし（直接入力）";
+    }
+
+    // ② テキストエリア（textarea）へ初期文章として流し込む
+    const messageArea = document.getElementById("contactMessage");
+    if (messageArea) {
+        messageArea.value = `【AIチャットからの引き継ぎ条件】\n` + summaryString + `\n【追加のご質問・ご要望】\n`;
+    }
+
+    // ③ 全メッセージ履歴（JSON）を送信用のhiddenインプットへセット
+    const hiddenInput = document.getElementById("hiddenChatLog");
+    if (hiddenInput && localData) {
+        hiddenInput.value = JSON.stringify(localData);
+    }
+});
+</script>
+
+</body>
+</html>
