@@ -320,38 +320,44 @@ function renderOptions(options) {
 function handleOptionClick(selectedText) {
     appendUserMessage(selectedText);
 
-    // 問い合わせ・予約完了ボタンが押された場合
-    if (selectedText.includes("予約") || selectedText.includes("申込む") || selectedText.includes("問合せ")) {
+    // 予約・問合せボタンが押された場合
+    if (selectedText.includes("予約") || selectedText.includes("申込む") || selectedText.includes("問合せ") || selectedText.includes("相談をする")) {
         setTimeout(() => {
-            appendBotMessage("ご希望いただきありがとうございます！\n入力いただいた条件を保持して、お問い合わせフォームへ案内いたします...");
+            appendBotMessage("ご希望いただきありがとうございます！\n入力いただいた条件を添えて、お問い合わせフォームへ移動します...");
             document.getElementById("chatOptions").innerHTML = "";
 
-            // --- 💡 データの保存・引き継ぎ処理 ---
-            
-            // ① ブラウザ（localStorage）に全会話データ・整理データを一時保存
-            localStorage.setItem("realEstateChatData", JSON.stringify({
-                mode: chatState.mode,
-                area: chatState.area,
-                details: chatState.data,
-                history: chatState.history,
-                completedAt: new Date().toLocaleString()
-            }));
-
-            // ② 1.5秒後に問い合わせフォームへ自動移動（URLパラメータでデータを渡す）
             setTimeout(() => {
-                const params = new URLSearchParams({
-                    mode: chatState.mode || "",
-                    area: chatState.area || "",
-                    details: JSON.stringify(chatState.data)
+                // 1. チャットでまとめた条件テキストを作成
+                let summaryText = `【AIチャットからのご希望条件引き継ぎ】\n`;
+                if (chatState.mode) summaryText += `・ご相談種別: ${chatState.mode}\n`;
+                if (chatState.area) summaryText += `・ご希望エリア: ${chatState.area}\n`;
+                
+                Object.keys(chatState.data).forEach(key => {
+                    summaryText += `・${key}: ${chatState.data[key]}\n`;
                 });
 
-                // 実際の問い合わせページのパスに書き換えてください（例: "contact.html" や "https://example.com/contact"）
-                window.location.href = `contact.html?${params.toString()}`;
+                // 2. いえらぶのお問い合わせフォームURL（ご自身のURLに差し替えてください）
+                const ieloveFormUrl = "https://www.xxx.co.jp/contact/"; // ←御社の「いえらぶ問い合わせページURL」
+
+                // 3. いえらぶの備考欄パラメータ名（例: remarks や comment など）に合わせてURLを生成
+                // ※URLパラメータで日本語を送るため encodeURIComponent を使用
+                const targetUrl = `${ieloveFormUrl}?remarks=${encodeURIComponent(summaryText)}`;
+
+                // 4. いえらぶのフォームへ移動
+                window.location.href = targetUrl;
+
             }, 1500);
 
         }, 300);
         return;
     }
+
+    setTimeout(() => {
+        const response = getAIResponse(selectedText);
+        appendBotMessage(response.text);
+        renderOptions(response.options);
+    }, 300);
+}
 
     setTimeout(() => {
         const response = getAIResponse(selectedText);
