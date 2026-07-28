@@ -1,38 +1,22 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ノアリブホーム チャットサポート</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-  <div class="chat-container">
-    <div class="chat-header">
-      ノアリブホーム お問い合わせチャット
-    </div>
-
-    <!-- メッセージ表示エリア -->
-    <div class="chat-body" id="chatBody">
-      <div class="message bot-message">
-        こんにちは！ノアリブホームへようこそ。<br>
-        お部屋探しや不動産のご相談など、気になることを選択するか、入力欄よりご質問ください！
-      </div>
-    </div>
-
-    <!-- 選択肢ボタンエリア -->
-    <div class="quick-buttons" id="quick-buttons">
-      <!-- 初期表示用のボタン（必要に応じてJavaScript等で追加可能） -->
-    </div>
-
-    <!-- 入力フォームエリア -->
-    <form class="chat-input-area" onsubmit="return false;">
-      <input type="text" id="user-input" placeholder="メッセージを入力..." autocomplete="off">
-      <button type="submit" id="send-btn">送信</button>
-    </form>
+<div class="chat-container">
+  <div class="chat-header">
+    ノアリブホーム お問い合わせチャット
   </div>
 
-  <script src="chat.js"></script>
-</body>
-</html>
+  <!-- メッセージ表示エリア -->
+  <div class="chat-body" id="chatBody">
+    <div class="message bot-message">
+      こんにちは！ノアリブホームへようこそ。<br>
+      お部屋探しや不動産のご相談など、気になることを選択するか、入力欄よりご質問ください！
+    </div>
+  </div>
+
+  <!-- 選択肢ボタンエリア（ここが表示される場所です） -->
+  <div class="quick-buttons" id="quick-buttons"></div>
+
+  <!-- 入力フォームエリア -->
+  <form class="chat-input-area" onsubmit="return false;">
+    <input type="text" id="user-input" placeholder="メッセージを入力..." autocomplete="off">
+    <button type="submit" id="send-btn">送信</button>
+  </form>
+</div>
