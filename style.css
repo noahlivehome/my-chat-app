@@ -1,168 +1,163 @@
-@charset "UTF-8";
-
+/* 基本設定 */
 * {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
 }
 
 body {
-  font-family: "Helvetica Neue", Arial, sans-serif;
-  background-color: #f2f4f1;
-  color: #333333;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 12px;
+    background-color: #f4f6f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
 }
 
+/* チャットコンテナ */
 .chat-container {
-  width: 100%;
-  max-width: 440px;
-  height: 600px;
-  background: #ffffff;
-  border-radius: 20px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+    width: 380px;
+    height: 600px;
+    background-color: #f0f0f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
 }
 
 /* ヘッダー */
 .chat-header {
-  background: #a3b19b;
-  color: #ffffff;
-  padding: 16px 20px;
-  font-weight: 600;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
+    background-color: #8da287;
+    color: #ffffff;
+    padding: 14px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 15px;
+    letter-spacing: 0.5px;
 }
 
-.chat-header-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* メッセージ表示エリア */
+.chat-messages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-/* チャットメッセージ表示エリア */
-.chat-body {
-  flex: 1;
-  padding: 20px 16px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  background-color: #f7f8f6;
-}
-
+/* 共通バブル */
 .message {
-  max-width: 82%;
-  padding: 12px 16px;
-  border-radius: 16px;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  word-break: break-word;
+    max-width: 85%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
-.user-message {
-  align-self: flex-end;
-  background-color: #a3b19b;
-  color: #ffffff;
-  border-bottom-right-radius: 4px;
+/* Botメッセージ（白背景・丸角） */
+.message.bot {
+    align-self: flex-start;
+    background-color: #ffffff;
+    color: #333333;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.bot-message {
-  align-self: flex-start;
-  background-color: #ffffff;
-  color: #333333;
-  border-bottom-left-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+/* ユーザーメッセージ */
+.message.user {
+    align-self: flex-end;
+    background-color: #8da287;
+    color: #ffffff;
+    border-bottom-right-radius: 4px;
 }
 
-/* クイック選択ボタンエリア（横2列の角丸ボタン配置） */
-.quick-buttons {
-  padding: 12px;
-  background: #ffffff;
-  border-top: 1px solid #eee8df;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  flex-shrink: 0;
+/* 選択肢ボタンコンテナ */
+.chat-options-container {
+    padding: 10px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background-color: #f0f0f0;
 }
 
-.quick-buttons button {
-  background: #ffffff;
-  color: #5c5247;
-  border: 1.5px solid #b59f88;
-  padding: 10px 8px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: center;
-  line-height: 1.3;
+/* 2列並び用フレックスボックス */
+.options-grid {
+    display: flex;
+    gap: 8px;
 }
 
-.quick-buttons button:hover {
-  background: #f5f2ec;
-  border-color: #8c7662;
-  color: #3d3630;
+/* 通常選択肢ボタン（白背景・緑枠・黒文字） */
+.option-btn {
+    flex: 1;
+    background-color: #ffffff;
+    border: 1.5px solid #8da287;
+    color: #333333;
+    padding: 10px 8px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.3;
 }
 
-/* 5ラリー目以降に出る「お問い合わせ」ボタン（1列フル幅で強調） */
-.quick-buttons button.primary-action-btn,
-.quick-buttons button.full-width {
-  grid-column: span 2;
-  background: #8c7662;
-  color: #ffffff;
-  border-color: #7a6653;
-  font-weight: 600;
-  padding: 12px;
-  box-shadow: 0 2px 6px rgba(140, 118, 98, 0.2);
+.option-btn:hover {
+    background-color: #f0f7ef;
 }
 
-.quick-buttons button.primary-action-btn:hover,
-.quick-buttons button.full-width:hover {
-  background: #786452;
+/* メインコンバージョンボタン（緑背景・白文字） */
+.option-btn.primary {
+    width: 100%;
+    background-color: #8da287;
+    color: #ffffff;
+    border: none;
+    padding: 12px;
+    font-size: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* 下部入力エリア */
+.option-btn.primary:hover {
+    background-color: #7a8f74;
+}
+
+/* 入力エリア */
 .chat-input-area {
-  display: flex;
-  padding: 12px 16px;
-  background: #ffffff;
-  gap: 10px;
-  align-items: center;
-  border-top: 1px solid #eaeaea;
-  flex-shrink: 0;
+    display: flex;
+    padding: 10px 12px;
+    background-color: #ffffff;
+    border-top: 1px solid #e0e0e0;
 }
 
 .chat-input-area input {
-  flex: 1;
-  padding: 10px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 20px;
-  outline: none;
-  font-size: 0.9rem;
-  background-color: #f5f5f5;
+    flex: 1;
+    border: 1px solid #cccccc;
+    padding: 8px 12px;
+    border-radius: 20px;
+    outline: none;
+    font-size: 14px;
 }
 
-.send-icon-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #a3b19b;
-  border: none;
-  color: #ffffff;
-  font-size: 1.1rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+.chat-input-area button {
+    background-color: #8da287;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    margin-left: 8px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.chat-input-area button:hover {
+    background-color: #7a8f74;
 }
