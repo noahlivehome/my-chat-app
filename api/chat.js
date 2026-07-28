@@ -1,5 +1,3 @@
-import https from 'https';
-
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -10,148 +8,133 @@ export default async function handler(req, res) {
 
   try {
     const { message, history } = req.body || {};
-    const apiKey = process.env.GROQ_API_KEY;
 
-    if (!apiKey) {
-      return res.status(500).json({ error: "GROQ_API_KEY が設定されていません。" });
-    }
-
-    // 正確なターン判定（ユーザーのメッセージ送信回数 + 1）
+    // ユーザーのメッセージ履歴から現在のターン数を判定
     const userMessages = Array.isArray(history) 
       ? history.filter(item => item.role === "user") 
       : [];
     const turnCount = userMessages.length + 1;
 
-    // ニーズカテゴリーの判定
+    // 過去の会話全体からカテゴリを判定
     const fullText = (userMessages.map(m => m.content).join(" ") + " " + (message || "")).toLowerCase();
-    let userCategory = "rent"; // デフォルト：借りたい
+    
+    let category = "rent"; // デフォルト：賃貸を探したい
     if (fullText.includes("貸したい") || fullText.includes("オーナー") || fullText.includes("管理")) {
-      userCategory = "owner_rent";
-    } else if (fullText.includes("売りたい") || fullText.includes("売却")) {
-      userCategory = "owner_sell";
-    } else if (fullText.includes("買いたい") || fullText.includes("購入")) {
-      userCategory = "buy";
+      category = "owner_rent";
+    } else if (fullText.includes("売却") || fullText.includes("売りたい")) {
+      category = "owner_sell";
+    } else if (fullText.includes("購入") || fullText.includes("買いたい")) {
+      category = "buy";
     }
 
-    const systemInstruction = `# Role & Purpose
-あなたは「ノアリブホーム」の親身でプロフェッショナルな不動産AIコンサルタントです。
-お客様のニーズ（①借りたい、②貸したい、③売却、④購入）を特定し、ヒアリングを行った上で、問い合わせへスムーズに誘導することを目的とします。
+    // 各シナリオのメッセージ＆ボタン定義（オウム返し一切なし、エリア完全指定）
+    const scenarios = {
+      // 1. 賃貸を探したい
+      rent: {
+        1: {
+          reply: "お部屋探しのご相談ですね！ノアリブホームにお任せください。\nご希望のエリアをお聞かせいただけますか？",
+          options: ["📍 赤羽・北区エリア", "📍 川口エリア", "📍 板橋区エリア", "📍 その他・相談したい"]
+        },
+        2: {
+          reply: "ありがとうございます！\nご希望の間取り（広さ）はお決まりでしょうか？",
+          options: ["🏠 1K・1DK", "🏠 1LDK・2LDK", "🏠 3LDK以上", "❓ まだ決まっていない"]
+        },
+        3: {
+          reply: "承知いたしました。\nおおよその月額ご予算（管理費込み）の目安を教えていただけますか？",
+          options: ["💰 8万円未満", "💰 8〜10万円", "💰 10〜15万円", "💰 15万円以上"]
+        },
+        4: {
+          reply: "ありがとうございます。\nお引っ越しのご希望時期はいつ頃をお考えでしょうか？",
+          options: ["⚡ すぐにでも", "📅 1ヶ月以内", "📅 2〜3ヶ月以内", "💭 良い物件があれば"]
+        },
+        5: {
+          reply: "ご条件をお聞かせいただきありがとうございます！\n最新のデータベースよりご希望に沿う空室情報やWeb未公開資料をお探しいたします。\n画面下部のお問い合わせボタンよりお気軽にご連絡ください。",
+          options: []
+        }
+      },
 
-# Special Target Area
-得意エリア：赤羽、北区、川口市、板橋区（およびその周辺沿線）
-案内方針：「東京都内」などの広範な表現は避け、必ず「赤羽・北区・川口・板橋エリア」を中心に案内すること。
+      // 2. 貸したい（オーナー様）
+      owner_rent: {
+        1: {
+          reply: "賃貸管理・貸し出しのご相談ですね！\nご所有されている物件のエリアはおどちらになりますか？",
+          options: ["📍 赤羽・北区エリア", "📍 川口エリア", "📍 板橋区エリア", "📍 その他"]
+        },
+        2: {
+          reply: "承知いたしました。\nご所有物件の種別について教えていただけますか？",
+          options: ["🏢 区分マンション", "🏠 一戸建て", "🏬 アパート・一棟ビル", "❓ その他"]
+        },
+        3: {
+          reply: "ありがとうございます。\n現在の物件のご状況はいかがでしょうか？",
+          options: ["🔑 現在空室", "🚪 近々退去予定", "🏃 他社で募集中", "💭 今後の参考に"]
+        },
+        4: {
+          reply: "承知いたしました。\n今回はどのようなサポートをご希望でしょうか？",
+          options: ["💡 無料で賃料査定したい", "🛠️ 管理会社を変更したい", "🔍 空室対策・集客の相談", "❓ 検討中"]
+        },
+        5: {
+          reply: "詳しく教えていただきありがとうございます！\n地域の賃貸市場に精通したスタッフが適切な査定・プランをご提案いたします。\n画面下部のお問い合わせボタンよりご相談をお待ちしております。",
+          options: []
+        }
+      },
 
-# Communication Rules
-- 丁寧で誠実、かつ分かりやすい日本の敬語を徹底すること。
-- スマホでの視認性を高めるため、1回の返答は【100〜150文字程度】とし、適度に改行を入れること。
-- 本文内にテキストで選択肢一覧を書かないこと（選択肢は必ず末尾の [OPTIONS] に出力）。
-- 1回の返答で尋ねるヒアリング項目は【最大1〜2つ】とすること。
-- 会話途中で「こんにちは」等の挨拶を無駄に繰り返さないこと。
-- 現在の会話数：${turnCount}ターン目（最大5ターン）
+      // 3. 売却したい
+      owner_sell: {
+        1: {
+          reply: "ご売却のご相談ですね！\nご売却をご検討中の物件エリアをお聞かせください。",
+          options: ["📍 赤羽・北区エリア", "📍 川口エリア", "📍 板橋区エリア", "📍 その他"]
+        },
+        2: {
+          reply: "ありがとうございます。\n物件の種別について教えていただけますか？",
+          options: ["🏢 分譲マンション", "🏠 一戸建て", "🧱 土地・一棟", "❓ その他"]
+        },
+        3: {
+          reply: "承知いたしました。\nご売却のご希望時期はお決まりでしょうか？",
+          options: ["⚡ できるだけ早く", "📅 半年以内", "📅 1年以内", "📊 まずは査定額だけ知りたい"]
+        },
+        4: {
+          reply: "ありがとうございます。\nご売却にあたって一番重視されるポイントは何でしょうか？",
+          options: ["💰 売却価格の高さ", "⚡ スピード重視", "🔒 周囲に秘密で売却", "💬 丁寧なサポート"]
+        },
+        5: {
+          reply: "ご回答いただきありがとうございます！\n赤羽・北区・川口・板橋エリアに強い当社の専任担当が迅速に査定いたします。\n画面下部のお問い合わせボタンよりお気軽にご依頼ください。",
+          options: []
+        }
+      },
 
-# Strict Guardrails (絶対禁止事項)
-- 架空の物件情報や具体例・スペック（例：「赤羽駅徒歩5分、家賃8万円の1K」等）は絶対につくらないこと。
-- 家賃、査定額、諸費用、仲介手数料などの具体的な数字（〇万円、〇％など）や金額の試算・例え話は一切出さないこと。
-- ユーザーから具体的な条件を聞いていない段階で「条件を受け止めました」と言わないこと。
-- 「**」や「#」などのマークダウン記号は絶対に使用せず、プレーンテキストのみで回答すること。
-
-# Turn & Output Format Rules
-${turnCount < 5 ? `
-1〜4ターン目ルール：
-質問は1〜2つにし、返答本文の末尾に【必ず】以下のフォーマットで2〜3個の選択肢を付与してください。
-
-(回答本文テキスト)
-
-[OPTIONS]
-- 選択肢1
-- 選択肢2
-- 選択肢3
-` : `
-★現在5ターン目（最終ターン）です：
-新たな質問（「〜でしょうか？」等）は一切禁止です。
-これまでのヒアリングのお礼と、ご希望に沿った最新情報・提案の準備ができる旨を伝え、画面下部のお問い合わせボタンから進んでいただくよう案内して締めくくってください。
-※[OPTIONS] タグや選択肢は絶対に出力しないでください。
-`}`;
-
-    const messages = [{ role: "system", content: systemInstruction }];
-
-    if (history && Array.isArray(history)) {
-      const recentHistory = history.slice(-8);
-      recentHistory.forEach(item => {
-        messages.push({
-          role: item.role === "user" ? "user" : "assistant",
-          content: String(item.content || "")
-        });
-      });
-    }
-
-    messages.push({ role: "user", content: String(message || "こんにちは") });
-
-    const postData = JSON.stringify({
-      model: "llama-3.1-8b-instant",
-      messages: messages,
-      temperature: 0.2,
-      presence_penalty: 0.5,
-      frequency_penalty: 0.5,
-      max_tokens: 300
-    });
-
-    const options = {
-      hostname: 'api.groq.com',
-      path: '/openai/v1/chat/completions',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Length': Buffer.byteLength(postData, 'utf8')
+      // 4. 購入したい
+      buy: {
+        1: {
+          reply: "物件購入のご相談ですね！\nご希望のエリアをお聞かせいただけますか？",
+          options: ["📍 赤羽・北区エリア", "📍 川口エリア", "📍 板橋区エリア", "📍 その他"]
+        },
+        2: {
+          reply: "ありがとうございます！\nご検討中の物件種別について教えていただけますか？",
+          options: ["🏢 マンション", "🏡 新築・中古戸建て", "🧱 土地", "❓ まだ迷っている"]
+        },
+        3: {
+          reply: "承知いたしました。\nおおよそのご予算感（買い替えの場合は想定額）はおいくら位でしょうか？",
+          options: ["💰 3,000万円以下", "💰 3,000〜5,000万円", "💰 5,000〜7,000万円", "💰 7,000万円以上"]
+        },
+        4: {
+          reply: "ありがとうございます。\nご購入のご希望時期はいつ頃をお考えですか？",
+          options: ["⚡ 良い物件があればすぐ", "📅 半年以内", "📅 1年以内", "💭 まずは情報収集"]
+        },
+        5: {
+          reply: "条件をお聞かせいただきありがとうございます！\n未公開物件情報も含め、お客様に最適な物件・資金計画をご案内いたします。\n画面下部のお問い合わせボタンよりご相談予約をお待ちしております。",
+          options: []
+        }
       }
     };
 
-    const apiResponse = await new Promise((resolve, reject) => {
-      const request = https.request(options, (response) => {
-        response.setEncoding('utf8');
-        let data = '';
-        response.on('data', (chunk) => { data += chunk; });
-        response.on('end', () => {
-          try {
-            resolve({ statusCode: response.statusCode, body: JSON.parse(data) });
-          } catch (e) {
-            reject(new Error("JSON解析エラー"));
-          }
-        });
-      });
-      request.on('error', (error) => reject(error));
-      request.write(postData, 'utf8');
-      request.end();
-    });
+    // 該当するターンとシナリオのデータを取得（5ターン超えたら5ターン目を維持）
+    const step = Math.min(turnCount, 5);
+    const currentScenario = scenarios[category][step] || scenarios.rent[step];
 
-    if (apiResponse.statusCode !== 200) {
-      return res.status(apiResponse.statusCode).json({ error: "一時的なエラーが発生しました。" });
-    }
-
-    const rawText = apiResponse.body.choices?.[0]?.message?.content || "";
-
-    let replyText = rawText;
-    let buttonOptions = [];
-
-    // [OPTIONS] タグとハイフン記号の解析処理
-    const optionsIndex = rawText.indexOf("[OPTIONS]");
-    if (optionsIndex !== -1) {
-      replyText = rawText.substring(0, optionsIndex).trim();
-      const optionsPart = rawText.substring(optionsIndex + 9);
-      buttonOptions = optionsPart
-        .split('\n')
-        .map(line => line.replace(/^[\s\-\*•]+/, '').trim())
-        .filter(line => line.length > 0);
-    }
-
-    const isFinished = turnCount >= 5;
-
-    return res.status(200).json({ 
-      reply: replyText,
-      options: isFinished ? [] : buttonOptions,
-      isFinished: isFinished,
-      userCategory: userCategory
+    return res.status(200).json({
+      reply: currentScenario.reply,
+      options: currentScenario.options,
+      isFinished: step >= 5,
+      userCategory: category
     });
 
   } catch (error) {
