@@ -58,13 +58,11 @@ async function sendMessage(textFromButton) {
       body: JSON.stringify({ message: message, history: conversationHistory })
     });
 
-    const data = await response.json();
-
-    if (response.ok && data.reply) {
+    if (response.ok) {
+      const data = await response.json();
       replyText = data.reply;
       optionsData = data.options;
     } else {
-      // API未接続やエラー時のセーフティフォールバック
       replyText = getFallbackReply(message);
     }
   } catch (error) {
@@ -82,10 +80,10 @@ async function sendMessage(textFromButton) {
     } else if (optionsData && optionsData.length > 0) {
       renderApiButtons(optionsData);
     } else {
-      renderAdaptiveButtons(message, replyText);
+      renderAdaptiveButtons(message);
     }
 
-    isSending = false;
+    isSending = false; // 送信中フラグを確実に解除
   }
 }
 window.sendMessage = sendMessage;
@@ -156,51 +154,52 @@ function renderApiButtons(options) {
   });
 }
 
-// 1〜4ラリー目の動的ボタン切替
-function renderAdaptiveButtons(userMsg, aiReply) {
+// 1〜4ラリー目の動的ボタン切替（不整合を修正）
+function renderAdaptiveButtons(userMsg) {
   const quickButtonsDiv = document.getElementById("quick-buttons");
   if (!quickButtonsDiv) return;
 
   const uMsg = userMsg ? String(userMsg) : "";
-  let candidateButtons = [];
+  let candidateTexts = [];
 
   if (uMsg.includes("賃貸") || uMsg.includes("探したい")) {
-    candidateButtons = [
-      { label: "📍 エリア・間取りを伝える", text: "希望のエリアや間取りの条件があります" },
-      { label: "💰 ご予算について伝える", text: "予算や家賃の希望について相談したいです" },
-      { label: "🐾 こだわり条件を伝える", text: "ペット飼育や設備などのこだわり条件があります" },
-      { label: "💬 その他スタッフに相談", text: "スタッフに直接相談したいことがあります" }
+    candidateTexts = [
+      "📍 エリア・間取りを相談したい",
+      "💰 家賃やご予算について相談したい",
+      "🐾 ペット可などこだわり条件がある",
+      "💬 直接スタッフに相談したい"
     ];
   } else if (uMsg.includes("貸したい")) {
-    candidateButtons = [
-      { label: "🏢 物件のエリア・種別を伝える", text: "所有物件のエリアや種別について伝えたいです" },
-      { label: "💡 空室対策・管理について聞く", text: "空室対策や管理サポートについて詳しく知りたいです" }
+    candidateTexts = [
+      "🏢 所有物件のエリアや種別を伝える",
+      "💡 空室対策や管理内容を聞きたい"
     ];
   } else if (uMsg.includes("売りたい")) {
-    candidateButtons = [
-      { label: "🏠 売却検討の物件情報を伝える", text: "売却を検討している物件の情報を伝えたいです" },
-      { label: "📈 売却の流れや査定について", text: "売却の流れや無料査定について詳しく知りたいです" }
+    candidateTexts = [
+      "🏠 売却したい物件情報を伝える",
+      "📈 売却の流れや無料査定について聞く"
     ];
   } else if (uMsg.includes("買いたい")) {
-    candidateButtons = [
-      { label: "🔍 希望エリア・種別を伝える", text: "探しているエリアや物件の種別を伝えたいです" },
-      { label: "🏦 資金計画・ローン相談", text: "資金計画や住宅ローンについて相談したいです" }
+    candidateTexts = [
+      "🔍 探しているエリアや種別を伝える",
+      "🏦 住宅ローンや資金計画の相談をする"
     ];
   } else {
-    candidateButtons = [
-      { label: "🔍 詳しく条件を伝える", text: "もう少し詳しい条件を伝えます" },
-      { label: "💬 専門スタッフに相談する", text: "専門スタッフに詳しく相談したいです" }
+    candidateTexts = [
+      "🔍 詳しい希望条件を伝える",
+      "💬 専門スタッフに直接相談する"
     ];
   }
 
-  const filteredButtons = candidateButtons.filter(btn => !usedButtonTexts.includes(btn.text));
+  // 使用済み以外のボタンを生成
+  const filteredTexts = candidateTexts.filter(text => !usedButtonTexts.includes(text));
 
   quickButtonsDiv.innerHTML = "";
-  filteredButtons.forEach(btn => {
+  filteredTexts.forEach(text => {
     const button = document.createElement("button");
     button.type = "button";
-    button.innerText = btn.label;
-    button.onclick = () => sendQuickMessage(btn.text);
+    button.innerText = text;
+    button.onclick = () => sendQuickMessage(text);
     quickButtonsDiv.appendChild(button);
   });
 }
