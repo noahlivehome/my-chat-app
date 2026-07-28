@@ -1,47 +1,39 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ノアリブホーム AIアドバイザー</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不動産Webサイト - AIチャット</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <div class="chat-container">
-    <!-- ヘッダー -->
-    <div class="chat-header">
-      <div class="chat-header-title">
-        💬 <span>ノアリブホーム お問い合わせチャット</span>
-      </div>
+    <!-- チャットウィジェット本体 -->
+    <div class="chat-container">
+        <!-- チャットヘッダー -->
+        <div class="chat-header">
+            <span>不動産ご案内AIアシスタント</span>
+        </div>
+
+        <!-- メッセージ表示エリア -->
+        <div class="chat-messages" id="chatMessages">
+            <!-- JavaScriptでメッセージが動的に追加されます -->
+        </div>
+
+        <!-- ボタン選択肢エリア -->
+        <div class="chat-options-container" id="chatOptions">
+            <!-- JavaScriptで選択肢ボタンが動的に追加されます -->
+        </div>
+
+        <!-- 入力エリア -->
+        <div class="chat-input-area">
+            <input type="text" id="userInput" placeholder="メッセージを入力..." onkeypress="handleKeyPress(event)">
+            <button id="sendBtn" onclick="sendMessage()">送信</button>
+        </div>
     </div>
 
-    <!-- チャット本文エリア -->
-    <div class="chat-body" id="chatBody">
-      <div class="message bot-message">
-        こんにちは！ノアリブホームのAIアドバイザーです。<br>
-        お部屋探し（賃貸）、賃貸経営・管理、売却や購入など、何でもお気軽にご相談ください！
-      </div>
-    </div>
-
-    <!-- 初回用選択ボタン（2列配置） -->
-    <div class="quick-buttons" id="quick-buttons">
-      <button type="button" onclick="sendQuickMessage('賃貸物件を探したいです')">🔍 賃貸を探したい</button>
-      <button type="button" onclick="sendQuickMessage('所有している部屋を貸したい・管理の相談がしたいです')">🔑 貸したい</button>
-      <button type="button" onclick="sendQuickMessage('不動産を売りたいです')">🏠 売却したい</button>
-      <button type="button" onclick="sendQuickMessage('不動産を買いたいです')">💰 購入したい</button>
-    </div>
-
-    <!-- 入力エリア -->
-    <form class="chat-input-area" id="chat-form" onsubmit="return false;">
-      <input type="text" id="user-input" placeholder="メッセージを入力..." autocomplete="off">
-      <button type="button" class="send-icon-btn" id="send-btn" onclick="sendMessage()">➤</button>
-    </form>
-  </div>
-<form class="chat-input-area" id="chat-form" onsubmit="return false;">
-      <input type="text" id="user-input" placeholder="メッセージを入力..." autocomplete="off">
-      <button type="button" class="send-icon-btn" id="send-btn" onclick="sendMessage()">➤</button>
-    </form>
-  </div>
+    <!-- スクリプトの読み込み（階層を指定） -->
+    <script src="api/chat.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
