@@ -1,8 +1,5 @@
 @charset "UTF-8";
 
-/* ==========================================================================
-   Base Styles & Reset
-   ========================================================================== */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -10,9 +7,9 @@
 }
 
 body {
-  font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
-  background-color: #f7f4ef;
-  color: #4a433d;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background-color: #f2f4f1;
+  color: #333333;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -20,37 +17,38 @@ body {
   padding: 12px;
 }
 
-/* ==========================================================================
-   Chat Container
-   ========================================================================== */
 .chat-container {
   width: 100%;
-  max-width: 480px;
-  height: 90vh;
-  max-height: 800px;
+  max-width: 440px;
+  height: 600px;
   background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(112, 93, 76, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid #e8e2d9;
 }
 
-/* Header */
+/* ヘッダー */
 .chat-header {
-  background: #8c7662;
+  background: #a3b19b;
   color: #ffffff;
-  padding: 18px 20px;
-  text-align: center;
+  padding: 16px 20px;
   font-weight: 600;
-  font-size: 1.05rem;
-  letter-spacing: 0.05em;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   flex-shrink: 0;
 }
 
-/* Chat Body */
+.chat-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* チャットメッセージ表示エリア */
 .chat-body {
   flex: 1;
   padding: 20px 16px;
@@ -58,75 +56,40 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  background-color: #faf8f5;
+  background-color: #f7f8f6;
 }
 
-/* Custom Scrollbar */
-.chat-body::-webkit-scrollbar,
-.quick-buttons::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-.chat-body::-webkit-scrollbar-thumb,
-.quick-buttons::-webkit-scrollbar-thumb {
-  background: #d8cfc4;
-  border-radius: 10px;
-}
-
-/* ==========================================================================
-   Messages
-   ========================================================================== */
 .message {
   max-width: 82%;
   padding: 12px 16px;
   border-radius: 16px;
-  font-size: 0.92rem;
-  line-height: 1.6;
-  word-wrap: break-word;
-  animation: fadeIn 0.25s ease-out forwards;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  word-break: break-word;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* User Message */
 .user-message {
   align-self: flex-end;
-  background-color: #b59f88;
+  background-color: #a3b19b;
   color: #ffffff;
   border-bottom-right-radius: 4px;
-  box-shadow: 0 2px 8px rgba(181, 159, 136, 0.25);
 }
 
-/* Bot Message */
 .bot-message {
   align-self: flex-start;
-  background-color: #efebe4;
-  color: #3d3630;
+  background-color: #ffffff;
+  color: #333333;
   border-bottom-left-radius: 4px;
-  border: 1px solid #e3dcd1;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
 }
 
-/* ==========================================================================
-   Quick Option Buttons Area
-   ========================================================================== */
-/* ==========================================================================
-   Quick Option Buttons Area（横2列の角丸ボタン配置）
-   ========================================================================== */
+/* クイック選択ボタンエリア（横2列の角丸ボタン配置） */
 .quick-buttons {
   padding: 12px;
   background: #ffffff;
   border-top: 1px solid #eee8df;
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 左右2列に等分割 */
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
   flex-shrink: 0;
 }
@@ -134,9 +97,9 @@ body {
 .quick-buttons button {
   background: #ffffff;
   color: #5c5247;
-  border: 1.5px solid #b59f88; /* 枠線デザイン */
+  border: 1.5px solid #b59f88;
   padding: 10px 8px;
-  border-radius: 20px; /* しっかりした角丸 */
+  border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -154,7 +117,7 @@ body {
 /* 5ラリー目以降に出る「お問い合わせ」ボタン（1列フル幅で強調） */
 .quick-buttons button.primary-action-btn,
 .quick-buttons button.full-width {
-  grid-column: span 2; /* 横いっぱいに広げる */
+  grid-column: span 2;
   background: #8c7662;
   color: #ffffff;
   border-color: #7a6653;
@@ -168,82 +131,38 @@ body {
   background: #786452;
 }
 
-/* ==========================================================================
-   Input Form Area
-   ========================================================================== */
+/* 下部入力エリア */
 .chat-input-area {
   display: flex;
-  padding: 14px 12px;
-  border-top: 1px solid #eee8df;
+  padding: 12px 16px;
   background: #ffffff;
-  gap: 8px;
+  gap: 10px;
+  align-items: center;
+  border-top: 1px solid #eaeaea;
   flex-shrink: 0;
 }
 
 .chat-input-area input {
   flex: 1;
   padding: 10px 16px;
-  border: 1px solid #ddd5c9;
-  border-radius: 24px;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
   outline: none;
-  font-size: 0.92rem;
-  background-color: #faf8f5;
-  color: #4a433d;
-  transition: border-color 0.2s, background-color 0.2s;
-}
-
-.chat-input-area input::placeholder {
-  color: #a89f91;
-}
-
-.chat-input-area input:focus {
-  border-color: #b59f88;
-  background-color: #ffffff;
-}
-
-.chat-input-area button {
-  padding: 0 18px;
-  background: #8c7662;
-  color: #ffffff;
-  border: none;
-  border-radius: 24px;
-  font-weight: 600;
   font-size: 0.9rem;
+  background-color: #f5f5f5;
+}
+
+.send-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #a3b19b;
+  border: none;
+  color: #ffffff;
+  font-size: 1.1rem;
   cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.chat-input-area button:hover {
-  background: #786452;
-}
-
-/* チャット全体のコンテナ（高さをしっかり確保する） */
-.chat-container {
-  width: 100%;
-  max-width: 440px;
-  height: 600px; /* ★高さを固定（または 80vh など）にして領域を確保します */
   display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-/* チャットメッセージ表示エリア（余ったスペースをいっぱいに広げる） */
-.chat-body,
-#chatBody {
-  flex: 1 !important; /* ★ここが1つ上に押し広げられるように強制します */
-  min-height: 200px;  /* ★最低限のメッセージエリア高さを確保 */
-  overflow-y: auto;
-  padding: 16px;
-}
-
-/* ボタンエリア（下部に固定） */
-.quick-buttons,
-#quick-buttons {
-  flex-shrink: 0; /* ★潰れないように固定 */
-}
-
-/* 入力エリア（一番下に固定） */
-.chat-input-area,
-#chat-form {
-  flex-shrink: 0; /* ★潰れないように固定 */
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
