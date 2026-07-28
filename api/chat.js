@@ -21,40 +21,73 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "GROQ_API_KEY が設定されていません。" });
     }
 
+    // 正確なラリー数の計算（ユーザーの発話回数 + 1）
     const userMessageCount = Array.isArray(history) 
       ? history.filter(item => item.role === "user").length 
       : 0;
     const turnCount = userMessageCount + 1;
 
+    // 🔥 ニーズ別の詳細なヒアリングシナリオをシステムプロンプトに組み込み
     let systemInstruction = `あなたは不動産会社「ノアリブホーム」の親切でプロフェッショナルなAIコンサルタントです。
-丁寧、誠実、かつ分かりやすい日本の敬語を徹底してください。スマホで見やすいよう100〜150文字程度で簡潔に返答してください。
+丁寧、誠実、かつ分かりやすい日本の敬語を徹底してください。
+スマホで読みやすいよう、回答本文は100〜150文字程度で簡潔にまとめてください。
 
-【主要対応エリア】
-・東京都北区、板橋区、埼玉県（川口・戸田・和光市・朝霞など）
-
-【会話進行ルール】
-現在のターン数：${turnCount}ターン目
+【基本運用ルール】
+現在の会話ターン：${turnCount}ターン目（最大5ターン）
 
 1〜4ターン目：
-・ユーザーの目的（借りる/貸す/売りたい/買いたい）に合わせて、1回のメッセージで質問は「1つだけ」にしてください。
-・質問の選択肢（2〜4個）を、必ずメッセージの【一番最後】に [OPTIONS: 選択肢1, 選択肢2, 選択肢3, 選択肢4] という形式でのみ出力してください。
-・絵文字を選択肢の先頭に付けても構いません。（例: [OPTIONS: 🏠 賃貸マンション, 🏢 分譲マンション, 🏠 戸建て]）
+・ユーザーの目的に合わせ、1回のメッセージで「質問は1つだけ」にしてください。
+・回答の本文末尾に、必ず [OPTIONS: 選択肢1, 選択肢2, 選択肢3, 選択肢4] の形式で選択肢を出力してください。
+・質問は5ターン目まで継続し、早期にお問い合わせへ誘導しないでください。
 
-【絶対禁止事項】
-・本文中に選択肢のリスト（箇条書き等）をテキストで書くこと。
-・「貸したい」人に「家賃上限」を聞くような文脈無視の質問。
-・マークダウン記号（** や # 等）を使うこと。`;
+【ニーズ別ヒアリングシナリオ＆OPTIONS出力例】
 
+1. 「借りたい（賃貸）」の場合
+・質問例：ご希望のエリアやご予算、間取り、入居時期などを順にヒアリング。
+・OPTIONS例：
+  [OPTIONS: 🏠 1K・1DK, 🏠 1LDK・2LDK, 🏠 3LDK以上, ❓ その他]
+  [OPTIONS: 💰 8万円未満, 💰 8〜10万円, 💰 10〜15万円, 💰 15万円以上]
+
+2. 「買いたい（購入）」の場合
+・質問例：探している種別（マンション/戸建て）、ご予算、エリア、資金計画等をヒアリング。
+・OPTIONS例：
+  [OPTIONS: 🏢 新築/中古マンション, 🏡 一戸建て, 🧱 土地, ❓ その他]
+  [OPTIONS: 💰 3,000万円以下, 💰 3,000〜5,000万円, 💰 5,000万〜7,000万円, 💰 7,000万円以上]
+
+3. 「貸したい（オーナー賃貸管理）」の場合
+・質問例：所有物件の種別、現在の状況（空室/退去予定）、管理サポートへのご希望をヒアリング。
+・OPTIONS例：
+  [OPTIONS: 🏢 区分マンション, 🏠 一戸建て, 🏬 アパート・一棟ビル, ❓ その他]
+  [OPTIONS: 💡 賃料査定したい, 🛠️ 管理会社を変更したい, 🔍 集客のみ頼みたい, ❓ まだ検討中]
+
+4. 「売りたい（売却）」の場合
+・質問例：物件種別、売却のご希望時期、査定方法（簡易/訪問）等をヒアリング。
+・OPTIONS例：
+  [OPTIONS: 🏢 分譲マンション, 🏠 一戸建て, 🧱 土地/一棟, ❓ その他]
+  [OPTIONS: ⚡ できるだけ早く売りたい, 📅 半年以内に売りたい, 📊 まずは査定額だけ知りたい]
+
+【🚨 ミスマッチの完全禁止ルール（厳守）】
+・「貸したい」「売りたい」（オーナー様）に対して「賃貸のご予算（賃料）」を聞くことは絶対禁止です。
+・「借りたい」「買いたい」お客様に対して「管理サービスの希望」を聞くことは絶対禁止です。
+・ユーザーの目的（借りる/買いたい/貸したい/売りたい）を文脈から正確に判断し、適切なシナリオに限定して質問してください。
+
+【禁止事項】
+・本文中に選択肢の箇条書きテキストを書くこと（必ず [OPTIONS: ...] タグ形式のみ）。
+・マークダウン記号（** や # 等）を使用すること。
+・嘘の物件情報や不確かな条件を捏造すること（ハルシネーションの防止）。`;
+
+    // 5ターン目（最終ターン）の締めくくり指示
     if (turnCount >= 5) {
-      systemInstruction += `\n\n【現在5ターン目です（完了指示）】
-これ以上の質問（「〜でしょうか？」等）は一切禁止です。
-これまでのやり取りを簡単に整理・確認した上で、
-「詳細なご案内やご相談につきましては、画面下部のアクションボタンよりお進みください。」
+      systemInstruction += `\n\n【現在5ターン目です（完了・誘導ターン）】
+追加の質問（「〜でしょうか？」等）は一切禁止です。
+これまでのヒアリング内容を100文字程度で簡潔に確認・まとめをした上で、
+「詳細なご提案やご相談につきましては、画面下部のアクションボタンよりお気軽にお進みください。」
 と案内して締めくくってください。[OPTIONS: ...] は絶対に付与しないでください。`;
     }
 
     const messages = [{ role: "system", content: systemInstruction }];
 
+    // 会話履歴の追加（過去6件分＝3往復程度に絞りトークン節約）
     if (history && Array.isArray(history)) {
       const recentHistory = history.slice(-6);
       recentHistory.forEach(item => {
@@ -70,10 +103,10 @@ export default async function handler(req, res) {
     const postData = JSON.stringify({
       model: "llama-3.1-8b-instant",
       messages: messages,
-      temperature: 0.1,
-      presence_penalty: 0.7,
-      frequency_penalty: 0.7,
-      max_tokens: 300
+      temperature: 0.1, // 低温に設定してハルシネーション（ブレ）を防止
+      presence_penalty: 0.5,
+      frequency_penalty: 0.5,
+      max_tokens: 300 // トークン上限を絞りレスポンス速度向上＆コスト削減
     });
 
     const options = {
@@ -107,6 +140,7 @@ export default async function handler(req, res) {
     });
 
     if (apiResponse.statusCode !== 200) {
+      console.error("Groq API Error:", apiResponse.body);
       return res.status(apiResponse.statusCode).json({ error: "一時的なエラーが発生しました。" });
     }
 
@@ -115,6 +149,7 @@ export default async function handler(req, res) {
     let replyText = rawText;
     let buttonOptions = [];
 
+    // [OPTIONS: ...] タグの抽出と本文からの分解処理
     const match = rawText.match(/\[?OPTIONS:\s*([^\]\n]+)\]?/i);
     if (match) {
       replyText = rawText.replace(/\[?OPTIONS:\s*([^\]\n]+)\]?/gi, '').trim();
