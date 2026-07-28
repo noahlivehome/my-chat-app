@@ -1,7 +1,7 @@
 // チャットの状態管理
-const chatState = {
-    category: null, // 'rent', 'owner', 'sell', 'buy'
-    turnCount: 0    // ターン数制限用
+window.chatState = {
+    category: null,
+    turnCount: 0
 };
 
 // 初期表示用選択肢データ
@@ -12,20 +12,20 @@ const initialOptions = [
     { text: "🏡 物件を購入したい", value: "buy" }
 ];
 
-// ウェルカムメッセージ取得
-function getWelcomeMessage() {
+// 初期メッセージ取得関数
+window.getWelcomeMessage = function() {
     return {
         text: "いらっしゃいませ！\n不動産のご案内AIアシスタントです。\n\n本日はどのようなご相談でしょうか？\n下の選択肢よりお選びください。",
         options: initialOptions
     };
-}
+};
 
-// チャット応答ロジック
-function sendChatMessage(userInputText) {
-    chatState.turnCount++;
+// チャット応答生成関数
+window.sendChatMessage = function(userInputText) {
+    window.chatState.turnCount++;
 
     // 5ターン目以降はフォーム・相談窓口へ誘導
-    if (chatState.turnCount >= 5) {
+    if (window.chatState.turnCount >= 5) {
         return {
             text: "詳細なご条件やお問合せにつきましては、担当スタッフより詳しく丁寧にご案内いたします。\n\nお手数ですが、下記よりお気軽にお問い合わせくださいませ。",
             options: [
@@ -35,9 +35,9 @@ function sendChatMessage(userInputText) {
     }
 
     // 初回カテゴリ未選択の場合
-    if (!chatState.category) {
+    if (!window.chatState.category) {
         if (userInputText.includes("賃貸") || userInputText.includes("借り")) {
-            chatState.category = "rent";
+            window.chatState.category = "rent";
             return {
                 text: "お部屋探しですね！\nご希望のエリア、間取り、ご予算、ペット飼育などのこだわり条件はございますか？\n\n差し支えない範囲で教えていただけますと幸いです！",
                 options: [
@@ -47,7 +47,7 @@ function sendChatMessage(userInputText) {
                 ]
             };
         } else if (userInputText.includes("貸したい") || userInputText.includes("オーナー")) {
-            chatState.category = "owner";
+            window.chatState.category = "owner";
             return {
                 text: "賃貸管理のご相談ですね！\n所有されている物件のエリアや種別（マンション・戸建てなど）、現在のお悩みについて教えていただけますか？",
                 options: [
@@ -57,7 +57,7 @@ function sendChatMessage(userInputText) {
                 ]
             };
         } else if (userInputText.includes("売却") || userInputText.includes("売り")) {
-            chatState.category = "sell";
+            window.chatState.category = "sell";
             return {
                 text: "ご売却のご相談ですね！\nご売却をご検討中の物件エリアや時期、現状のお悩みなどについて教えていただけますか？",
                 options: [
@@ -67,7 +67,7 @@ function sendChatMessage(userInputText) {
                 ]
             };
         } else if (userInputText.includes("購入") || userInputText.includes("買い")) {
-            chatState.category = "buy";
+            window.chatState.category = "buy";
             return {
                 text: "物件ご購入のご相談ですね！\nご希望のエリアや種別（新築・中古戸建て・マンションなど）、ご検討のきっかけなどを教えていただけますか？",
                 options: [
@@ -79,7 +79,7 @@ function sendChatMessage(userInputText) {
         }
     }
 
-    // 専門的トラブル等のハンドリング
+    // トラブル・法律等への対応
     if (userInputText.includes("トラブル") || userInputText.includes("契約") || userInputText.includes("法律") || userInputText.includes("違約金")) {
         return {
             text: "ご質問ありがとうございます。\nお約束事や専門的なご相談につきましては、専門スタッフより詳しくご案内いたします。\n\nお手数ですが直接お問い合わせいただけますでしょうか。",
@@ -89,8 +89,8 @@ function sendChatMessage(userInputText) {
         };
     }
 
-    // カテゴリ別のシナリオ回答
-    switch (chatState.category) {
+    // カテゴリ別シナリオ
+    switch (window.chatState.category) {
         case "rent":
             return {
                 text: "詳細なご希望をお知らせいただきありがとうございます！\nご希望の入居時期や、その他の譲れない条件（バストイレ別、2階以上など）はございますか？",
@@ -135,4 +135,4 @@ function sendChatMessage(userInputText) {
                 ]
             };
     }
-}
+};
