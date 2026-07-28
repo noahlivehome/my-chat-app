@@ -1,4 +1,157 @@
-// ★ 修正版：エリア特化＆コンテキスト適応型ボタン生成関数 ★
+let conversationHistory = [];
+let turnCount = 0; // ラリー回数
+let isSending = false; // 二重送信・フリーズ防止用フラグ
+let usedButtonTexts = []; // 押されたボタンのテキストを記録する配列
+const contactUrl = "https://www.noahlivehome.jp/contact/"; 
+
+// ページ読み込み完了時にイベントを確実にバインド＆初期ボタン表示
+window.addEventListener("DOMContentLoaded", () => {
+  const sendBtn = document.getElementById("send-btn");
+  const userInput = document.getElementById("user-input");
+
+  if (sendBtn) {
+    sendBtn.onclick = (e) => {
+      e.preventDefault();
+      sendMessage();
+    };
+  }
+
+  if (userInput) {
+    userInput.onkeypress = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+      }
+    };
+  }
+
+  // 初回読み込み時にデフォルトのクイック選択ボタンを描画
+  renderAdaptiveButtons("", "");
+});
+
+// クイック選択ボタン押下時
+function sendQuickMessage(text) {
+  if (isSending) return; // 送信中なら連打防止
+  sendMessage(text);
+}
+
+// 送信メイン処理
+async function sendMessage(textFromButton) {
+  if (isSending) return; // 処理中なら弾く
+
+  const userInput = document.getElementById("user-input");
+  
+  // ボタンからのテキスト、または入力欄のテキストを取得
+  let message = "";
+  if (typeof textFromButton === "string" && textFromButton.trim() !== "") {
+    message = textFromButton.trim();
+  } else if (userInput && userInput.value.trim() !== "") {
+    message = userInput.value.trim();
+  }
+
+  if (!message) return; // 空文字送信防止
+
+  // 押されたテキストを記録（一度押したボタンを除外するため）
+  usedButtonTexts.push(message);
+
+  // 送信中フラグをオン
+  isSending = true;
+
+  // 入力欄をクリア
+  if (userInput) userInput.value = "";
+
+  // 1. ユーザーメッセージ表示
+  appendMessage("user-message", message);
+  turnCount++; // ラリー数加算
+
+  try {
+    // 2. API送信
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8"
+      },
+      body: JSON.stringify({
+        message: message,
+        history: conversationHistory
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.reply) {
+      // 3. AIの返答を表示
+      appendMessage("bot-message", data.reply);
+
+      // 4. 会話履歴更新
+      conversationHistory.push({ role: "user", content: message });
+      conversationHistory.push({ role: "assistant", content: data.reply });
+
+      // 5. APIからボタン（data.options）が返ってきている場合は最優先、なければ動的生成
+      if (data.options && data.options.length > 0) {
+        renderApiButtons(data.options);
+      } else {
+        renderAdaptiveButtons(message, data.reply);
+      }
+
+    } else {
+      console.error("API Error Response:", data);
+      appendMessage("bot-message", `エラーが発生しました: ${data.error || "通信失敗"}`);
+    }
+
+  } catch (error) {
+    console.error("送信通信エラー:", error);
+    appendMessage("bot-message", "通信エラーが発生しました。時間を置いて再度お試しください。");
+  } finally {
+    // 処理完了後にフラグ解除
+    isSending = false;
+  }
+}
+
+// メッセージ描画
+function appendMessage(senderClass, text) {
+  const chatBody = document.getElementById("chatBody");
+  if (!chatBody) return;
+
+  const messageElement = document.createElement("div");
+  messageElement.className = `message ${senderClass}`;
+  
+  // 万が一 [OPTIONS] が含まれていた場合、本文だけを抽出して表示
+  let cleanText = String(text);
+  if (cleanText.includes("[OPTIONS]")) {
+    cleanText = cleanText.split("[OPTIONS]")[0];
+  }
+
+  cleanText = cleanText.replace(/\*\*/g, '').trim();
+  messageElement.innerHTML = cleanText.replace(/\n/g, '<br>');
+
+  chatBody.appendChild(messageElement);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+// APIからの確実な指定ボタン（data.options）を優先描画する関数
+function renderApiButtons(options) {
+  const quickButtonsDiv = document.getElementById("quick-buttons");
+  if (!quickButtonsDiv) return;
+
+  quickButtonsDiv.innerHTML = "";
+
+  options.forEach(optText => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.innerText = optText;
+
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      sendQuickMessage(optText);
+    });
+
+    quickButtonsDiv.appendChild(button);
+  });
+}
+
+// エリア特化＆コンテキスト適応型ボタン生成関数
 function renderAdaptiveButtons(userMsg, aiReply) {
   const quickButtonsDiv = document.getElementById("quick-buttons");
   if (!quickButtonsDiv) return;
@@ -9,7 +162,7 @@ function renderAdaptiveButtons(userMsg, aiReply) {
 
   let candidateButtons = [];
 
-  // 0. ★【追加】初回表示時（メッセージが空のとき）★
+  // 0. ★【修正ポイント】初回表示時（メッセージが空のとき）★
   if (!uMsg && !aReply) {
     candidateButtons = [
       { label: "🏠 賃貸物件を探したい", text: "賃貸物件を探したいです" },
@@ -35,7 +188,7 @@ function renderAdaptiveButtons(userMsg, aiReply) {
       { label: "📅 無料で内見予約・問合せをする", url: contactUrl, isPrimary: true }
     ];
   }
-  // 3. 🔑 オーナー様向け（貸したい・管理の文脈）
+  // 3. オーナー様向け（貸したい・管理の文脈）
   else if (aReply.includes("管理") || aReply.includes("空室") || uMsg.includes("貸したい")) {
     candidateButtons = [
       { label: "🏠 ノアリブホームの管理サポートを聞く", text: "どんな管理サポートや空室対策がありますか？" },
@@ -43,7 +196,7 @@ function renderAdaptiveButtons(userMsg, aiReply) {
       { label: "📊 無料で賃料査定・管理相談を申込む", url: contactUrl, isPrimary: true }
     ];
   } 
-  // 4. 🏠 売主様向け（売却・査定の文脈）
+  // 4. 売主様向け（売却・査定の文脈）
   else if (aReply.includes("査定") || uMsg.includes("売却") || uMsg.includes("売りたい")) {
     candidateButtons = [
       { label: "🤝 売却の手順や費用を聞く", text: "売却の手順や費用について教えてください" },
@@ -51,7 +204,7 @@ function renderAdaptiveButtons(userMsg, aiReply) {
       { label: "📊 無料で売却査定を依頼する", url: contactUrl, isPrimary: true }
     ];
   }
-  // 5. 💰 購入したい（売買購入の文脈）
+  // 5. 購入したい（売買購入の文脈）
   else if (uMsg.includes("購入") || uMsg.includes("買いたい")) {
     candidateButtons = [
       { label: "📍 赤羽・北区エリアで買いたい", text: "赤羽・北区エリアで物件を探しています" },
@@ -69,7 +222,7 @@ function renderAdaptiveButtons(userMsg, aiReply) {
     ];
   }
 
-  // ★ 過去に押されたテキストを持つボタンを除外（URLボタンは常に残す）
+  // 過去に押されたテキストを持つボタンを除外（URLボタンは常に残す）
   const filteredButtons = candidateButtons.filter(btn => {
     if (btn.url) return true;
     return !usedButtonTexts.includes(btn.text);
