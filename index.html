@@ -1,203 +1,44 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ノアリブホーム AIチャット</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; }
-    .chat-container { max-width: 450px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); overflow: hidden; display: flex; flex-direction: column; height: 600px; }
-    .chat-header { background: #8da288; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 16px; }
-    .chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: #fdfdfd; }
-    
-    .msg { max-width: 80%; padding: 12px 16px; border-radius: 16px; line-height: 1.5; font-size: 14px; }
-    .msg.user { align-self: flex-end; background: #8da288; color: white; border-bottom-right-radius: 4px; }
-    .msg.assistant { align-self: flex-start; background: #f0f2f0; color: #333; border-bottom-left-radius: 4px; }
+// 🔥 1〜4ターン目：AIから渡されたニーズ別選択肢を画像スタイルボタンに変換
+function renderTurnButtons(options) {
+  const actionArea = document.getElementById("actionArea");
+  actionArea.innerHTML = "";
 
-    /* 🔥 画像スタイルのボタン容器 */
-    .button-container { padding: 12px 15px; background: #fafafa; border-top: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 10px; }
-    
-    /* 2列並びのグリッド（購入・売却・賃貸・管理が綺麗に収まります） */
-    .cta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    
-    /* 画像を完全に模したボタンデザイン */
-    .cta-sub-btn {
-      background: #ffffff;
-      border: 1px solid #7c9878;
-      color: #333333;
-      padding: 10px 6px;
-      border-radius: 16px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      text-align: center;
-      line-height: 1.3;
-      transition: background 0.2s;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .cta-sub-btn:hover { background: #f0f4f0; }
+  if (!options || options.length === 0) return;
 
-    /* 5ターン目専用の緑色メインボタン */
-    .cta-main-btn {
-      width: 100%;
-      background-color: #8da288;
-      color: #ffffff;
-      border: none;
-      padding: 14px 10px;
-      border-radius: 16px;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-      text-align: center;
-    }
+  const container = document.createElement("div");
+  container.className = "button-container";
 
-    .input-area { display: flex; padding: 12px; background: #fff; border-top: 1px solid #eee; align-items: center; gap: 8px; }
-    .input-area input { flex: 1; padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 20px; outline: none; font-size: 14px; }
-    .input-area button { padding: 10px 16px; background: #8da288; color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; }
-  </style>
-</head>
-<body>
+  const grid = document.createElement("div");
+  grid.className = "cta-grid";
 
-<div class="chat-container">
-  <div class="chat-header">ノアリブホーム AIサポート</div>
-  
-  <div class="chat-box" id="chatBox">
-    <div class="msg assistant">こんにちは！ノアリブホームです。お部屋探しやご売却・賃貸管理など、どのようなご相談でしょうか？</div>
-  </div>
-  
-  <!-- 🔥 ターンごと・初期表示のボタンエリア -->
-  <div id="actionArea">
+  options.forEach(optText => {
+    const btn = document.createElement("button");
+    btn.className = "cta-sub-btn";
+    btn.innerText = optText;
+    btn.onclick = () => sendOption(optText);
+    grid.appendChild(btn);
+  });
+
+  container.appendChild(grid);
+  actionArea.appendChild(container);
+}
+
+// 🔥 5ターン目（会話終了時）：画像と全く同じデザインの最終CTAを表示
+function renderFinalCTAButtons() {
+  const actionArea = document.getElementById("actionArea");
+  actionArea.innerHTML = `
     <div class="button-container">
       <div class="cta-grid">
-        <button class="cta-sub-btn" onclick="sendOption('部屋を探したい')">🏠 部屋を探したい</button>
-        <button class="cta-sub-btn" onclick="sendOption('貸したい（オーナー）')">💡 貸したい（オーナー）</button>
-        <button class="cta-sub-btn" onclick="sendOption('売りたい（売却）')">📊 売りたい（売却）</button>
-        <!-- ✨ 追加された買いたい（購入）ボタン -->
-        <button class="cta-sub-btn" onclick="sendOption('買いたい（購入）')">🔑 買いたい（購入）</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="input-area">
-    <input type="text" id="userInput" placeholder="メッセージを入力..." onkeypress="handleKeyPress(event)">
-    <button onclick="sendUserMessage()">送信</button>
-  </div>
-</div>
-
-<script>
-  let chatHistory = [];
-
-  function appendMessage(role, text) {
-    const chatBox = document.getElementById("chatBox");
-    const msgDiv = document.createElement("div");
-    msgDiv.className = `msg ${role}`;
-    msgDiv.innerText = text;
-    chatBox.appendChild(msgDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-
-  // 🔥 毎ターンAIが返した選択肢（2〜4個）を画像と同じデザインで生成
-  function renderTurnButtons(options) {
-    const actionArea = document.getElementById("actionArea");
-    actionArea.innerHTML = "";
-
-    if (!options || options.length === 0) return;
-
-    const container = document.createElement("div");
-    container.className = "button-container";
-
-    const grid = document.createElement("div");
-    grid.className = "cta-grid";
-
-    // 選択肢が3つなど奇数の場合は1つ全幅にするなどのスタイル自動調整も可能
-    options.forEach(optText => {
-      const btn = document.createElement("button");
-      btn.className = "cta-sub-btn";
-      btn.innerText = optText;
-      btn.onclick = () => sendOption(optText);
-      grid.appendChild(btn);
-    });
-
-    container.appendChild(grid);
-    actionArea.appendChild(container);
-  }
-
-  // 5ターン目の最終ボタン
-  function renderFinalCTAButtons() {
-    const actionArea = document.getElementById("actionArea");
-    actionArea.innerHTML = `
-      <div class="button-container">
-        <div class="cta-grid">
-          <button class="cta-sub-btn" onclick="sendOption('ノアリブホームの管理サポートを聞く')">
-            🏠 管理サポートを聞く
-          </button>
-          <button class="cta-sub-btn" onclick="sendOption('相談・取引の流れを知りたい')">
-            💡 ご相談の流れを知りたい
-          </button>
-        </div>
-        <button class="cta-main-btn" onclick="window.location.href='/contact'">
-          📊 無料で査定・物件相談を申し込む
+        <button class="cta-sub-btn" onclick="sendOption('ノアリブホームの管理サポートを聞く')">
+          🏠 ノアリブホームの管理サポートを聞く
+        </button>
+        <button class="cta-sub-btn" onclick="sendOption('貸し出し・ご相談の流れを知りたい')">
+          💡 ご相談の流れを知りたい
         </button>
       </div>
-    `;
-  }
-
-  function sendOption(text) {
-    document.getElementById("actionArea").innerHTML = ""; // 押した後にボタン消去
-    sendMessage(text);
-  }
-
-  function sendUserMessage() {
-    const input = document.getElementById("userInput");
-    const text = input.value.trim();
-    if (!text) return;
-    input.value = "";
-    document.getElementById("actionArea").innerHTML = "";
-    sendMessage(text);
-  }
-
-  function handleKeyPress(e) {
-    if (e.key === "Enter") sendUserMessage();
-  }
-
-  async function sendMessage(userText) {
-    appendMessage("user", userText);
-
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: userText,
-          history: chatHistory
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.reply) {
-        appendMessage("assistant", data.reply);
-        
-        // ターンに応じたボタンの更新
-        if (data.isFinished) {
-          renderFinalCTAButtons();
-        } else {
-          renderTurnButtons(data.options);
-        }
-
-        chatHistory.push({ role: "user", content: userText });
-        chatHistory.push({ role: "assistant", content: data.reply });
-      } else {
-        appendMessage("assistant", "エラーが発生しました。");
-      }
-    } catch (err) {
-      console.error(err);
-      appendMessage("assistant", "通信エラーが発生しました。");
-    }
-  }
-</script>
-
-</body>
-</html>
+      <button class="cta-main-btn" onclick="window.location.href='/contact'">
+        📊 無料で賃料査定・物件相談を申し込む
+      </button>
+    </div>
+  `;
+}
