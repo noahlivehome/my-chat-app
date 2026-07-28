@@ -13,19 +13,11 @@
       ノアリブホーム お問い合わせチャット
     </div>
 
-    <div class="chat-body" id="chatBody">
-      <div class="message bot-message">
-        こんにちは！ノアリブホームへようこそ。<br>
-        お部屋探しや不動産のご相談など、気になることを選択するか、入力欄よりご質問ください！
-      </div>
-    </div>
-
-    <!-- 初回ボタン（お問い合わせボタンは除外） -->
-    <div class="quick-buttons" id="quick-buttons">
-      <button type="button" onclick="sendQuickMessage('賃貸物件を探したいです')">🏠 賃貸物件を探したい</button>
-      <button type="button" onclick="sendQuickMessage('所有している部屋を貸したい・管理の相談がしたいです')">🔑 部屋を貸したい・管理相談</button>
-      <button type="button" onclick="sendQuickMessage('不動産を買いたいです')">🏢 不動産を買いたい</button>
-      <button type="button" onclick="sendQuickMessage('不動産を売りたいです')">💰 不動産を売りたい・査定したい</button>
+  <div class="quick-buttons" id="quick-buttons">
+      <button type="button" onclick="sendQuickMessage('賃貸物件を探したいです')">🔍 賃貸を探したい</button>
+      <button type="button" onclick="sendQuickMessage('所有している部屋を貸したい・管理の相談がしたいです')">🔑 貸したい</button>
+      <button type="button" onclick="sendQuickMessage('不動産を売りたいです')">🏠 売却したい</button>
+      <button type="button" onclick="sendQuickMessage('不動産を買いたいです')">💰 購入したい</button>
     </div>
 
     <form class="chat-input-area" id="chat-form" onsubmit="return false;">
