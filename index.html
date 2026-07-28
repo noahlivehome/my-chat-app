@@ -9,12 +9,10 @@
 <body>
 
   <div class="chat-container">
-    <!-- ヘッダー -->
     <div class="chat-header">
       ノアリブホーム お問い合わせチャット
     </div>
 
-    <!-- メッセージ表示エリア -->
     <div class="chat-body" id="chatBody">
       <div class="message bot-message">
         こんにちは！ノアリブホームへようこそ。<br>
@@ -22,13 +20,17 @@
       </div>
     </div>
 
-    <!-- クイック選択ボタンエリア -->
-    <div class="quick-buttons" id="quick-buttons"></div>
+    <!-- ★ ここに最初からボタンを入れておきます ★ -->
+    <div class="quick-buttons" id="quick-buttons">
+      <button type="button" onclick="sendQuickMessage('賃貸物件を探したいです')">🏠 賃貸物件を探したい</button>
+      <button type="button" onclick="sendQuickMessage('所有している部屋を貸したい・管理の相談がしたいです')">🔑 部屋を貸したい・管理相談</button>
+      <button type="button" onclick="sendQuickMessage('不動産の売買（購入・売却）について相談したいです')">🏢 不動産を買いたい・売りたい</button>
+      <button type="button" class="primary-action-btn" onclick="window.open('https://www.noahlivehome.jp/contact/', '_blank')">📩 無料相談・お問い合わせ画面へ進む</button>
+    </div>
 
-    <!-- 入力フォームエリア -->
     <form class="chat-input-area" id="chat-form" onsubmit="return false;">
       <input type="text" id="user-input" placeholder="メッセージを入力..." autocomplete="off">
-      <button type="submit" id="send-btn">送信</button>
+      <button type="button" id="send-btn" onclick="sendMessage()">送信</button>
     </form>
   </div>
 
