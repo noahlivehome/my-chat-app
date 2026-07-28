@@ -16,15 +16,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// クイックボタン押下処理
 function sendQuickMessage(text) {
   if (isSending) return;
   sendMessage(text);
 }
 window.sendQuickMessage = sendQuickMessage;
 
-// メイン送信処理
-async function sendMessage(textFromButton) {
+function sendMessage(textFromButton) {
   if (isSending) return;
 
   const userInput = document.getElementById("user-input");
@@ -45,50 +43,29 @@ async function sendMessage(textFromButton) {
 
   // 1. ユーザーメッセージ表示
   appendMessage("user-message", message);
-  turnCount++; // ラリー数カウント
+  turnCount++;
 
-  let replyText = "";
-  let optionsData = null;
+  // 2. 返答文を作成（通信を行わず即時返答）
+  setTimeout(() => {
+    let replyText = getFallbackReply(message);
 
-  try {
-    // 2. API送信
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify({ message: message, history: conversationHistory })
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      replyText = data.reply;
-      optionsData = data.options;
-    } else {
-      replyText = getFallbackReply(message);
-    }
-  } catch (error) {
-    console.warn("通信またはAPIエラー、フォールバック作動:", error);
-    replyText = getFallbackReply(message);
-  } finally {
-    // 3. AI返答表示と履歴追加
+    // 3. AI返答表示
     appendMessage("bot-message", replyText);
     conversationHistory.push({ role: "user", content: message });
     conversationHistory.push({ role: "assistant", content: replyText });
 
-    // 4. ボタン更新（5ラリー以降の制御を含む）
+    // 4. ボタン更新
     if (turnCount >= 5) {
       renderContactButtonOnly();
-    } else if (optionsData && optionsData.length > 0) {
-      renderApiButtons(optionsData);
     } else {
       renderAdaptiveButtons(message);
     }
 
-    isSending = false; // 送信中フラグを確実に解除
-  }
+    isSending = false;
+  }, 300); // 0.3秒だけ自然なラグを入れる
 }
 window.sendMessage = sendMessage;
 
-// フォールバック返答
 function getFallbackReply(msg) {
   if (turnCount >= 5) {
     return "これまでのご希望条件を元に、専門スタッフが最適なご提案資料をご用意いたします。詳しいご相談や最新の空室状況につきましては、下記のお問い合わせ画面よりお気軽にお進みくださいませ。";
@@ -105,7 +82,6 @@ function getFallbackReply(msg) {
   return "ご要望について承りました。さらに詳しい条件を教えていただけますか？";
 }
 
-// メッセージ表示処理（マークダウン記号を完全除去）
 function appendMessage(senderClass, text) {
   const chatBody = document.getElementById("chatBody");
   if (!chatBody) return;
@@ -125,7 +101,6 @@ function appendMessage(senderClass, text) {
   chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-// 5ラリー目以降：お問い合わせボタンのみをフル幅で表示
 function renderContactButtonOnly() {
   const quickButtonsDiv = document.getElementById("quick-buttons");
   if (!quickButtonsDiv) return;
@@ -139,22 +114,6 @@ function renderContactButtonOnly() {
   quickButtonsDiv.appendChild(button);
 }
 
-// API指定ボタン描画
-function renderApiButtons(options) {
-  const quickButtonsDiv = document.getElementById("quick-buttons");
-  if (!quickButtonsDiv) return;
-  quickButtonsDiv.innerHTML = "";
-
-  options.forEach(optText => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.innerText = optText;
-    button.onclick = () => sendQuickMessage(optText);
-    quickButtonsDiv.appendChild(button);
-  });
-}
-
-// 1〜4ラリー目の動的ボタン切替（不整合を修正）
 function renderAdaptiveButtons(userMsg) {
   const quickButtonsDiv = document.getElementById("quick-buttons");
   if (!quickButtonsDiv) return;
@@ -191,7 +150,6 @@ function renderAdaptiveButtons(userMsg) {
     ];
   }
 
-  // 使用済み以外のボタンを生成
   const filteredTexts = candidateTexts.filter(text => !usedButtonTexts.includes(text));
 
   quickButtonsDiv.innerHTML = "";
