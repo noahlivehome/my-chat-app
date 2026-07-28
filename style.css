@@ -1,6 +1,8 @@
-/* ==========================================
-   ベース設定
-   ========================================== */
+@charset "UTF-8";
+
+/* ==========================================================================
+   Base Styles & Reset
+   ========================================================================== */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -8,208 +10,201 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: #f4f6f8;
-  color: #333;
+  font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
+  background-color: #f7f4ef; /* やわらかいベージュ背景 */
+  color: #4a433d; /* 濃いブラウン文字 */
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  padding: 12px;
 }
 
-/* チャットコンテナ全体 */
+/* ==========================================================================
+   Chat Container
+   ========================================================================== */
 .chat-container {
   width: 100%;
-  max-width: 480px; /* スマホ・モバイルファーストな幅設定 */
-  height: 100vh;
-  max-height: 840px;
-  background-color: #ffffff;
+  max-width: 480px;
+  height: 90vh;
+  max-height: 800px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(112, 93, 76, 0.12); /* あたたかみのある影 */
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  border-radius: 16px;
   overflow: hidden;
+  border: 1px solid #e8e2d9;
 }
 
-/* ==========================================
-   ヘッダー
-   ========================================== */
+/* Header */
 .chat-header {
-  background: linear-gradient(135deg, #005bac, #0082e6);
+  background: #8c7662; /* 落ち着いたシックなブラウン */
   color: #ffffff;
-  padding: 16px 20px;
-  text-align: left;
-}
-
-.header-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.status-badge {
-  width: 10px;
-  height: 10px;
-  background-color: #4caf50;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.chat-header h2 {
-  font-size: 1.1rem;
+  padding: 18px 20px;
+  text-align: center;
   font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.05em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-.header-sub {
-  font-size: 0.75rem;
-  opacity: 0.85;
-  margin-top: 4px;
-}
-
-/* ==========================================
-   チャットログ表示エリア
-   ========================================== */
+/* Chat Body (Message History Area) */
 .chat-body {
   flex: 1;
-  padding: 16px;
+  padding: 20px 16px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  background-color: #f9fbff;
+  gap: 14px;
+  background-color: #faf8f5; /* ほんのり温かみのある白背景 */
 }
 
+/* Scrollbar Style */
+.chat-body::-webkit-scrollbar,
+.quick-buttons::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.chat-body::-webkit-scrollbar-thumb,
+.quick-buttons::-webkit-scrollbar-thumb {
+  background: #d8cfc4;
+  border-radius: 10px;
+}
+
+/* ==========================================================================
+   Messages
+   ========================================================================== */
 .message {
-  max-width: 80%;
+  max-width: 82%;
   padding: 12px 16px;
   border-radius: 16px;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  word-break: break-word;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  word-wrap: break-word;
+  animation: fadeIn 0.25s ease-out forwards;
 }
 
-/* AI返答吹き出し */
-.bot-message {
-  align-self: flex-start;
-  background-color: #ffffff;
-  color: #2c3e50;
-  border: 1px solid #e2e8f0;
-  border-top-left-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* ユーザー送信吹き出し */
+/* User Message */
 .user-message {
   align-self: flex-end;
-  background-color: #005bac;
+  background-color: #b59f88; /* 上品なサンドベージュ */
   color: #ffffff;
-  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 8px rgba(181, 159, 136, 0.25);
 }
 
-/* ==========================================
-   クイックボタンエリア
-   ========================================== */
-.quick-buttons-wrapper {
-  padding: 8px 16px;
-  background-color: #ffffff;
-  border-top: 1px solid #edf2f7;
+/* Bot Message */
+.bot-message {
+  align-self: flex-start;
+  background-color: #efebe4; /* アイボリーベージュ */
+  color: #3d3630;
+  border-bottom-left-radius: 4px;
+  border: 1px solid #e3dcd1;
 }
 
+/* ==========================================================================
+   Quick Option Buttons Area
+   ========================================================================== */
 .quick-buttons {
+  padding: 12px;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  background: #ffffff;
+  border-top: 1px solid #eee8df;
+  max-height: 150px;
+  overflow-y: auto;
 }
 
 .quick-buttons button {
-  background-color: #f0f4f8;
-  color: #005bac;
-  border: 1px solid #d0dfef;
-  padding: 8px 12px;
+  background: #f5f2ec;
+  color: #5c5247;
+  border: 1px solid #ded6ca;
+  padding: 8px 14px;
   border-radius: 20px;
-  font-size: 0.825rem;
-  font-weight: 500;
+  font-size: 0.83rem;
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
+  line-height: 1.3;
 }
 
 .quick-buttons button:hover {
-  background-color: #e1edf9;
+  background: #eae4d9;
+  border-color: #c8beaf;
+  color: #3d3630;
 }
 
-/* コンバージョン（お問い合わせ等）用の目立つボタン */
+/* Primary Action Button (Call to Action) */
 .quick-buttons button.primary-action-btn {
-  background-color: #ff6b00;
+  background: #8c7662; /* ヘッダーと同系のブラウンで際立たせる */
   color: #ffffff;
-  border-color: #e05e00;
+  border-color: #7a6653;
   font-weight: 600;
-  box-shadow: 0 2px 6px rgba(255, 107, 0, 0.25);
+  box-shadow: 0 2px 6px rgba(140, 118, 98, 0.2);
 }
 
 .quick-buttons button.primary-action-btn:hover {
-  background-color: #e56000;
+  background: #786452;
+  border-color: #695645;
 }
 
-/* ==========================================
-   入力エリア
-   ========================================== */
-.chat-footer {
-  padding: 12px 16px;
-  background-color: #ffffff;
-  border-top: 1px solid #e2e8f0;
-}
-
-.input-form {
+/* ==========================================================================
+   Input Form Area
+   ========================================================================== */
+.chat-input-area {
   display: flex;
+  padding: 14px 12px;
+  border-top: 1px solid #eee8df;
+  background: #ffffff;
   gap: 8px;
 }
 
-.input-form input {
+.chat-input-area input {
   flex: 1;
-  padding: 10px 14px;
-  border: 1px solid #cbd5e1;
+  padding: 10px 16px;
+  border: 1px solid #ddd5c9;
   border-radius: 24px;
-  font-size: 0.9rem;
   outline: none;
-  transition: border-color 0.2s;
+  font-size: 0.92rem;
+  background-color: #faf8f5;
+  color: #4a433d;
+  transition: border-color 0.2s, background-color 0.2s;
 }
 
-.input-form input:focus {
-  border-color: #005bac;
+.chat-input-area input::placeholder {
+  color: #a89f91;
 }
 
-.input-form input:disabled {
-  background-color: #f1f5f9;
-  cursor: not-allowed;
+.chat-input-area input:focus {
+  border-color: #b59f88;
+  background-color: #ffffff;
 }
 
-.input-form button {
-  width: 42px;
-  height: 42px;
-  background-color: #005bac;
+.chat-input-area button {
+  padding: 0 18px;
+  background: #8c7662;
   color: #ffffff;
   border: none;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  border-radius: 24px;
+  font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background 0.2s ease;
 }
 
-.input-form button:hover {
-  background-color: #004483;
-}
-
-.input-form button:disabled {
-  background-color: #cbd5e1;
-  cursor: not-allowed;
-}
-
-/* PC等大画面時の表示調整 */
-@media (min-height: 850px) {
-  body {
-    padding: 20px 0;
-  }
+.chat-input-area button:hover {
+  background: #786452;
 }
