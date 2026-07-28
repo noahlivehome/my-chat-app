@@ -1,7 +1,7 @@
 let conversationHistory = [];
 let turnCount = 0; // ラリー回数
 let isSending = false; // 二重送信・フリーズ防止用フラグ
-let usedButtonTexts = []; // ★ 押されたボタンのテキストを記録する配列
+let usedButtonTexts = []; // 押されたボタンのテキストを記録する配列
 const contactUrl = "https://www.noahlivehome.jp/contact/"; 
 
 // ページ読み込み完了時にイベントを確実にバインド
@@ -50,18 +50,18 @@ async function sendMessage(textFromButton) {
 
   if (!message) return; // 空文字送信防止
 
-  // ★ 押されたテキストを記録（一度押したボタンを除外するため）
+  // 押されたテキストを記録（一度押したボタンを除外するため）
   usedButtonTexts.push(message);
 
   // 送信中フラグをオン＆UI無効化
   isSending = true;
   if (userInput) {
     userInput.value = "";
-    userInput.disabled = true; // ★ 入力不可にする
+    userInput.disabled = true;
   }
   if (sendBtn) sendBtn.disabled = true;
 
-  // ★ 送信直後にボタン群を消去（または非活性化）して連打を防ぐ
+  // 送信直後にボタン群を消去して連打を防ぐ
   if (quickButtonsDiv) quickButtonsDiv.innerHTML = "";
 
   // 1. ユーザーメッセージ表示
@@ -91,8 +91,12 @@ async function sendMessage(textFromButton) {
       conversationHistory.push({ role: "user", content: message });
       conversationHistory.push({ role: "assistant", content: data.reply });
 
-      // 5. カテゴリ・ステップ判定して固定ボタンを表示
-      renderCategoryFixedButtons(message);
+      // 5. APIから返ってきた options または 最終ターン判定に応じてボタンを描画
+      if (data.isFinished) {
+        renderFinalCTAButton(data.userCategory);
+      } else {
+        renderButtonsFromAPI(data.options);
+      }
 
     } else {
       console.error("API Error Response:", data);
@@ -107,7 +111,7 @@ async function sendMessage(textFromButton) {
     isSending = false;
     if (userInput) {
       userInput.disabled = false;
-      userInput.focus(); // ★ 送信後に入力欄にフォーカスを戻す
+      userInput.focus();
     }
     if (sendBtn) sendBtn.disabled = false;
   }
@@ -134,102 +138,68 @@ function appendMessage(senderClass, text) {
   chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-// 💡 ★ カテゴリごとの固定ボタン制御関数（重複除外機能付き） ★
-function renderCategoryFixedButtons(lastMessage) {
+// 💡 API（AI）から返ってきた選択肢（data.options）をもとにボタンを動的生成する関数
+function renderButtonsFromAPI(options) {
   const quickButtonsDiv = document.getElementById("quick-buttons");
   if (!quickButtonsDiv) return;
 
-  let candidateButtons = [];
-
-  // 1. 4回以上のラリー達成時（お問い合わせへ固定）
-  if (turnCount >= 4) {
-    candidateButtons = [
-      { label: "💬 条件（予算・間取り等）について相談する", text: "希望条件について相談したいです" },
-      { label: "📩 無料相談・お問い合わせ画面へ進む", url: contactUrl, isPrimary: true }
-    ];
-  } 
-  // 2-A. 🏙️ すでに東京・埼玉等のエリアを選択した後のボタン
-  else if (lastMessage.includes("東京都内") || lastMessage.includes("埼玉県内")) {
-    candidateButtons = [
-      { label: "📍 具体的におすすめの駅・エリアを聞く", text: "おすすめの駅やエリアを提案してください" },
-      { label: "💬 条件（ペット・間取り・予算等）を伝える", text: "ペット可などの希望条件について相談したい" },
-      { label: "📅 無料で内見予約・物件問合せをする", url: contactUrl, isPrimary: true }
-    ];
-  }
-  // 2-B. 🔍 賃貸を探したい（初回）
-  else if (lastMessage.includes("賃貸") || lastMessage.includes("借りたい") || lastMessage.includes("部屋")) {
-    candidateButtons = [
-      { label: "🏙️ 東京都内で探したい", text: "東京都内で探したい" },
-      { label: "埼玉 県内で探したい", text: "埼玉県内で探したい" },
-      { label: "💬 条件（ペット・間取り等）を相談", text: "ペット可などのこだわり条件について相談したい" },
-      { label: "📅 無料で内見予約・問合せをする", url: contactUrl, isPrimary: true }
-    ];
-  } 
-  // 3. 🔑 貸したい（オーナー様向け）
-  else if (lastMessage.includes("貸したい") || lastMessage.includes("賃貸経営") || lastMessage.includes("管理")) {
-    candidateButtons = [
-      { label: "🏠 ノアリブホームの管理サポートを聞く", text: "どんな管理サポートや空室対策がありますか？" },
-      { label: "💡 貸し出しまでの流れを知りたい", text: "賃貸として貸し出すまでの流れを教えてください" },
-      { label: "📊 無料で賃料査定・管理相談を申込む", url: contactUrl, isPrimary: true }
-    ];
-  } 
-  // 4. 🏠 売却したい（売主様向け）
-  else if (lastMessage.includes("売却") || lastMessage.includes("売りたい")) {
-    candidateButtons = [
-      { label: "🤝 売却の流れや手順を聞く", text: "売却の手順や流れについて教えてください" },
-      { label: "💡 売却時のサポート特徴を聞く", text: "ノアリブホームの売却サポートの特徴は何ですか？" },
-      { label: "📊 無料で売却査定を依頼する", url: contactUrl, isPrimary: true }
-    ];
-  } 
-  // 5. 💰 購入したい（住宅購入向け）
-  else if (lastMessage.includes("購入") || lastMessage.includes("買いたい") || lastMessage.includes("マイホーム")) {
-    candidateButtons = [
-      { label: "🏦 住宅ローン・資金計画について聞く", text: "住宅ローンや資金計画の進め方について教えてください" },
-      { label: "🏡 物件選びのポイントを聞く", text: "失敗しない物件選びのポイントは何ですか？" },
-      { label: "💬 個別提案・購入のご相談（予約）", url: contactUrl, isPrimary: true }
-    ];
-  } 
-  // デフォルト
-  else {
-    candidateButtons = [
-      { label: "💬 希望条件を直接相談する", text: "希望の条件やお悩みについて詳しく相談したいです" },
-      { label: "📩 お問い合わせ画面へ進む", url: contactUrl, isPrimary: true }
-    ];
-  }
-
-  // ★ 過去に押されたテキストを持つボタンを除外する（trimして厳密に比較）
-  const filteredButtons = candidateButtons.filter(btn => {
-    if (btn.url) return true; // お問い合わせリンク等は常に残す
-    return !usedButtonTexts.some(usedText => usedText.trim() === btn.text.trim());
-  });
-
-  // もし通常ボタンが全滅したら、お問い合わせリンクのみ残す
-  if (filteredButtons.length === 0) {
-    filteredButtons.push({ label: "📩 お問い合わせ画面へ進む", url: contactUrl, isPrimary: true });
-  }
-
-  // ボタン描画処理
   quickButtonsDiv.innerHTML = "";
-  
-  filteredButtons.forEach(btn => {
+
+  // 重複・使用済みテキストを除外
+  let availableOptions = [];
+  if (Array.isArray(options)) {
+    availableOptions = options.filter(optText => {
+      const cleanOpt = optText.trim();
+      return !usedButtonTexts.some(used => used.trim() === cleanOpt);
+    });
+  }
+
+  // もしAPIからのボタンが全滅した場合は、デフォルトのお問い合わせ導線を表示
+  if (availableOptions.length === 0) {
+    renderFinalCTAButton();
+    return;
+  }
+
+  // 1〜4ターン目の選択肢ボタンを描画
+  availableOptions.forEach(optText => {
     const button = document.createElement("button");
     button.type = "button";
-    button.innerText = btn.label;
-    
-    if (btn.isPrimary) {
-      button.className = "primary-action-btn";
-    }
+    button.innerText = optText;
 
     button.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (btn.url) {
-        window.open(btn.url, '_blank');
-      } else if (btn.text) {
-        sendQuickMessage(btn.text);
-      }
+      sendQuickMessage(optText);
     });
-    
+
     quickButtonsDiv.appendChild(button);
   });
+}
+
+// 💡 5ターン目（最終ターン）のお問い合わせ用メインCTAボタン描画関数
+function renderFinalCTAButton(category) {
+  const quickButtonsDiv = document.getElementById("quick-buttons");
+  if (!quickButtonsDiv) return;
+
+  quickButtonsDiv.innerHTML = "";
+
+  let ctaLabel = "📩 お問い合わせ・ご相談画面へ進む";
+  if (category === "owner_rent" || category === "owner_sell") {
+    ctaLabel = "📊 無料査定・ご相談画面へ進む";
+  } else if (category === "buy") {
+    ctaLabel = "🔑 個別相談・お問い合わせ画面へ進む";
+  }
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.innerText = ctaLabel;
+  button.className = "primary-action-btn"; // 強調表示用クラス
+
+  button.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.open(contactUrl, '_blank');
+  });
+
+  quickButtonsDiv.appendChild(button);
 }
