@@ -3,115 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>お問い合わせフォーム</title>
+    <title>ご希望条件の確認・お問合せ連携</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background-color: #f4f6f8; padding: 20px; display: flex; justify-content: center; }
-        .form-container { width: 100%; max-width: 600px; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h2 { margin-bottom: 20px; color: #333; font-size: 20px; }
-        .form-group { margin-bottom: 16px; }
-        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; color: #555; }
-        input[type="text"], input[type="email"], textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
-        textarea { height: 120px; resize: vertical; }
-        .chat-summary-box { background: #f0f7ef; border: 1px solid #8da287; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
-        .submit-btn { width: 100%; background: #8da287; color: #fff; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; }
-        .submit-btn:hover { background: #7a8f74; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+        }
+        body {
+            background-color: #f4f6f8;
+            padding: 24px 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 520px;
+            background: #ffffff;
+            padding: 28px 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        h2 {
+            font-size: 18px;
+            color: #333333;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .description {
+            font-size: 13px;
+            color: #666666;
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.5;
+        }
+        /* チャット条件表示ボックス */
+        .summary-box {
+            background-color: #f0f7ef;
+            border: 1.5px solid #8da287;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .summary-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .summary-content {
+            font-size: 13px;
+            color: #444444;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            background: #ffffff;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        /* ボタンエリア */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .copy-btn {
+            width: 100%;
+            background-color: #ffffff;
+            border: 1.5px solid #8da287;
+            color: #8da287;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .copy-btn:hover {
+            background-color: #f0f7ef;
+        }
+        .submit-btn {
+            width: 100%;
+            background-color: #8da287;
+            color: #ffffff;
+            border: none;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            transition: all 0.2s ease;
+        }
+        .submit-btn:hover {
+            background-color: #7a8f74;
+        }
+        .notice {
+            font-size: 11px;
+            color: #888888;
+            margin-top: 12px;
+            text-align: center;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
 
-<div class="form-container">
-    <h2>お問い合わせ・ご相談フォーム</h2>
+<div class="container">
+    <h2>🤖 ご希望条件の引き継ぎ</h2>
+    <p class="description">AIチャットでお伺いしたご条件をまとめました。<br>この内容で「いえらぶお問合せフォーム」へ移動します。</p>
 
-    <!-- ① チャット条件の確認用表示エリア -->
-    <div class="chat-summary-box" id="chatSummary">
-        <strong>🤖 チャットでご入力いただいたご希望条件：</strong>
-        <p id="summaryText">読み込み中...</p>
+    <!-- チャット引き継ぎ内容の表示エリア -->
+    <div class="summary-box">
+        <div class="summary-title">📋 ヒアリング結果一覧</div>
+        <div class="summary-content" id="summaryText">読み込み中...</div>
     </div>
 
-    <form action="#" method="POST">
-        <!-- ユーザー情報入力 -->
-        <div class="form-group">
-            <label for="userName">お名前 <span style="color:red;">*</span></label>
-            <input type="text" id="userName" name="userName" required placeholder="山田 太郎">
-        </div>
+    <!-- アクションボタン -->
+    <div class="btn-group">
+        <button class="copy-btn" id="copyBtn" onclick="copySummaryText()">✂️ 上記の条件テキストをコピー</button>
+        <a id="ieloveLink" href="#" target="_blank" class="submit-btn">
+            いえらぶのお問合せフォームを開く ➔
+        </a>
+    </div>
 
-        <div class="form-group">
-            <label for="userEmail">メールアドレス <span style="color:red;">*</span></label>
-            <input type="email" id="userEmail" name="userEmail" required placeholder="example@email.com">
-        </div>
-
-        <!-- ② 自動反映されるご相談内容テキストエリア -->
-        <div class="form-group">
-            <label for="contactMessage">ご相談内容・引き継ぎ条件</label>
-            <textarea id="contactMessage" name="contactMessage"></textarea>
-        </div>
-
-        <!-- ③ サーバー送信用の隠し項目（hidden） -->
-        <input type="hidden" id="hiddenChatLog" name="chatLogData">
-
-        <button type="submit" class="submit-btn">送信する</button>
-    </form>
+    <p class="notice">
+        ※ボタンを押すと別タブで「いえらぶお問合せフォーム」が開きます。<br>
+        フォームの「備考欄・ご要望欄」へ貼り付けて（または自動入力で）ご送信ください。
+    </p>
 </div>
 
-<!-- データ引き継ぎ処理用JavaScript -->
 <script>
+// 1. 設定：御社の「いえらぶお問合せフォームURL」を入力してください
+const IELOVE_FORM_URL = "https://www.noahlivehome.jp/contact/"; // ←ここをご自身のURLに変更！
+
+// 2. 相談種別の日本語表示マップ
+const modeNames = {
+    rent: "お部屋探し（賃貸希望）",
+    owner: "物件の賃貸管理・貸出（オーナー様）",
+    sell: "物件のご売却（売却希望）",
+    buy: "物件のご購入（購入希望）"
+};
+
+let formattedTextForCopy = "";
+
 document.addEventListener("DOMContentLoaded", () => {
-    // --- 1. URLパラメータからデータを取得（方法A） ---
+    // URLパラメータの取得
     const urlParams = new URLSearchParams(window.location.search);
     const mode = urlParams.get("mode") || "";
     const area = urlParams.get("area") || "";
     let details = {};
-    
+
     try {
         if (urlParams.get("details")) {
             details = JSON.parse(urlParams.get("details"));
         }
-    } catch(e) { console.error("URLパラメータ解析エラー", e); }
+    } catch(e) { console.error("URL解析エラー:", e); }
 
-    // --- 2. localStorageから会話履歴全体を取得（方法B） ---
+    // localStorageからのバックアップデータ取得
     const localDataRaw = localStorage.getItem("realEstateChatData");
     let localData = null;
     if (localDataRaw) {
         try { localData = JSON.parse(localDataRaw); } catch(e) {}
     }
 
-    // --- 3. 相談種別の日本語変換 ---
-    const modeNames = {
-        rent: "お部屋探し（賃貸希望）",
-        owner: "物件の賃貸管理（貸主希望）",
-        sell: "物件の売却（売却希望）",
-        buy: "物件の購入（購入希望）"
-    };
-    const modeJP = modeNames[mode] || localData?.mode || "お問い合わせ";
+    // 表示用テキストの組み立て
+    const currentMode = mode || localData?.mode || "";
+    const modeJP = modeNames[currentMode] || "お問い合わせ";
 
-    // --- 4. 画面・テキストエリアへ条件を自動セット ---
-    let summaryString = `ご相談区分：${modeJP}\n`;
-    if (area) summaryString += `希望エリア：${area}\n`;
+    let textLines = [];
+    textLines.push(`【ご相談種別】${modeJP}`);
     
-    // ヒアリング詳細データがあれば追加
-    Object.keys(details).forEach(key => {
-        summaryString += `・${key} : ${details[key]}\n`;
+    if (area) {
+        textLines.push(`【ご希望エリア】${area}`);
+    }
+
+    // 詳細条件の組み立て
+    const detailData = Object.keys(details).length > 0 ? details : (localData?.details || {});
+    Object.keys(detailData).forEach(key => {
+        textLines.push(`・${detailData[key]}`);
     });
 
-    // ① 確認用エリア（緑の枠）へ表示
+    formattedTextForCopy = `【AIチャットからの引き継ぎ条件】\n` + textLines.join("\n");
+
+    // 画面のテキスト領域へ表示
     const summaryEl = document.getElementById("summaryText");
     if (summaryEl) {
-        summaryEl.innerText = summaryString || "チャット条件なし（直接入力）";
+        summaryEl.innerText = formattedTextForCopy;
     }
 
-    // ② テキストエリア（textarea）へ初期文章として流し込む
-    const messageArea = document.getElementById("contactMessage");
-    if (messageArea) {
-        messageArea.value = `【AIチャットからの引き継ぎ条件】\n` + summaryString + `\n【追加のご質問・ご要望】\n`;
-    }
-
-    // ③ 全メッセージ履歴（JSON）を送信用のhiddenインプットへセット
-    const hiddenInput = document.getElementById("hiddenChatLog");
-    if (hiddenInput && localData) {
-        hiddenInput.value = JSON.stringify(localData);
+    // いえらぶフォームURLのセット（URLパラメータで備考欄へ送る処理を付与）
+    const ieloveLinkEl = document.getElementById("ieloveLink");
+    if (ieloveLinkEl) {
+        // いえらぶフォームがURL引継ぎ（例: ?remarks=... や ?comment=...）に対応している場合の記述
+        const finalUrl = `${IELOVE_FORM_URL}?remarks=${encodeURIComponent(formattedTextForCopy)}`;
+        ieloveLinkEl.href = finalUrl;
     }
 });
+
+// テキストコピー機能
+function copySummaryText() {
+    if (!formattedTextForCopy) return;
+
+    navigator.clipboard.writeText(formattedTextForCopy).then(() => {
+        const copyBtn = document.getElementById("copyBtn");
+        copyBtn.innerText = "✅ コピーしました！";
+        copyBtn.style.backgroundColor = "#e8f5e9";
+        
+        setTimeout(() => {
+            copyBtn.innerText = "✂️ 上記の条件テキストをコピー";
+            copyBtn.style.backgroundColor = "#ffffff";
+        }, 2000);
+    }).catch(err => {
+        alert("コピーに失敗しました。手動で選択してコピーしてください。");
+    });
+}
 </script>
 
 </body>
