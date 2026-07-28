@@ -1,15 +1,21 @@
-document.addEventListener("DOMContentLoaded", () => {
-    // 初期表示の実行
+window.addEventListener("load", () => {
     initChat();
 });
 
 function initChat() {
-    if (typeof getWelcomeMessage === "function") {
-        const welcomeData = getWelcomeMessage();
+    if (typeof window.getWelcomeMessage === "function") {
+        const welcomeData = window.getWelcomeMessage();
         appendBotMessage(welcomeData.text);
         renderOptions(welcomeData.options);
     } else {
-        console.error("api/chat.js が正しく読み込まれていません。");
+        // 万が一 api/chat.js が読み込めなかった場合のフォールバック表示
+        appendBotMessage("いらっしゃいませ！\n不動産のご案内AIアシスタントです。\n\n本日はどのようなご相談でしょうか？");
+        renderOptions([
+            { text: "🏠 賃貸のお部屋を探したい", value: "rent" },
+            { text: "🔑 物件を貸したい（オーナー様）", value: "owner" },
+            { text: "🏢 物件を売却したい", value: "sell" },
+            { text: "🏡 物件を購入したい", value: "buy" }
+        ]);
     }
 }
 
@@ -73,7 +79,7 @@ function renderOptions(options) {
     scrollToBottom();
 }
 
-// 選択肢タップ時のイベント制御
+// 選択肢タップ時の処理
 function handleOptionClick(selectedText) {
     appendUserMessage(selectedText);
     
@@ -81,18 +87,20 @@ function handleOptionClick(selectedText) {
         setTimeout(() => {
             appendBotMessage("ご希望いただきありがとうございます！\n下記のお問い合わせ窓口（またはフォーム）よりお進みくださいませ。");
             document.getElementById("chatOptions").innerHTML = "";
-        }, 400);
+        }, 300);
         return;
     }
 
     setTimeout(() => {
-        const response = sendChatMessage(selectedText);
-        appendBotMessage(response.text);
-        renderOptions(response.options);
-    }, 400);
+        if (typeof window.sendChatMessage === "function") {
+            const response = window.sendChatMessage(selectedText);
+            appendBotMessage(response.text);
+            renderOptions(response.options);
+        }
+    }, 300);
 }
 
-// テキスト送信時のイベント制御
+// テキスト送信時の処理
 function sendMessage() {
     const input = document.getElementById("userInput");
     const text = input.value.trim();
@@ -102,20 +110,22 @@ function sendMessage() {
     input.value = "";
 
     setTimeout(() => {
-        const response = sendChatMessage(text);
-        appendBotMessage(response.text);
-        renderOptions(response.options);
-    }, 400);
+        if (typeof window.sendChatMessage === "function") {
+            const response = window.sendChatMessage(text);
+            appendBotMessage(response.text);
+            renderOptions(response.options);
+        }
+    }, 300);
 }
 
-// Enterキー押下時
+// Enterキー制御
 function handleKeyPress(event) {
     if (event.key === "Enter") {
         sendMessage();
     }
 }
 
-// スクロール制御
+// スクロール最下部へ移動
 function scrollToBottom() {
     const messagesContainer = document.getElementById("chatMessages");
     if (messagesContainer) {
