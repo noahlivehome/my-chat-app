@@ -11,8 +11,8 @@
 
 body {
   font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
-  background-color: #f7f4ef; /* 温かみのあるベージュ背景 */
-  color: #4a433d; /* 落ち着いたダークブラウンテキスト */
+  background-color: #f7f4ef;
+  color: #4a433d;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -39,7 +39,7 @@ body {
 
 /* Header */
 .chat-header {
-  background: #8c7662; /* メインカラー（シープブラウン） */
+  background: #8c7662;
   color: #ffffff;
   padding: 18px 20px;
   text-align: center;
@@ -50,7 +50,7 @@ body {
   flex-shrink: 0;
 }
 
-/* Chat Body (Message Area) */
+/* Chat Body */
 .chat-body {
   flex: 1;
   padding: 20px 16px;
@@ -61,7 +61,7 @@ body {
   background-color: #faf8f5;
 }
 
-/* Scrollbar Style */
+/* Custom Scrollbar */
 .chat-body::-webkit-scrollbar,
 .quick-buttons::-webkit-scrollbar {
   width: 5px;
@@ -100,7 +100,7 @@ body {
 /* User Message */
 .user-message {
   align-self: flex-end;
-  background-color: #b59f88; /* 上品なサンドベージュ */
+  background-color: #b59f88;
   color: #ffffff;
   border-bottom-right-radius: 4px;
   box-shadow: 0 2px 8px rgba(181, 159, 136, 0.25);
@@ -109,7 +109,7 @@ body {
 /* Bot Message */
 .bot-message {
   align-self: flex-start;
-  background-color: #efebe4; /* アイボリーベージュ */
+  background-color: #efebe4;
   color: #3d3630;
   border-bottom-left-radius: 4px;
   border: 1px solid #e3dcd1;
@@ -125,6 +125,7 @@ body {
   gap: 8px;
   background: #ffffff;
   border-top: 1px solid #eee8df;
+  min-height: 50px;
   max-height: 160px;
   overflow-y: auto;
   flex-shrink: 0;
