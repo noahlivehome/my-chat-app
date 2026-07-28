@@ -1,4 +1,12 @@
-// チャット状態の管理
+// ==========================================
+// 1. 設定項目（御社の環境に合わせて変更）
+// ==========================================
+// 御社の「いえらぶお問合せページ」のURLを設定してください
+const IELOVE_FORM_URL = "https://www.xxxx.co.jp/contact/"; // ←★実際のURLに書き換えてください
+
+// ==========================================
+// 2. チャット状態の管理
+// ==========================================
 const chatState = {
     mode: null,
     step: 0,
@@ -22,13 +30,12 @@ const initialOptions = [
     { text: "🏡 物件を買いたい（購入）", value: "buy" }
 ];
 
-// 画面の読み込みが完了したら初期メッセージを表示する
+// 画面読み込み完了時に初期メッセージを表示
 window.addEventListener("load", () => {
     initChat();
 });
 
 function initChat() {
-    // 既存メッセージを一度クリア
     const msgContainer = document.getElementById("chatMessages");
     if (msgContainer) msgContainer.innerHTML = "";
     
@@ -36,7 +43,9 @@ function initChat() {
     renderOptions(initialOptions);
 }
 
-// AI応答メインロジック
+// ==========================================
+// 3. AI会話分岐ロジック
+// ==========================================
 function getAIResponse(userInputText) {
     if (userInputText.includes("借りたい") || userInputText.includes("賃貸を探す")) {
         chatState.mode = "rent";
@@ -56,9 +65,9 @@ function getAIResponse(userInputText) {
         return {
             text: "物件を貸したい（オーナー様）のご相談ですね！\nご所有物件の「種別」はどちらでしょうか？",
             options: [
-                { text: "🏢 マンション・アパート", value: "mansion" },
+                { text: "🏢 マンション（1室/一棟）", value: "mansion" },
                 { text: "🏠 一戸建て", value: "house" },
-                { text: "🏬 事業用・事務所", value: "apartment" }
+                { text: "🏬 アパート・事業用", value: "apartment" }
             ]
         };
     } else if (userInputText.includes("売りたい") || userInputText.includes("売却")) {
@@ -83,7 +92,7 @@ function getAIResponse(userInputText) {
         };
     }
 
-    // エリアの魅力チェック
+    // エリアキーワード判定
     let areaComment = "";
     for (const key in areaInfo) {
         if (userInputText.includes(key)) {
@@ -93,10 +102,11 @@ function getAIResponse(userInputText) {
         }
     }
 
+    // 賃貸ヒアリングステップ
     if (chatState.mode === "rent") {
         if (chatState.step === 1) {
             chatState.step = 2;
-            chatState.data.area = userInputText;
+            chatState.data["希望エリア"] = userInputText;
             return {
                 text: `${areaComment}続いて、ご希望の「ご予算（家賃上限）」を教えてください！`,
                 options: [
@@ -108,7 +118,7 @@ function getAIResponse(userInputText) {
             };
         } else if (chatState.step === 2) {
             chatState.step = 3;
-            chatState.data.budget = userInputText;
+            chatState.data["希望予算"] = userInputText;
             return {
                 text: "ご予算について承知いたしました！\n次に、ご希望の「間取り・広さ」をお選びください。",
                 options: [
@@ -119,7 +129,7 @@ function getAIResponse(userInputText) {
             };
         } else if (chatState.step === 3) {
             chatState.step = 4;
-            chatState.data.layout = userInputText;
+            chatState.data["希望間取り"] = userInputText;
             return {
                 text: "ありがとうございます！\n最後に「譲れないこだわり条件」があれば教えてください。",
                 options: [
@@ -129,11 +139,11 @@ function getAIResponse(userInputText) {
                 ]
             };
         } else {
-            chatState.data.condition = userInputText;
+            chatState.data["こだわり条件"] = userInputText;
             return {
-                text: "ご希望条件をお知らせいただきありがとうございます！\n条件に合うお部屋の検索・詳細データのご用意が整いました。\n\n「内見予約」または「店舗でのご相談」を承ります。下記よりお進みください！",
+                text: "ご希望条件をお知らせいただきありがとうございます！\n条件に合うお部屋の検索・詳細データのご用意が整いました。\n\nお問合せフォームへ自動引き継ぎいたしますので、下記よりお進みください！",
                 options: [
-                    { text: "📅 無料で内見予約・相談をする", value: "contact", isPrimary: true }
+                    { text: "📅 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }
                 ]
             };
         }
@@ -145,7 +155,9 @@ function getAIResponse(userInputText) {
     };
 }
 
-// メッセージ描画（Bot）
+// ==========================================
+// 4. UI描画・操作イベント処理
+// ==========================================
 function appendBotMessage(text) {
     const container = document.getElementById("chatMessages");
     if (!container) return;
@@ -156,7 +168,6 @@ function appendBotMessage(text) {
     scrollToBottom();
 }
 
-// メッセージ描画（User）
 function appendUserMessage(text) {
     const container = document.getElementById("chatMessages");
     if (!container) return;
@@ -167,22 +178,9 @@ function appendUserMessage(text) {
     scrollToBottom();
 }
 
-// ボタン選択肢描画
 function renderOptions(options) {
     const container = document.getElementById("chatOptions");
-    if (!container) {
-        // もし chatOptions がメッセージ欄の中になければ動的に作成
-        const chatBox = document.querySelector(".chat-container");
-        const inputArea = document.querySelector(".chat-input-area");
-        if (chatBox && inputArea) {
-            const newOptContainer = document.createElement("div");
-            newOptContainer.id = "chatOptions";
-            newOptContainer.className = "chat-options-container";
-            chatBox.insertBefore(newOptContainer, inputArea);
-            return renderOptions(options);
-        }
-        return;
-    }
+    if (!container) return;
     
     container.innerHTML = "";
     if (!options || options.length === 0) return;
@@ -214,24 +212,41 @@ function renderOptions(options) {
     scrollToBottom();
 }
 
-// ボタンタップ時処理
+// ボタン選択時 & いえらぶ自動連携処理
 function handleOptionClick(selectedText) {
     appendUserMessage(selectedText);
 
-    if (selectedText.includes("予約") || selectedText.includes("申込む") || selectedText.includes("問合せ")) {
+    // 予約・問合せボタンが押された時の「自動引き継ぎ処理」
+    if (selectedText.includes("予約") || selectedText.includes("申込む") || selectedText.includes("問合せ") || selectedText.includes("進む")) {
         setTimeout(() => {
-            appendBotMessage("ご希望いただきありがとうございます！\n入力いただいた条件を保持して、お問い合わせフォームへ案内いたします...");
+            appendBotMessage("ありがとうございます！\n入力いただいた条件を添えて、お問合せフォームへ自動遷移します...");
+            
             const optContainer = document.getElementById("chatOptions");
             if (optContainer) optContainer.innerHTML = "";
 
             setTimeout(() => {
-                const params = new URLSearchParams({
-                    mode: chatState.mode || "",
-                    area: chatState.area || "",
-                    details: JSON.stringify(chatState.data)
+                // 1. チャットで入力された条件テキストを組み立て
+                let summaryText = `【AIチャットからの引き継ぎ条件】\n`;
+                
+                const modeNames = {
+                    rent: "お部屋探し（賃貸希望）",
+                    owner: "物件の賃貸管理・貸出（オーナー様）",
+                    sell: "物件のご売却（売却希望）",
+                    buy: "物件のご購入（購入希望）"
+                };
+                
+                if (chatState.mode) summaryText += `ご相談区分：${modeNames[chatState.mode] || chatState.mode}\n`;
+                
+                // ヒアリングした詳細データの流し込み
+                Object.keys(chatState.data).forEach(key => {
+                    summaryText += `・${key} : ${chatState.data[key]}\n`;
                 });
-                window.location.href = `contact.html?${params.toString()}`;
-            }, 1500);
+
+                // 2. いえらぶの「message（#message）」へ自動代入するURLを生成して遷移
+                const targetUrl = `${IELOVE_FORM_URL}?message=${encodeURIComponent(summaryText)}`;
+                window.location.href = targetUrl;
+
+            }, 1200);
 
         }, 300);
         return;
@@ -244,7 +259,7 @@ function handleOptionClick(selectedText) {
     }, 300);
 }
 
-// テキスト送信処理
+// 自由入力テキストの送信処理
 function sendMessage() {
     const input = document.getElementById("userInput");
     if (!input) return;
