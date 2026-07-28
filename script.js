@@ -7,19 +7,10 @@ function initChat() {
         const welcomeData = window.getWelcomeMessage();
         appendBotMessage(welcomeData.text);
         renderOptions(welcomeData.options);
-    } else {
-        // 万が一 api/chat.js が読み込めなかった場合のフォールバック表示
-        appendBotMessage("いらっしゃいませ！\n不動産のご案内AIアシスタントです。\n\n本日はどのようなご相談でしょうか？");
-        renderOptions([
-            { text: "🏠 賃貸のお部屋を探したい", value: "rent" },
-            { text: "🔑 物件を貸したい（オーナー様）", value: "owner" },
-            { text: "🏢 物件を売却したい", value: "sell" },
-            { text: "🏡 物件を購入したい", value: "buy" }
-        ]);
     }
 }
 
-// Botメッセージを表示
+// Botメッセージを画面に追加
 function appendBotMessage(text) {
     const messagesContainer = document.getElementById("chatMessages");
     if (!messagesContainer) return;
@@ -30,7 +21,7 @@ function appendBotMessage(text) {
     scrollToBottom();
 }
 
-// ユーザーメッセージを表示
+// ユーザーメッセージを画面に追加
 function appendUserMessage(text) {
     const messagesContainer = document.getElementById("chatMessages");
     if (!messagesContainer) return;
@@ -41,7 +32,7 @@ function appendUserMessage(text) {
     scrollToBottom();
 }
 
-// ボタン選択肢の表示
+// ボタン選択肢の生成（2列グリッド配置）
 function renderOptions(options) {
     const optionsContainer = document.getElementById("chatOptions");
     if (!optionsContainer) return;
@@ -52,7 +43,7 @@ function renderOptions(options) {
     const normalOptions = options.filter(opt => !opt.isPrimary);
     const primaryOptions = options.filter(opt => opt.isPrimary);
 
-    // 通常ボタン（横並び）
+    // 通常選択肢（横2列グリッドで配置）
     if (normalOptions.length > 0) {
         const gridDiv = document.createElement("div");
         gridDiv.className = "options-grid";
@@ -67,7 +58,7 @@ function renderOptions(options) {
         optionsContainer.appendChild(gridDiv);
     }
 
-    // CVボタン（緑色全幅）
+    // 主要コンバージョンボタン（緑色全幅）
     primaryOptions.forEach(opt => {
         const btn = document.createElement("button");
         btn.className = "option-btn primary";
@@ -79,10 +70,12 @@ function renderOptions(options) {
     scrollToBottom();
 }
 
-// 選択肢タップ時の処理
+// 選択肢ボタンがクリックされた時の処理
 function handleOptionClick(selectedText) {
+    // 1. ユーザーの発話を画面に表示
     appendUserMessage(selectedText);
-    
+
+    // 2. お問い合わせ等を選択した場合の完了制御
     if (selectedText.includes("問合せ") || selectedText.includes("予約") || selectedText.includes("査定") || selectedText.includes("フォーム")) {
         setTimeout(() => {
             appendBotMessage("ご希望いただきありがとうございます！\n下記のお問い合わせ窓口（またはフォーム）よりお進みくださいませ。");
@@ -91,6 +84,7 @@ function handleOptionClick(selectedText) {
         return;
     }
 
+    // 3. 次の会話コメントと選択肢を生成して画面更新
     setTimeout(() => {
         if (typeof window.sendChatMessage === "function") {
             const response = window.sendChatMessage(selectedText);
@@ -100,7 +94,7 @@ function handleOptionClick(selectedText) {
     }, 300);
 }
 
-// テキスト送信時の処理
+// メッセージ送信ボタン時の処理
 function sendMessage() {
     const input = document.getElementById("userInput");
     const text = input.value.trim();
@@ -118,14 +112,14 @@ function sendMessage() {
     }, 300);
 }
 
-// Enterキー制御
+// Enterキーでの送信制御
 function handleKeyPress(event) {
     if (event.key === "Enter") {
         sendMessage();
     }
 }
 
-// スクロール最下部へ移動
+// スクロール制御
 function scrollToBottom() {
     const messagesContainer = document.getElementById("chatMessages");
     if (messagesContainer) {
