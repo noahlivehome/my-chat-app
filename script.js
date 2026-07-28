@@ -1,65 +1,279 @@
 // チャット状態の管理
 const chatState = {
-    category: null,
-    turnCount: 0
+    mode: null,       // 'rent', 'owner', 'sell', 'buy'
+    step: 0,          // 各フロー内のステップ管理
+    area: "",         // エリア情報
+    data: {}          // ヒアリングデータの保持
 };
 
-// 初期表示の選択肢
+// 主要エリアの魅力データ（追加も自由です）
+const areaInfo = {
+    "赤羽": "JR各線が乗り入れていて都心や埼玉方面へのアクセスが抜群！商店街や飲食店も豊富で生活利便性が非常に高い人気の街です。",
+    "新宿": "複数路線が利用可能で通勤・通学の利便性は間違いなくトップクラス！商業施設も揃う大都会の真ん中です。",
+    "池袋": "山手線はじめアクセスが良好で、ショッピングやエンタメ施設が充実した非常に便利なエリアです。",
+    "横浜": "おしゃれな街並みと優れたアクセス性を兼ね備え、住みやすさで常に上位にランクインする大人気エリアです。"
+};
+
+// 初期表示選択肢（ボタン文言は分かりやすく2列表示）
 const initialOptions = [
-    { text: "🏠 賃貸のお部屋を探したい", value: "rent" },
-    { text: "🔑 物件を貸したい（オーナー様）", value: "owner" },
-    { text: "🏢 物件を売却したい", value: "sell" },
-    { text: "🏡 物件を購入したい", value: "buy" }
+    { text: "🏠 部屋を借りたい（賃貸）", value: "rent" },
+    { text: "🔑 物件を貸したい（貸主）", value: "owner" },
+    { text: "🏢 物件を売りたい（売却）", value: "sell" },
+    { text: "🏡 物件を買いたい（購入）", value: "buy" }
 ];
 
-// 画面読み込み完了時に自動実行
+// 画面読み込み完了時
 document.addEventListener("DOMContentLoaded", () => {
     initChat();
 });
 
 function initChat() {
-    appendBotMessage("いらっしゃいませ！\n不動産のご案内AIアシスタントです。\n\n本日はどのようなご相談でしょうか？\n下の選択肢よりお選びください。");
+    appendBotMessage("いらっしゃいませ！\n不動産ご案内AIアシスタントです。\n\n本日はどのようなご相談でしょうか？\n下の選択肢よりお選びください。");
     renderOptions(initialOptions);
 }
 
-// Botメッセージ描画
+// AIの応答生成メインロジック
+function getAIResponse(userInputText) {
+    // --- 0. 途中での条件変更・モード切り替え検知 ---
+    if (userInputText.includes("借りたい") || userInputText.includes("賃貸を探す")) {
+        chatState.mode = "rent";
+        chatState.step = 1;
+        return {
+            text: "お部屋探し（賃貸）のご相談ですね！\nご希望の「エリア（駅名）」をお知らせいただくか、下からお選びください。",
+            options: [
+                { text: "📍 赤羽エリア", value: "area_akabane" },
+                { text: "📍 新宿エリア", value: "area_shinjuku" },
+                { text: "📍 池袋エリア", value: "area_ikebukuro" },
+                { text: "💡 エリアから相談する", value: "area_other" }
+            ]
+        };
+    } else if (userInputText.includes("貸したい") || userInputText.includes("オーナー")) {
+        chatState.mode = "owner";
+        chatState.step = 1;
+        return {
+            text: "物件を貸したい（オーナー様）のご相談ですね！\nご所有物件の「種別」はどちらでしょうか？",
+            options: [
+                { text: "🏢 マンション（1室/一棟）", value: "mansion" },
+                { text: "🏠 一戸建て", value: "house" },
+                { text: "🏬 アパート・事業用", value: "apartment" },
+                { text: "📋 相談して決める", value: "other" }
+            ]
+        };
+    } else if (userInputText.includes("売りたい") || userInputText.includes("売却")) {
+        chatState.mode = "sell";
+        chatState.step = 1;
+        return {
+            text: "物件のご売却のご相談ですね！\nご所有物件の「種別」とおおよその「所在地（エリア）」を教えていただけますか？",
+            options: [
+                { text: "🏢 マンション（赤羽周辺など）", value: "sell_mansion" },
+                { text: "🏠 戸建て・土地", value: "sell_house" },
+                { text: "📍 エリアを入力して相談", value: "sell_input" }
+            ]
+        };
+    } else if (userInputText.includes("買いたい") || userInputText.includes("購入")) {
+        chatState.mode = "buy";
+        chatState.step = 1;
+        return {
+            text: "物件のご購入のご相談ですね！\nどのような種別をお探しでしょうか？",
+            options: [
+                { text: "🏢 新築・中古マンション", value: "buy_mansion" },
+                { text: "🏡 新築・中古一戸建て", value: "buy_house" },
+                { text: "🏞 土地を探している", value: "buy_land" }
+            ]
+        };
+    }
+
+    // エリア名の魅力抽出チェック
+    let areaComment = "";
+    for (const key in areaInfo) {
+        if (userInputText.includes(key)) {
+            areaComment = `「${key}」ですね！\n${areaInfo[key]}\n\n`;
+            chatState.area = key;
+            break;
+        }
+    }
+
+    // --- ①【賃貸希望】フロー ---
+    if (chatState.mode === "rent") {
+        if (chatState.step === 1) {
+            chatState.step = 2;
+            return {
+                text: `${areaComment}続いて、ご希望の「ご予算（家賃上限）」を教えてください！`,
+                options: [
+                    { text: "💴 8万円以内", value: "b_8" },
+                    { text: "💴 10万円以内", value: "b_10" },
+                    { text: "💴 12万円以内", value: "b_12" },
+                    { text: "💴 15万円以上", value: "b_15" }
+                ]
+            };
+        } else if (chatState.step === 2) {
+            chatState.step = 3;
+            return {
+                text: "ご予算について承知いたしました！\n次に、ご希望の「間取り・広さ」をお選びください。",
+                options: [
+                    { text: "🛋 ワンルーム・1K", value: "1k" },
+                    { text: "🛋 1LDK・2DK", value: "1ldk" },
+                    { text: "🛋 2LDK以上（ファミリー向け）", value: "2ldk" }
+                ]
+            };
+        } else if (chatState.step === 3) {
+            chatState.step = 4;
+            return {
+                text: "ありがとうございます！\n最後に「譲れないこだわり条件」があれば1〜2点教えてください。（ボタン選択または自由入力）",
+                options: [
+                    { text: "🛀 バストイレ別", value: "bt" },
+                    { text: "🐶 ペット飼育可", value: "pet" },
+                    { text: "🔒 オートロック付き", value: "lock" },
+                    { text: "🏃‍♂️ 駅から徒歩5分以内", value: "walk5" }
+                ]
+            };
+        } else {
+            return {
+                text: "ご希望条件をお知らせいただきありがとうございます！\n条件に合うお部屋の検索・詳細データのご用意が整いました。\n\n「内見予約」または「店舗でのご相談」を承ります。下記よりお進みください！",
+                options: [
+                    { text: "📅 無料で内見予約・相談をする", value: "contact", isPrimary: true }
+                ]
+            };
+        }
+    }
+
+    // --- ②【貸したい（オーナー）】フロー ---
+    if (chatState.mode === "owner") {
+        if (chatState.step === 1) {
+            chatState.step = 2;
+            return {
+                text: "ありがとうございます。\n物件のあるおおよその「所在地（市区町村・駅名など）」を教えていただけますか？",
+                options: [
+                    { text: "📍 赤羽エリア周辺", value: "akabane" },
+                    { text: "📍 東京都内", value: "tokyo" },
+                    { text: "✍️ メッセージで直接入力", value: "input" }
+                ]
+            };
+        } else if (chatState.step === 2) {
+            chatState.step = 3;
+            return {
+                text: `${areaComment}現在の「お悩み・ご状況」に最も近いものをお選びください。`,
+                options: [
+                    { text: "❓ 現在、空室で困っている", value: "vacancy" },
+                    { text: "🚪 近々、退去予定がある", value: "leaving" },
+                    { text: "🏠 現在、自分が居住中", value: "living" },
+                    { text: "🔰 初めての賃貸経営", value: "first" }
+                ]
+            };
+        } else {
+            return {
+                text: "ご状況をお知らせいただきありがとうございます！\n適正な想定賃料の試算や最適な管理プランのご案内が可能です。\n\n担当よりご連絡（資料送付）いたしますので、下記より無料相談をお申し込みください！",
+                options: [
+                    { text: "📋 賃料試算・無料相談を予約する", value: "contact", isPrimary: true }
+                ]
+            };
+        }
+    }
+
+    // --- ③【売りたい（売却）】フロー ---
+    if (chatState.mode === "sell") {
+        if (chatState.step === 1) {
+            chatState.step = 2;
+            return {
+                text: `${areaComment}ご売却の「時期」や「ご理由」はお決まりでしょうか？`,
+                options: [
+                    { text: "⚡️ なるべく早く売りたい", value: "quick" },
+                    { text: "📊 まずは相場を知りたい", value: "market" },
+                    { text: "🏡 住み替え・買い替えのため", value: "change" }
+                ]
+            };
+        } else if (chatState.step === 2) {
+            chatState.step = 3;
+            return {
+                text: "承知いたしました！ご希望の「査定方法」をお選びください。\n\n・机上査定：データに基づく簡単な相場把握\n・訪問査定：現地を確認する正確な価格査定",
+                options: [
+                    { text: "💻 簡単な相場を知る（机上査定）", value: "desk" },
+                    { text: "🏠 正確な価格を知る（訪問査定）", value: "visit" }
+                ]
+            };
+        } else {
+            return {
+                text: "ありがとうございます！\n無料査定の受付けを開始いたします。下記フォームよりお気軽にお申し込みください！",
+                options: [
+                    { text: "📝 無料査定・相談を申し込む", value: "contact", isPrimary: true }
+                ]
+            };
+        }
+    }
+
+    // --- ④【買いたい（購入）】フロー ---
+    if (chatState.mode === "buy") {
+        if (chatState.step === 1) {
+            chatState.step = 2;
+            return {
+                text: "ありがとうございます！\nご希望の「エリア（駅名）」と総額の「ご予算イメージ」を教えていただけますか？",
+                options: [
+                    { text: "📍 赤羽エリア（3,000万〜5,000万円）", value: "buy_akabane" },
+                    { text: "📍 都心エリア（5,000万〜8,000万円）", value: "buy_tokyo" },
+                    { text: "💬 予算・エリアを直接入力する", value: "buy_input" }
+                ]
+            };
+        } else if (chatState.step === 2) {
+            chatState.step = 3;
+            return {
+                text: `${areaComment}購入時期や、住宅ローンの事前審査状況についてはいかがでしょうか？`,
+                options: [
+                    { text: "🗓 いい物件があればすぐにでも", value: "soon" },
+                    { text: "💡 住宅ローンの相談もしたい", value: "loan_help" },
+                    { text: "🔍 まずは情報収集段階", value: "info" }
+                ]
+            };
+        } else {
+            return {
+                text: "ありがとうございます！\nWebには掲載されていない「非公開物件」の情報含め、専門スタッフよりご提案させていただきます。\n\n下記よりご来店またはオンライン相談をご予約ください！",
+                options: [
+                    { text: "📱 非公開物件のご案内・ご来店予約", value: "contact", isPrimary: true }
+                ]
+            };
+        }
+    }
+
+    // --- デフォルト（新規スタート・汎用） ---
+    return {
+        text: `「${userInputText}」ですね！承知いたしました。\nどのようなご相談（借りる・貸す・買う・売る）をお望みでしょうか？`,
+        options: initialOptions
+    };
+}
+
+// UI更新用ヘルパー関数群
 function appendBotMessage(text) {
-    const messagesContainer = document.getElementById("chatMessages");
-    if (!messagesContainer) return;
-    const messageDiv = document.createElement("div");
-    messageDiv.className = "message bot";
-    messageDiv.innerText = text;
-    messagesContainer.appendChild(messageDiv);
+    const container = document.getElementById("chatMessages");
+    if (!container) return;
+    const div = document.createElement("div");
+    div.className = "message bot";
+    div.innerText = text;
+    container.appendChild(div);
     scrollToBottom();
 }
 
-// ユーザーメッセージ描画
 function appendUserMessage(text) {
-    const messagesContainer = document.getElementById("chatMessages");
-    if (!messagesContainer) return;
-    const messageDiv = document.createElement("div");
-    messageDiv.className = "message user";
-    messageDiv.innerText = text;
-    messagesContainer.appendChild(messageDiv);
+    const container = document.getElementById("chatMessages");
+    if (!container) return;
+    const div = document.createElement("div");
+    div.className = "message user";
+    div.innerText = text;
+    container.appendChild(div);
     scrollToBottom();
 }
 
-// ボタン選択肢描画（横2列レイアウト）
 function renderOptions(options) {
-    const optionsContainer = document.getElementById("chatOptions");
-    if (!optionsContainer) return;
-    optionsContainer.innerHTML = "";
+    const container = document.getElementById("chatOptions");
+    if (!container) return;
+    container.innerHTML = "";
 
     if (!options || options.length === 0) return;
 
     const normalOptions = options.filter(opt => !opt.isPrimary);
     const primaryOptions = options.filter(opt => opt.isPrimary);
 
-    // 通常選択肢（横2列）
     if (normalOptions.length > 0) {
         const gridDiv = document.createElement("div");
         gridDiv.className = "options-grid";
-
         normalOptions.forEach(opt => {
             const btn = document.createElement("button");
             btn.className = "option-btn";
@@ -67,27 +281,24 @@ function renderOptions(options) {
             btn.onclick = () => handleOptionClick(opt.text);
             gridDiv.appendChild(btn);
         });
-        optionsContainer.appendChild(gridDiv);
+        container.appendChild(gridDiv);
     }
 
-    // 主要CVボタン（緑色全幅）
     primaryOptions.forEach(opt => {
         const btn = document.createElement("button");
         btn.className = "option-btn primary";
         btn.innerText = opt.text;
         btn.onclick = () => handleOptionClick(opt.text);
-        optionsContainer.appendChild(btn);
+        container.appendChild(btn);
     });
 
     scrollToBottom();
 }
 
-// 選択肢タップ時の会話制御
 function handleOptionClick(selectedText) {
     appendUserMessage(selectedText);
-    
-    // お問い合わせ等を選択した場合
-    if (selectedText.includes("問合せ") || selectedText.includes("予約") || selectedText.includes("査定") || selectedText.includes("フォーム")) {
+
+    if (selectedText.includes("予約") || selectedText.includes("申込む") || selectedText.includes("問合せ")) {
         setTimeout(() => {
             appendBotMessage("ご希望いただきありがとうございます！\n下記のお問い合わせ窓口（またはフォーム）よりお進みくださいませ。");
             document.getElementById("chatOptions").innerHTML = "";
@@ -102,7 +313,6 @@ function handleOptionClick(selectedText) {
     }, 300);
 }
 
-// テキスト送信時の会話制御
 function sendMessage() {
     const input = document.getElementById("userInput");
     const text = input.value.trim();
@@ -118,104 +328,15 @@ function sendMessage() {
     }, 300);
 }
 
-// AIの応答生成ロジック
-function getAIResponse(userInputText) {
-    chatState.turnCount++;
-
-    // 5ターン目以降はお問い合わせへ誘導
-    if (chatState.turnCount >= 5) {
-        return {
-            text: "詳細なご条件やお問合せにつきましては、担当スタッフより詳しく丁寧にご案内いたします。\n\nお手数ですが、下記よりお気軽にお問い合わせくださいませ。",
-            options: [
-                { text: "📅 無料相談・お問い合わせ", value: "contact", isPrimary: true }
-            ]
-        };
-    }
-
-    // ① 賃貸を探したい
-    if (userInputText.includes("賃貸") || userInputText.includes("部屋")) {
-        chatState.category = "rent";
-        return {
-            text: "お部屋探しですね！\nご希望のエリア、間取り、ご予算、ペット飼育などのこだわり条件はございますか？\n\n差し支えない範囲で教えていただけますと幸いです！",
-            options: [
-                { text: "💰 家賃相場を確認", value: "rent_market" },
-                { text: "💭 条件（ペット等）伝える", value: "rent_condition" },
-                { text: "📅 無料で内見予約・物件問合せをする", value: "contact", isPrimary: true }
-            ]
-        };
-    }
-
-    // ② 貸したい（オーナー様）
-    if (userInputText.includes("貸したい") || userInputText.includes("オーナー")) {
-        chatState.category = "owner";
-        return {
-            text: "賃貸管理のご相談ですね！\n所有されている物件のエリアや種別（マンション・戸建てなど）、現在のお悩みについて教えていただけますか？",
-            options: [
-                { text: "🏢 物件・エリアを伝える", value: "owner_info" },
-                { text: "❓ 空室対策のご相談", value: "owner_vacancy" },
-                { text: "📋 賃料試算・無料相談を予約する", value: "contact", isPrimary: true }
-            ]
-        };
-    }
-
-    // ③ 売却したい
-    if (userInputText.includes("売却") || userInputText.includes("売り")) {
-        chatState.category = "sell";
-        return {
-            text: "ご売却のご相談ですね！\nご売却をご検討中の物件エリアや時期、現状のお悩みなどについて教えていただけますか？",
-            options: [
-                { text: "📍 エリア・時期を伝える", value: "sell_info" },
-                { text: "📊 査定の流れを聞く", value: "sell_flow" },
-                { text: "📝 無料査定を申し込む", value: "contact", isPrimary: true }
-            ]
-        };
-    }
-
-    // ④ 購入したい
-    if (userInputText.includes("購入") || userInputText.includes("買")) {
-        chatState.category = "buy";
-        return {
-            text: "物件ご購入のご相談ですね！\nご希望のエリアや種別（新築・中古戸建て・マンションなど）、ご検討のきっかけなどを教えていただけますか？",
-            options: [
-                { text: "🏠 希望種別・エリア伝える", value: "buy_info" },
-                { text: "💡 住宅ローンの相談", value: "buy_loan" },
-                { text: "📱 来店・オンライン相談を予約する", value: "contact", isPrimary: true }
-            ]
-        };
-    }
-
-    // トラブル・法律系への対応
-    if (userInputText.includes("トラブル") || userInputText.includes("契約") || userInputText.includes("法律") || userInputText.includes("違約金")) {
-        return {
-            text: "ご質問ありがとうございます。\nお約束事や専門的なご相談につきましては、専門スタッフより詳しくご案内いたします。\n\nお手数ですが直接お問い合わせいただけますでしょうか。",
-            options: [
-                { text: "📩 専門スタッフに相談する", value: "contact", isPrimary: true }
-            ]
-        };
-    }
-
-    // 会話継続時の返答
-    return {
-        text: "ご回答いただきありがとうございます！\n他にご希望や気になる条件などはございますか？\n\nご希望のボタンをお選びいただくか、メッセージで教えてください。",
-        options: [
-            { text: "✨ その他の条件を伝える", value: "more_detail" },
-            { text: "🔍 詳しい相談をしたい", value: "more_consult" },
-            { text: "📅 無料で相談予約・問合せをする", value: "contact", isPrimary: true }
-        ]
-    };
-}
-
-// Enterキー対応
 function handleKeyPress(event) {
     if (event.key === "Enter") {
         sendMessage();
     }
 }
 
-// スクロール最下部移動
 function scrollToBottom() {
-    const messagesContainer = document.getElementById("chatMessages");
-    if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    const container = document.getElementById("chatMessages");
+    if (container) {
+        container.scrollTop = container.scrollHeight;
     }
 }
