@@ -10,7 +10,7 @@
     .chat-header { background: #8da288; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 16px; }
     .chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: #fdfdfd; }
     
-    .msg { max-width: 80%; padding: 12px 16px; border-radius: 16px; line-height: 1.5; font-size: 14px; }
+    .msg { max-width: 80%; padding: 12px 16px; border-radius: 16px; line-height: 1.5; font-size: 14px; white-space: pre-wrap; }
     .msg.user { align-self: flex-end; background: #8da288; color: white; border-bottom-right-radius: 4px; }
     .msg.assistant { align-self: flex-start; background: #f0f2f0; color: #333; border-bottom-left-radius: 4px; }
 
@@ -59,16 +59,16 @@
   <div class="chat-header">ノアリブホーム AIサポート</div>
   
   <div class="chat-box" id="chatBox">
-    <div class="msg assistant">こんにちは！ノアリブホームです。お部屋探しやご売却・賃貸管理など、どのようなご相談でしょうか？</div>
+    <div class="msg assistant">こんにちは！ノアリブホームです。不動産のご相談を承っております。どのようなご相談でしょうか？</div>
   </div>
   
   <div id="actionArea">
     <div class="button-container">
       <div class="cta-grid">
-        <button class="cta-sub-btn" onclick="sendOption('部屋を探したい')">🏠 部屋を探したい</button>
+        <button class="cta-sub-btn" onclick="sendOption('賃貸を探したい')">🏠 賃貸を探したい</button>
         <button class="cta-sub-btn" onclick="sendOption('貸したい（オーナー）')">💡 貸したい（オーナー）</button>
-        <button class="cta-sub-btn" onclick="sendOption('売りたい（売却）')">📊 売りたい（売却）</button>
-        <button class="cta-sub-btn" onclick="sendOption('買いたい（購入）')">🔑 買いたい（購入）</button>
+        <button class="cta-sub-btn" onclick="sendOption('売却したい')">📊 売却したい</button>
+        <button class="cta-sub-btn" onclick="sendOption('購入したい')">🔑 購入したい</button>
       </div>
     </div>
   </div>
@@ -91,7 +91,7 @@
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
-  // 動的ボタン生成（1〜4ターン目）
+  // 1〜4ターン目の動的ボタンレンダリング
   function renderTurnButtons(options) {
     const actionArea = document.getElementById("actionArea");
     actionArea.innerHTML = "";
@@ -116,11 +116,11 @@
     actionArea.appendChild(container);
   }
 
-  // ニーズに応じた最終CTAボタン生成（5ターン目）
+  // 5ターン目の最終お問い合わせCTAボタン
   function renderFinalCTAButtons(category) {
     const actionArea = document.getElementById("actionArea");
-    let mainBtnText = "📩 最新の物件・ご相談の問い合わせをする";
-    let subBtn1 = "🏠 おすすめ物件一覧を見る";
+    let mainBtnText = "📩 最新の物件資料・ご相談を申し込む";
+    let subBtn1 = "🏠 おすすめ物件情報を見る";
     let subBtn2 = "💡 ご相談の流れを知りたい";
 
     if (category === "owner_rent") {
@@ -129,9 +129,9 @@
     } else if (category === "owner_sell") {
       mainBtnText = "📊 無料で売却査定・ご相談を申し込む";
       subBtn1 = "🏠 売却の流れを知りたい";
-    } else if (category === "buy_user") {
-      mainBtnText = "🔑 購入希望の物件・資金相談を申し込む";
-      subBtn1 = "🏡 おすすめの販売物件を見る";
+    } else if (category === "buy") {
+      mainBtnText = "🔑 個別相談（店舗・オンライン）を予約する";
+      subBtn1 = "🏡 未公開物件の情報をリクエスト";
     }
 
     actionArea.innerHTML = `
@@ -162,9 +162,7 @@
   }
 
   async function sendMessage(userText) {
-    // 画面のボタンエリアを送信時に一時クリア
     document.getElementById("actionArea").innerHTML = "";
-    
     appendMessage("user", userText);
 
     try {
@@ -185,7 +183,6 @@
         chatHistory.push({ role: "user", content: userText });
         chatHistory.push({ role: "assistant", content: data.reply });
 
-        // 5ターン目かどうかで表示を分ける（手入力・ボタンクリック両対応）
         if (data.isFinished) {
           renderFinalCTAButtons(data.userCategory);
         } else if (data.options && data.options.length > 0) {
