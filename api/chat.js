@@ -1,144 +1,247 @@
-export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+let conversationHistory = [];
+let turnCount = 0; // ラリー回数
+let isSending = false; // 二重送信・フリーズ防止用フラグ
+let usedButtonTexts = []; // 押されたボタンのテキストを記録する配列
+const contactUrl = "https://www.noahlivehome.jp/contact/"; 
 
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+// ページ読み込み完了時にイベントを確実にバインド
+window.addEventListener("DOMContentLoaded", () => {
+  const sendBtn = document.getElementById("send-btn");
+  const userInput = document.getElementById("user-input");
 
-  try {
-    const { message, history } = req.body || {};
+  if (sendBtn) {
+    sendBtn.onclick = (e) => {
+      e.preventDefault();
+      sendMessage();
+    };
+  }
 
-    // ユーザーのメッセージ履歴から現在のターン数を判定
-    const userMessages = Array.isArray(history) 
-      ? history.filter(item => item.role === "user") 
-      : [];
-    const turnCount = userMessages.length + 1;
-
-    // 過去の会話全体からカテゴリを判定
-    const fullText = (userMessages.map(m => m.content).join(" ") + " " + (message || "")).toLowerCase();
-    
-    let category = "rent"; // デフォルト：賃貸を探したい
-    if (fullText.includes("貸したい") || fullText.includes("オーナー") || fullText.includes("管理")) {
-      category = "owner_rent";
-    } else if (fullText.includes("売却") || fullText.includes("売りたい")) {
-      category = "owner_sell";
-    } else if (fullText.includes("購入") || fullText.includes("買いたい")) {
-      category = "buy";
-    }
-
-    // 各シナリオのメッセージ＆ボタン定義（オウム返し一切なし、エリア完全指定）
-    const scenarios = {
-      // 1. 賃貸を探したい
-      rent: {
-        1: {
-          reply: "お部屋探しのご相談ですね！ノアリブホームにお任せください。\nご希望のエリアをお聞かせいただけますか？",
-          options: ["📍 赤羽・北区エリア", "📍 川口エリア", "📍 板橋区エリア", "📍 その他・相談したい"]
-        },
-        2: {
-          reply: "ありがとうございます！\nご希望の間取り（広さ）はお決まりでしょうか？",
-          options: ["🏠 1K・1DK", "🏠 1LDK・2LDK", "🏠 3LDK以上", "❓ まだ決まっていない"]
-        },
-        3: {
-          reply: "承知いたしました。\nおおよその月額ご予算（管理費込み）の目安を教えていただけますか？",
-          options: ["💰 8万円未満", "💰 8〜10万円", "💰 10〜15万円", "💰 15万円以上"]
-        },
-        4: {
-          reply: "ありがとうございます。\nお引っ越しのご希望時期はいつ頃をお考えでしょうか？",
-          options: ["⚡ すぐにでも", "📅 1ヶ月以内", "📅 2〜3ヶ月以内", "💭 良い物件があれば"]
-        },
-        5: {
-          reply: "ご条件をお聞かせいただきありがとうございます！\n最新のデータベースよりご希望に沿う空室情報やWeb未公開資料をお探しいたします。\n画面下部のお問い合わせボタンよりお気軽にご連絡ください。",
-          options: []
-        }
-      },
-
-      // 2. 貸したい（オーナー様）
-      owner_rent: {
-        1: {
-          reply: "賃貸管理・貸し出しのご相談ですね！\nご所有されている物件のエリアはおどちらになりますか？",
-          options: ["📍 赤羽・北区エリア", "📍 川口エリア", "📍 板橋区エリア", "📍 その他"]
-        },
-        2: {
-          reply: "承知いたしました。\nご所有物件の種別について教えていただけますか？",
-          options: ["🏢 区分マンション", "🏠 一戸建て", "🏬 アパート・一棟ビル", "❓ その他"]
-        },
-        3: {
-          reply: "ありがとうございます。\n現在の物件のご状況はいかがでしょうか？",
-          options: ["🔑 現在空室", "🚪 近々退去予定", "🏃 他社で募集中", "💭 今後の参考に"]
-        },
-        4: {
-          reply: "承知いたしました。\n今回はどのようなサポートをご希望でしょうか？",
-          options: ["💡 無料で賃料査定したい", "🛠️ 管理会社を変更したい", "🔍 空室対策・集客の相談", "❓ 検討中"]
-        },
-        5: {
-          reply: "詳しく教えていただきありがとうございます！\n地域の賃貸市場に精通したスタッフが適切な査定・プランをご提案いたします。\n画面下部のお問い合わせボタンよりご相談をお待ちしております。",
-          options: []
-        }
-      },
-
-      // 3. 売却したい
-      owner_sell: {
-        1: {
-          reply: "ご売却のご相談ですね！\nご売却をご検討中の物件エリアをお聞かせください。",
-          options: ["📍 赤羽・北区エリア", "📍 川口エリア", "📍 板橋区エリア", "📍 その他"]
-        },
-        2: {
-          reply: "ありがとうございます。\n物件の種別について教えていただけますか？",
-          options: ["🏢 分譲マンション", "🏠 一戸建て", "🧱 土地・一棟", "❓ その他"]
-        },
-        3: {
-          reply: "承知いたしました。\nご売却のご希望時期はお決まりでしょうか？",
-          options: ["⚡ できるだけ早く", "📅 半年以内", "📅 1年以内", "📊 まずは査定額だけ知りたい"]
-        },
-        4: {
-          reply: "ありがとうございます。\nご売却にあたって一番重視されるポイントは何でしょうか？",
-          options: ["💰 売却価格の高さ", "⚡ スピード重視", "🔒 周囲に秘密で売却", "💬 丁寧なサポート"]
-        },
-        5: {
-          reply: "ご回答いただきありがとうございます！\n赤羽・北区・川口・板橋エリアに強い当社の専任担当が迅速に査定いたします。\n画面下部のお問い合わせボタンよりお気軽にご依頼ください。",
-          options: []
-        }
-      },
-
-      // 4. 購入したい
-      buy: {
-        1: {
-          reply: "物件購入のご相談ですね！\nご希望のエリアをお聞かせいただけますか？",
-          options: ["📍 赤羽・北区エリア", "📍 川口エリア", "📍 板橋区エリア", "📍 その他"]
-        },
-        2: {
-          reply: "ありがとうございます！\nご検討中の物件種別について教えていただけますか？",
-          options: ["🏢 マンション", "🏡 新築・中古戸建て", "🧱 土地", "❓ まだ迷っている"]
-        },
-        3: {
-          reply: "承知いたしました。\nおおよそのご予算感（買い替えの場合は想定額）はおいくら位でしょうか？",
-          options: ["💰 3,000万円以下", "💰 3,000〜5,000万円", "💰 5,000〜7,000万円", "💰 7,000万円以上"]
-        },
-        4: {
-          reply: "ありがとうございます。\nご購入のご希望時期はいつ頃をお考えですか？",
-          options: ["⚡ 良い物件があればすぐ", "📅 半年以内", "📅 1年以内", "💭 まずは情報収集"]
-        },
-        5: {
-          reply: "条件をお聞かせいただきありがとうございます！\n未公開物件情報も含め、お客様に最適な物件・資金計画をご案内いたします。\n画面下部のお問い合わせボタンよりご相談予約をお待ちしております。",
-          options: []
-        }
+  if (userInput) {
+    userInput.onkeypress = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
       }
     };
+  }
 
-    // 該当するターンとシナリオのデータを取得（5ターン超えたら5ターン目を維持）
-    const step = Math.min(turnCount, 5);
-    const currentScenario = scenarios[category][step] || scenarios.rent[step];
+  // 初期化時にデフォルトボタンを描画
+  renderAdaptiveButtons("", "");
+});
 
-    return res.status(200).json({
-      reply: currentScenario.reply,
-      options: currentScenario.options,
-      isFinished: step >= 5,
-      userCategory: category
+// クイック選択ボタン押下時
+function sendQuickMessage(text) {
+  if (isSending) return; // 送信中なら連打防止
+  sendMessage(text);
+}
+
+// 送信メイン処理
+async function sendMessage(textFromButton) {
+  if (isSending) return; // 処理中なら弾く
+
+  const userInput = document.getElementById("user-input");
+  
+  // ボタンからのテキスト、または入力欄のテキストを取得
+  let message = "";
+  if (typeof textFromButton === "string" && textFromButton.trim() !== "") {
+    message = textFromButton.trim();
+  } else if (userInput && userInput.value.trim() !== "") {
+    message = userInput.value.trim();
+  }
+
+  if (!message) return; // 空文字送信防止
+
+  // 押されたテキストを記録（一度押したボタンを除外するため）
+  usedButtonTexts.push(message);
+
+  // 送信中フラグをオン
+  isSending = true;
+
+  // 入力欄をクリア
+  if (userInput) userInput.value = "";
+
+  // 1. ユーザーメッセージ表示
+  appendMessage("user-message", message);
+  turnCount++; // ラリー数加算
+
+  try {
+    // 2. API送信
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8"
+      },
+      body: JSON.stringify({
+        message: message,
+        history: conversationHistory
+      })
     });
 
+    const data = await response.json();
+
+    if (response.ok && data.reply) {
+      // 3. AIの返答を表示
+      appendMessage("bot-message", data.reply);
+
+      // 4. 会話履歴更新
+      conversationHistory.push({ role: "user", content: message });
+      conversationHistory.push({ role: "assistant", content: data.reply });
+
+      // 5. APIからボタン（data.options）が返ってきている場合は最優先、なければ動的生成
+      if (data.options && data.options.length > 0) {
+        renderApiButtons(data.options);
+      } else {
+        renderAdaptiveButtons(message, data.reply);
+      }
+
+    } else {
+      console.error("API Error Response:", data);
+      appendMessage("bot-message", `エラーが発生しました: ${data.error || "通信失敗"}`);
+    }
+
   } catch (error) {
-    console.error("Server Error:", error);
-    return res.status(500).json({ error: "サーバーエラーが発生しました。" });
+    console.error("送信通信エラー:", error);
+    appendMessage("bot-message", "通信エラーが発生しました。時間を置いて再度お試しください。");
+  } finally {
+    // 処理完了後にフラグ解除
+    isSending = false;
   }
+}
+
+// メッセージ描画
+function appendMessage(senderClass, text) {
+  const chatBody = document.getElementById("chatBody");
+  if (!chatBody) return;
+
+  const messageElement = document.createElement("div");
+  messageElement.className = `message ${senderClass}`;
+  
+  // 万が一 [OPTIONS] が含まれていた場合、本文だけを抽出して表示
+  let cleanText = String(text);
+  if (cleanText.includes("[OPTIONS]")) {
+    cleanText = cleanText.split("[OPTIONS]")[0];
+  }
+
+  cleanText = cleanText.replace(/\*\*/g, '').trim();
+  messageElement.innerHTML = cleanText.replace(/\n/g, '<br>');
+
+  chatBody.appendChild(messageElement);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+// APIからの確実な指定ボタン（data.options）を優先描画する関数
+function renderApiButtons(options) {
+  const quickButtonsDiv = document.getElementById("quick-buttons");
+  if (!quickButtonsDiv) return;
+
+  quickButtonsDiv.innerHTML = "";
+
+  options.forEach(optText => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.innerText = optText;
+
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      sendQuickMessage(optText);
+    });
+
+    quickButtonsDiv.appendChild(button);
+  });
+}
+
+// エリア特化＆コンテキスト適応型ボタン生成関数
+function renderAdaptiveButtons(userMsg, aiReply) {
+  const quickButtonsDiv = document.getElementById("quick-buttons");
+  if (!quickButtonsDiv) return;
+
+  let candidateButtons = [];
+
+  // 1. 5回以上のラリー（お問い合わせへの誘導を最優先）
+  if (turnCount >= 5) {
+    candidateButtons = [
+      { label: "💬 条件や日程について相談する", text: "希望の条件や相談したい日程があります" },
+      { label: "📩 無料相談・お問い合わせ画面へ進む", url: contactUrl, isPrimary: true }
+    ];
+  } 
+  // 2. 賃貸探しでエリアを聞かれたとき（赤羽・北区・川口・板橋エリアに特化）
+  else if (userMsg.includes("賃貸") || userMsg.includes("借りたい") || userMsg.includes("部屋")) {
+    candidateButtons = [
+      { label: "📍 赤羽・北区エリアで探したい", text: "赤羽・北区エリアで探したいです" },
+      { label: "📍 川口エリアで探したい", text: "川口エリアで探したいです" },
+      { label: "📍 板橋区エリアで探したい", text: "板橋区エリアで探したいです" },
+      { label: "💬 条件（ペット・間取り等）を相談", text: "こだわり条件について相談したいです" },
+      { label: "📅 無料で内見予約・問合せをする", url: contactUrl, isPrimary: true }
+    ];
+  }
+  // 3. オーナー様向け（貸したい・管理の文脈）
+  else if (aiReply.includes("管理") || aiReply.includes("空室") || userMsg.includes("貸したい")) {
+    candidateButtons = [
+      { label: "🏠 ノアリブホームの管理サポートを聞く", text: "どんな管理サポートや空室対策がありますか？" },
+      { label: "💡 賃貸として貸し出す流れを聞く", text: "賃貸として貸し出すまでの流れを教えてください" },
+      { label: "📊 無料で賃料査定・管理相談を申込む", url: contactUrl, isPrimary: true }
+    ];
+  } 
+  // 4. 売主様向け（売却・査定の文脈）
+  else if (aiReply.includes("査定") || userMsg.includes("売却") || userMsg.includes("売りたい")) {
+    candidateButtons = [
+      { label: "🤝 売却の手順や費用を聞く", text: "売却の手順や費用について教えてください" },
+      { label: "💡 ノアリブホームの強みを聞く", text: "ノアリブホームの売却サポートの特徴は何ですか？" },
+      { label: "📊 無料で売却査定を依頼する", url: contactUrl, isPrimary: true }
+    ];
+  }
+  // 5. 購入したい（売買購入の文脈）
+  else if (userMsg.includes("購入") || userMsg.includes("買いたい")) {
+    candidateButtons = [
+      { label: "📍 赤羽・北区エリアで買いたい", text: "赤羽・北区エリアで物件を探しています" },
+      { label: "📍 川口・板橋エリアで買いたい", text: "川口・板橋エリアで物件を探しています" },
+      { label: "🏦 住宅ローンについて相談する", text: "住宅ローンや資金計画について相談したいです" },
+      { label: "📩 個別のご相談予約（店舗・オンライン）", url: contactUrl, isPrimary: true }
+    ];
+  }
+  // 6. デフォルト（汎用ボタン）
+  else {
+    candidateButtons = [
+      { label: "💡 具体的におすすめ物件・提案を聞く", text: "おすすめの条件や物件の選び方を教えてください" },
+      { label: "💬 条件について詳しく相談する", text: "希望条件やお悩みについて直接相談したいです" },
+      { label: "📩 お問い合わせ画面へ進む", url: contactUrl, isPrimary: true }
+    ];
+  }
+
+  // 過去に押されたテキストを持つボタンを除外（URLボタンは常に残す）
+  const filteredButtons = candidateButtons.filter(btn => {
+    if (btn.url) return true;
+    return !usedButtonTexts.includes(btn.text);
+  });
+
+  // テキスト系ボタンが全滅した場合はお問い合わせボタンを補填
+  if (filteredButtons.length === 0) {
+    filteredButtons.push({ label: "📩 無料相談・お問い合わせ画面へ進む", url: contactUrl, isPrimary: true });
+  }
+
+  // ボタン描画処理
+  quickButtonsDiv.innerHTML = "";
+  
+  filteredButtons.forEach(btn => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.innerText = btn.label;
+    
+    if (btn.isPrimary) {
+      button.className = "primary-action-btn";
+    }
+
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (btn.url) {
+        window.open(btn.url, '_blank');
+      } else if (btn.text) {
+        sendQuickMessage(btn.text);
+      }
+    });
+    
+    quickButtonsDiv.appendChild(button);
+  });
 }
