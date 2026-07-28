@@ -23,12 +23,10 @@
     </div>
 
     <!-- クイック選択ボタンエリア -->
-    <div class="quick-buttons" id="quick-buttons">
-      <!-- JavaScriptによりここに動的ボタンが挿入されます -->
-    </div>
+    <div class="quick-buttons" id="quick-buttons"></div>
 
     <!-- 入力フォームエリア -->
-    <form class="chat-input-area" onsubmit="return false;">
+    <form class="chat-input-area" id="chat-form" onsubmit="return false;">
       <input type="text" id="user-input" placeholder="メッセージを入力..." autocomplete="off">
       <button type="submit" id="send-btn">送信</button>
     </form>
