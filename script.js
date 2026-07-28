@@ -43,12 +43,14 @@ function initChat() {
 }
 
 // ==========================================
-// 3. AI会話分岐ロジック
+// 3. AI会話分岐ロジック（全モード修正版）
 // ==========================================
 function getAIResponse(userInputText) {
+    // モード切り替え判定
     if (userInputText.includes("借りたい") || userInputText.includes("賃貸を探す")) {
         chatState.mode = "rent";
         chatState.step = 1;
+        chatState.data = {};
         return {
             text: "お部屋探し（賃貸）のご相談ですね！\nご希望の「エリア（駅名）」をお知らせいただくか、下からお選びください。",
             options: [
@@ -61,6 +63,7 @@ function getAIResponse(userInputText) {
     } else if (userInputText.includes("貸したい") || userInputText.includes("オーナー")) {
         chatState.mode = "owner";
         chatState.step = 1;
+        chatState.data = {};
         return {
             text: "物件を貸したい（オーナー様）のご相談ですね！\nご所有物件の「種別」はどちらでしょうか？",
             options: [
@@ -72,6 +75,7 @@ function getAIResponse(userInputText) {
     } else if (userInputText.includes("売りたい") || userInputText.includes("売却")) {
         chatState.mode = "sell";
         chatState.step = 1;
+        chatState.data = {};
         return {
             text: "物件のご売却のご相談ですね！\nご所有物件の「種別」をお選びください。",
             options: [
@@ -82,6 +86,7 @@ function getAIResponse(userInputText) {
     } else if (userInputText.includes("買いたい") || userInputText.includes("購入")) {
         chatState.mode = "buy";
         chatState.step = 1;
+        chatState.data = {};
         return {
             text: "物件のご購入のご相談ですね！\nどのような種別をお探しでしょうか？",
             options: [
@@ -101,7 +106,7 @@ function getAIResponse(userInputText) {
         }
     }
 
-    // 賃貸ヒアリングステップ
+    // ①【借りたい（賃貸）】ステップ進行
     if (chatState.mode === "rent") {
         if (chatState.step === 1) {
             chatState.step = 2;
@@ -148,6 +153,92 @@ function getAIResponse(userInputText) {
         }
     }
 
+    // ②【貸したい（オーナー）】ステップ進行
+    if (chatState.mode === "owner") {
+        if (chatState.step === 1) {
+            chatState.step = 2;
+            chatState.data["物件種別"] = userInputText;
+            return {
+                text: "ありがとうございます。\n物件のおおよその「所在地（エリア）」を教えていただけますか？",
+                options: [
+                    { text: "📍 赤羽エリア周辺", value: "akabane" },
+                    { text: "📍 東京都内", value: "tokyo" },
+                    { text: "📍 埼玉県内", value: "saitama" }
+                ]
+            };
+        } else if (chatState.step === 2) {
+            chatState.step = 3;
+            chatState.data["物件所在地"] = userInputText;
+            return {
+                text: "承知いたしました。\n現在の「お悩み・ご状況」に一番近いものをお選びください。",
+                options: [
+                    { text: "❓ 現在、空室で困っている", value: "vacancy" },
+                    { text: "🚪 近々、退去予定がある", value: "leaving" },
+                    { text: "🏠 現在、自分が居住中", value: "living" },
+                    { text: "🔰 初めての賃貸管理", value: "first" }
+                ]
+            };
+        } else {
+            chatState.data["ご相談内容"] = userInputText;
+            return {
+                text: "ご状況をお知らせいただきありがとうございます！\n適正な想定賃料の試算や管理プランをご案内いたします。\n\n下記ボタンより、お問合せ・無料査定へお進みください！",
+                options: [
+                    { text: "📋 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }
+                ]
+            };
+        }
+    }
+
+    // ③【売りたい（売却）】ステップ進行
+    if (chatState.mode === "sell") {
+        if (chatState.step === 1) {
+            chatState.step = 2;
+            chatState.data["物件種別"] = userInputText;
+            return {
+                text: "承知いたしました。\nご売却をご検討の「時期」をお選びください。",
+                options: [
+                    { text: "⚡️ なるべく早く売りたい", value: "quick" },
+                    { text: "📊 まずは相場を知りたい", value: "market" },
+                    { text: "🏡 住み替えに合わせて", value: "change" }
+                ]
+            };
+        } else {
+            chatState.data["売却ご希望時期"] = userInputText;
+            return {
+                text: "ありがとうございます！\n無料査定のお申込みを承ります。\n\n下記ボタンより、お問合せへお進みください！",
+                options: [
+                    { text: "📝 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }
+                ]
+            };
+        }
+    }
+
+    // ④【買いたい（購入）】ステップ進行
+    if (chatState.mode === "buy") {
+        if (chatState.step === 1) {
+            chatState.step = 2;
+            chatState.data["購入種別"] = userInputText;
+            return {
+                text: "ありがとうございます！\nご希望の「予算イメージ」をお選びください。",
+                options: [
+                    { text: "💰 3,000万円以内", value: "3000" },
+                    { text: "💰 5,000万円以内", value: "5000" },
+                    { text: "💰 7,000万円以内", value: "7000" },
+                    { text: "💰 7,000万円以上", value: "over7000" }
+                ]
+            };
+        } else {
+            chatState.data["ご予算イメージ"] = userInputText;
+            return {
+                text: "ありがとうございます！\n未公開物件の情報含め、スタッフよりご提案させていただきます。\n\n下記ボタンより、お問合せへお進みください！",
+                options: [
+                    { text: "📱 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }
+                ]
+            };
+        }
+    }
+
+    // デフォルト応答
     return {
         text: `「${userInputText}」ですね！承知いたしました。\nどのようなご相談（借りる・貸す・買う・売る）をお望みでしょうか？`,
         options: initialOptions
