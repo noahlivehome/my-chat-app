@@ -1,7 +1,7 @@
 // チャットの状態管理
 const chatState = {
     category: null, // 'rent', 'owner', 'sell', 'buy'
-    turnCount: 0    // ターン数制限用（5ターン目でお問い合わせへ誘導）
+    turnCount: 0    // ターン数制限用
 };
 
 // 初期表示用選択肢データ
@@ -12,7 +12,7 @@ const initialOptions = [
     { text: "🏡 物件を購入したい", value: "buy" }
 ];
 
-// ウェルカムメッセージ生成
+// ウェルカムメッセージ取得
 function getWelcomeMessage() {
     return {
         text: "いらっしゃいませ！\n不動産のご案内AIアシスタントです。\n\n本日はどのようなご相談でしょうか？\n下の選択肢よりお選びください。",
@@ -20,11 +20,8 @@ function getWelcomeMessage() {
     };
 }
 
-/**
- * 応答メッセージ生成関数
- * ※ 将来的に自社サーバーや外部AI APIへ送信する場合は、この関数内で fetch() を呼び出します。
- */
-async function sendChatMessage(userInputText) {
+// チャット応答ロジック
+function sendChatMessage(userInputText) {
     chatState.turnCount++;
 
     // 5ターン目以降はフォーム・相談窓口へ誘導
@@ -82,7 +79,7 @@ async function sendChatMessage(userInputText) {
         }
     }
 
-    // 専門的トラブル等のハンドリング（ルール⑥）
+    // 専門的トラブル等のハンドリング
     if (userInputText.includes("トラブル") || userInputText.includes("契約") || userInputText.includes("法律") || userInputText.includes("違約金")) {
         return {
             text: "ご質問ありがとうございます。\nお約束事や専門的なご相談につきましては、専門スタッフより詳しくご案内いたします。\n\nお手数ですが直接お問い合わせいただけますでしょうか。",
@@ -109,7 +106,7 @@ async function sendChatMessage(userInputText) {
                 options: [
                     { text: "📉 空室対策について", value: "owner_detail1" },
                     { text: "🔄 管理会社の変更について", value: "owner_detail2" },
-                    { text: "📋 無料で管理相談をする", value: "contact", isPrimary: true }
+                    { text: "📋 無料で管理・試算相談をする", value: "contact", isPrimary: true }
                 ]
             };
         case "sell":
