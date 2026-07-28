@@ -5,13 +5,8 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   try {
     const { message, history } = req.body || {};
@@ -21,65 +16,60 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "GROQ_API_KEY が設定されていません。" });
     }
 
-    const userMessageCount = Array.isArray(history) 
-      ? history.filter(item => item.role === "user").length 
-      : 0;
-    const turnCount = userMessageCount + 1;
+    // ユーザー発話数に基づき正確にターン判定
+    const userMessages = Array.isArray(history) 
+      ? history.filter(item => item.role === "user") 
+      : [];
+    const turnCount = userMessages.length + 1;
 
-    let systemInstruction = `あなたは不動産会社「ノアリブホーム」の親切でプロフェッショナルなAIコンサルタントです。
-丁寧、誠実、かつ分かりやすい日本の敬語を徹底してください。
-スマホで読みやすいよう、回答本文は100〜150文字程度で簡潔にまとめてください。
+    // 会話全体のコンテキスト（ニーズ）を判定
+    const fullText = (userMessages.map(m => m.content).join(" ") + " " + (message || "")).toLowerCase();
+    
+    let userCategory = "rent_user"; // デフォルト：部屋を探したい
+    if (fullText.includes("貸したい") || fullText.includes("オーナー") || fullText.includes("管理")) {
+      userCategory = "owner_rent";
+    } else if (fullText.includes("売りたい") || fullText.includes("売却")) {
+      userCategory = "owner_sell";
+    } else if (fullText.includes("買いたい") || fullText.includes("購入")) {
+      userCategory = "buy_user";
+    }
 
-【基本運用ルール】
-現在の会話ターン：${turnCount}ターン目（最大5ターン）
+    let systemInstruction = `あなたは不動産会社「ノアリブホーム」の優秀で親しみやすいAIコンサルタントです。
+
+【話し方・トーンの徹底ルール】
+・「〜ということは〜ですね」といった機械的なオウム返しや理屈っぽい表現は【厳禁】です。
+・「承知いたしました！」「素敵ですね！」など、自然で誠実なプロの接客日本語を使ってください。
+・1回の返答は80〜120文字程度で短く簡潔に話してください。
+
+【会話の進行ルール】
+現在のターン：${turnCount}ターン目（最大5ターン）
 
 1〜4ターン目：
-・ユーザーの目的に合わせ、1回のメッセージで「質問は1つだけ」にしてください。
-・回答の本文末尾に、必ず [OPTIONS: 選択肢1, 選択肢2, 選択肢3, 選択肢4] の形式で選択肢を出力してください。
-・質問は5ターン目まで継続し、早期にお問い合わせへ誘導しないでください。
+・必ずユーザーに対して「質問を1つだけ」投げかけてください。
+・質問の選択肢を、文章の【一番最後】に [OPTIONS: 選択肢1, 選択肢2, 選択肢3, 選択肢4] の形式で必ず付与してください。
+・【注意】早期のお問い合わせ誘導（「下部のアクションボタンより〜」等）は1〜4ターン目では絶対に行わないでください。
 
-【ニーズ別ヒアリングシナリオ＆OPTIONS出力例】
-
-1. 「借りたい（賃貸）」の場合
-・質問例：ご希望のエリアやご予算、間取り、入居時期などを順にヒアリング。
-・OPTIONS例：
-  [OPTIONS: 🏠 1K・1DK, 🏠 1LDK・2LDK, 🏠 3LDK以上, ❓ その他]
-
-2. 「買いたい（購入）」の場合
-・質問例：探している種別（マンション/戸建て）、ご予算、エリア、資金計画等をヒアリング。
-・OPTIONS例：
-  [OPTIONS: 🏢 新築/中古マンション, 🏡 一戸建て, 🧱 土地, ❓ その他]
-
-3. 「貸したい（オーナー賃貸管理）」の場合
-・質問例：所有物件の種別、現在の状況（空室/退去予定）、管理サポートへのご希望をヒアリング。
-・OPTIONS例：
-  [OPTIONS: 🏢 区分マンション, 🏠 一戸建て, 🏬 アパート・一棟ビル, ❓ その他]
-
-4. 「売りたい（売却）」の場合
-・質問例：物件種別、売却のご希望時期、査定方法（簡易/訪問）等をヒアリング。
-・OPTIONS例：
-  [OPTIONS: ⚡ できるだけ早く売りたい, 📅 半年以内に売りたい, 📊 まずは査定額だけ知りたい]
-
-【🚨 ミスマッチの完全禁止ルール（厳守）】
-・「貸したい」「売りたい」（オーナー様）に対して「賃貸のご予算（賃料）」を聞くことは絶対禁止です。
-・「借りたい」「買いたい」お客様に対して「管理サービスの希望」を聞くことは絶対禁止です。
+【ニーズ別質問シナリオ】
+1. 部屋を探したい（賃貸）：希望エリア → 希望の間取り → ご予算 → 引っ越し時期
+2. 買いたい（購入）：ご希望の物件種別（マンション/戸建て） → エリア → ご予算 → 購入の時期
+3. 貸したい（オーナー）：所有物件の種別 → 現在の状況（空室/退去予定） → お困りごと/ご要望
+4. 売りたい（売却）：所有物件の種別 → 売却のご希望時期 → 査定方法のご希望
 
 【禁止事項】
-・本文中に選択肢の箇条書きテキストを書くこと（必ず [OPTIONS: ...] タグ形式のみ）。
-・マークダウン記号（** や # 等）を使用すること。`;
+・借りる人/買う人に「査定」や「オーナー管理」の話をすること。
+・マークダウン（** や # 等）を使うこと。`;
 
     if (turnCount >= 5) {
-      systemInstruction += `\n\n【現在5ターン目です（完了・誘導ターン）】
-追加の質問（「〜でしょうか？」等）は一切禁止です。
-これまでのヒアリング内容を100文字程度で簡潔に確認・まとめをした上で、
-「詳細なご提案やご相談につきましては、画面下部のアクションボタンよりお気軽にお進みください。」
-と案内して締めくくってください。[OPTIONS: ...] は絶対に付与しないでください。`;
+      systemInstruction += `\n\n【現在5ターン目（最終ターン）】
+これ以上の質問（「〜でしょうか？」等）は一切しないでください。
+「ご希望をお聞かせいただきありがとうございます！ご条件に合う最新の物件情報や詳細なご案内をご用意いたします。画面下部よりお気軽にお問い合わせください。」
+という旨を丁寧にお伝えして締めくくってください。[OPTIONS: ...] タグは絶対に付けないでください。`;
     }
 
     const messages = [{ role: "system", content: systemInstruction }];
 
     if (history && Array.isArray(history)) {
-      const recentHistory = history.slice(-6);
+      const recentHistory = history.slice(-8);
       recentHistory.forEach(item => {
         messages.push({
           role: item.role === "user" ? "user" : "assistant",
@@ -93,10 +83,10 @@ export default async function handler(req, res) {
     const postData = JSON.stringify({
       model: "llama-3.1-8b-instant",
       messages: messages,
-      temperature: 0.1,
+      temperature: 0.3,
       presence_penalty: 0.5,
       frequency_penalty: 0.5,
-      max_tokens: 300
+      max_tokens: 250
     });
 
     const options = {
@@ -123,8 +113,7 @@ export default async function handler(req, res) {
           }
         });
       });
-
-      request.on('error', (error) => { reject(error); });
+      request.on('error', (error) => reject(error));
       request.write(postData, 'utf8');
       request.end();
     });
@@ -145,14 +134,12 @@ export default async function handler(req, res) {
     }
 
     const isFinished = turnCount >= 5;
-    if (isFinished) {
-      buttonOptions = [];
-    }
 
     return res.status(200).json({ 
       reply: replyText,
-      options: buttonOptions,
-      isFinished: isFinished
+      options: isFinished ? [] : buttonOptions,
+      isFinished: isFinished,
+      userCategory: userCategory
     });
 
   } catch (error) {
