@@ -4,7 +4,7 @@ let isSending = false; // 二重送信・フリーズ防止用フラグ
 let usedButtonTexts = []; // 押されたボタンのテキストを記録する配列
 const contactUrl = "https://www.noahlivehome.jp/contact/"; 
 
-// ページ読み込み完了時にイベントを確実にバインド
+// ページ読み込み完了時にイベントを確実にバインド＆初期ボタン表示
 window.addEventListener("DOMContentLoaded", () => {
   const sendBtn = document.getElementById("send-btn");
   const userInput = document.getElementById("user-input");
@@ -25,7 +25,7 @@ window.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // 初期化時にデフォルトボタンを描画
+  // 初回読み込み時にデフォルトのクイック選択ボタンを表示
   renderAdaptiveButtons("", "");
 });
 
