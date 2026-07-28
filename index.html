@@ -16,14 +16,10 @@
         </div>
 
         <!-- メッセージ表示エリア -->
-        <div class="chat-messages" id="chatMessages">
-            <!-- JavaScriptでメッセージが動的に追加されます -->
-        </div>
+        <div class="chat-messages" id="chatMessages"></div>
 
         <!-- ボタン選択肢エリア -->
-        <div class="chat-options-container" id="chatOptions">
-            <!-- JavaScriptで選択肢ボタンが動的に追加されます -->
-        </div>
+        <div class="chat-options-container" id="chatOptions"></div>
 
         <!-- 入力エリア -->
         <div class="chat-input-area">
@@ -32,8 +28,8 @@
         </div>
     </div>
 
-    <!-- スクリプトの読み込み（階層を指定） -->
-    <script src="api/chat.js"></script>
-    <script src="script.js"></script>
+    <!-- スクリプトの読み込み（順番を確実にするため defer 付与） -->
+    <script src="api/chat.js" defer></script>
+    <script src="script.js" defer></script>
 </body>
 </html>
