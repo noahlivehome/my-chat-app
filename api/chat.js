@@ -1,51 +1,161 @@
-let systemInstruction = `【最優先指令：出力フォーマットの絶対遵守】
-あなたは「ノアリブホーム」のプロAIコンサルタントです。
-返答の本文（100文字程度）の後に、必ず半角改行を挟んで [OPTIONS: ...] の形式で指定の選択肢のみを出力してください。
-文章中や返答テキスト内に選択肢を書くことは禁止です。
+import https from 'https';
 
-【現在のターン数】: ${turnCount}ターン目（最大5ターン）
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
---------------------------------------------------
-【1〜4ターン目の進行ルール】
-ユーザーの目的に合わせ、以下の【規定のOPTIONSパターン】から【完全にそのまま】コピーして選択肢を出力してください。AI独自のボタンテキスト変更（「都心・郊外」や壊れた数字）は厳禁です。
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-■ 1. 部屋を探したい（賃貸）の場合
-・1ターン目（エリアを聞く）：
-  [OPTIONS: 📍 北区, 📍 その他東京都内, 📍 埼玉県内, 📍 その他・相談したい]
-・2ターン目（間取りや条件を聞く）：
-  [OPTIONS: 🏠 1K・1DK, 🏠 2LDK・3LDK以上, 🐾ペット可物件 , ❓ その他]
-・3ターン目（ご予算を聞く）：
-  [OPTIONS: 💰 8万円未満, 💰 8〜10万円, 💰 10〜15万円, 💰 15万円以上]
-・4ターン目（時期を聞く）：
-  [OPTIONS: ⚡ すぐにでも, 📅 1ヶ月以内, 📅 2〜3ヶ月以内, 💭 条件が合えば]
+  try {
+    const { message, history } = req.body || {};
+    const apiKey = process.env.GROQ_API_KEY;
 
-■ 2. 買いたい（購入）の場合
-・1ターン目（種別）：[OPTIONS: 🏢 マンション, 🏡 戸建て, 🧱 土地, ❓ その他]
-・2ターン目（エリア）：[OPTIONS: 📍 北区, 📍 その他東京都内, 📍 埼玉県内, 📍 その他]
-・3ターン目（ご予算）：[OPTIONS: 💰 3,000万円以下, 💰 3,000〜5,000万円, 💰 5,000〜7,000万円, 💰 7,000万円以上]
-・4ターン目（時期）：[OPTIONS: ⚡ 良い物件があればすぐ, 📅 半年以内, 📅 1年以内, 💭 情報収集]
+    if (!apiKey) {
+      return res.status(500).json({ error: "GROQ_API_KEY が設定されていません。" });
+    }
 
-■ 3. 貸したい（オーナー賃貸管理）の場合
-・1ターン目（種別）：[OPTIONS: 🏢 区分マンション, 🏠 一戸建て, 🏬 アパート・一棟ビル, ❓ その他]
-・2ターン目（状況）：[OPTIONS: 🔑 現在空室, 🚪 近々退去予定, 🏃 他社で募集中, 💭 今後の参考に]
-・3ターン目（要望）：[OPTIONS: 💡 賃料査定したい, 🛠️ 管理会社を変更したい, 🔍 集客だけ頼みたい, ❓ 検討中]
-・4ターン目（時期）：[OPTIONS: ⚡ すぐに相談したい, 📅 1ヶ月以内, 📅 3ヶ月以内, 💭 まずは情報収集]
+    // 正確なターン判定（ユーザーのメッセージ送信回数 + 1）
+    const userMessages = Array.isArray(history) 
+      ? history.filter(item => item.role === "user") 
+      : [];
+    const turnCount = userMessages.length + 1;
 
-■ 4. 売りたい（売却）の場合
-・1ターン目（種別）：[OPTIONS: 🏢 分譲マンション, 🏠 一戸建て, 🧱 土地・一棟, ❓ その他]
-・2ターン目（時期）：[OPTIONS: ⚡ できるだけ早く, 📅 半年以内, 📅 1年以内, 📊 まずは査定額だけ]
+    // ニーズカテゴリーの判定
+    const fullText = (userMessages.map(m => m.content).join(" ") + " " + (message || "")).toLowerCase();
+    let userCategory = "rent"; // デフォルト：借りたい
+    if (fullText.includes("貸したい") || fullText.includes("オーナー") || fullText.includes("管理")) {
+      userCategory = "owner_rent";
+    } else if (fullText.includes("売りたい") || fullText.includes("売却")) {
+      userCategory = "owner_sell";
+    } else if (fullText.includes("買いたい") || fullText.includes("購入")) {
+      userCategory = "buy";
+    }
 
---------------------------------------------------
-【5ターン目（最終ターン）の進行ルール】
-・質問（「〜でしょうか？」等）は絶対禁止。
-・「ご希望をお聞かせいただきありがとうございます！ご条件に合う最新の情報をご用意いたしますので、画面下部のアクションボタンよりお気軽にお問い合わせください。」と案内し締めくくってください。
-・[OPTIONS: ...] タグは一切出力しないでください。
+    const systemInstruction = `# Role & Purpose
+あなたは「ノアリブホーム」の親身でプロフェッショナルな不動産AIコンサルタントです。
+お客様のニーズ（①借りたい、②貸したい、③売却、④購入）を特定し、ヒアリングを行った上で、問い合わせへスムーズに誘導することを目的とします。
 
-【接客マナー＆禁止事項】
-・オウム返し（「〜ということは〜ですね」）は絶対禁止。自然で丁寧な接客敬語を使用してください。
-・「都心/郊外/近郊」という大ざっぱなエリア指定は絶対禁止。
-・マークダウン記号（** や # 等）は使用禁止。
-・1人称は「私」または「ノアリブホーム」とし、温かみと安心感のある接客トーン（です・ます調）を保つこと。
-・1回の発話で「！」（感嘆符）は1〜2回程度までとし、過度なテンションや冷たすぎる機械感の双方を避けること。
-・ 文頭に「さて」「それでは」「また」などの無駄な接続詞を多用せず、会話の流れに沿ったスムーズなつなぎ言葉を使うこと。
-・話し言葉として自然なリズムを意識し、1文が長くなりすぎないように適宜読点（、）や改行を入れること。`;
+# Special Target Area
+得意エリア：赤羽、北区、川口市、板橋区（およびその周辺沿線）
+案内方針：「東京都内」などの広範な表現は避け、必ず「赤羽・北区・川口・板橋エリア」を中心に案内すること。
+
+# Communication Rules
+- 丁寧で誠実、かつ分かりやすい日本の敬語を徹底すること。
+- スマホでの視認性を高めるため、1回の返答は【100〜150文字程度】とし、適度に改行を入れること。
+- 本文内にテキストで選択肢一覧を書かないこと（選択肢は必ず末尾の [OPTIONS] に出力）。
+- 1回の返答で尋ねるヒアリング項目は【最大1〜2つ】とすること。
+- 会話途中で「こんにちは」等の挨拶を無駄に繰り返さないこと。
+- 現在の会話数：${turnCount}ターン目（最大5ターン）
+
+# Strict Guardrails (絶対禁止事項)
+- 架空の物件情報や具体例・スペック（例：「赤羽駅徒歩5分、家賃8万円の1K」等）は絶対につくらないこと。
+- 家賃、査定額、諸費用、仲介手数料などの具体的な数字（〇万円、〇％など）や金額の試算・例え話は一切出さないこと。
+- ユーザーから具体的な条件を聞いていない段階で「条件を受け止めました」と言わないこと。
+- 「**」や「#」などのマークダウン記号は絶対に使用せず、プレーンテキストのみで回答すること。
+
+# Turn & Output Format Rules
+${turnCount < 5 ? `
+1〜4ターン目ルール：
+質問は1〜2つにし、返答本文の末尾に【必ず】以下のフォーマットで2〜3個の選択肢を付与してください。
+
+(回答本文テキスト)
+
+[OPTIONS]
+- 選択肢1
+- 選択肢2
+- 選択肢3
+` : `
+★現在5ターン目（最終ターン）です：
+新たな質問（「〜でしょうか？」等）は一切禁止です。
+これまでのヒアリングのお礼と、ご希望に沿った最新情報・提案の準備ができる旨を伝え、画面下部のお問い合わせボタンから進んでいただくよう案内して締めくくってください。
+※[OPTIONS] タグや選択肢は絶対に出力しないでください。
+`}`;
+
+    const messages = [{ role: "system", content: systemInstruction }];
+
+    if (history && Array.isArray(history)) {
+      const recentHistory = history.slice(-8);
+      recentHistory.forEach(item => {
+        messages.push({
+          role: item.role === "user" ? "user" : "assistant",
+          content: String(item.content || "")
+        });
+      });
+    }
+
+    messages.push({ role: "user", content: String(message || "こんにちは") });
+
+    const postData = JSON.stringify({
+      model: "llama-3.1-8b-instant",
+      messages: messages,
+      temperature: 0.2,
+      presence_penalty: 0.5,
+      frequency_penalty: 0.5,
+      max_tokens: 300
+    });
+
+    const options = {
+      hostname: 'api.groq.com',
+      path: '/openai/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Length': Buffer.byteLength(postData, 'utf8')
+      }
+    };
+
+    const apiResponse = await new Promise((resolve, reject) => {
+      const request = https.request(options, (response) => {
+        response.setEncoding('utf8');
+        let data = '';
+        response.on('data', (chunk) => { data += chunk; });
+        response.on('end', () => {
+          try {
+            resolve({ statusCode: response.statusCode, body: JSON.parse(data) });
+          } catch (e) {
+            reject(new Error("JSON解析エラー"));
+          }
+        });
+      });
+      request.on('error', (error) => reject(error));
+      request.write(postData, 'utf8');
+      request.end();
+    });
+
+    if (apiResponse.statusCode !== 200) {
+      return res.status(apiResponse.statusCode).json({ error: "一時的なエラーが発生しました。" });
+    }
+
+    const rawText = apiResponse.body.choices?.[0]?.message?.content || "";
+
+    let replyText = rawText;
+    let buttonOptions = [];
+
+    // [OPTIONS] タグとハイフン記号の解析処理
+    const optionsIndex = rawText.indexOf("[OPTIONS]");
+    if (optionsIndex !== -1) {
+      replyText = rawText.substring(0, optionsIndex).trim();
+      const optionsPart = rawText.substring(optionsIndex + 9);
+      buttonOptions = optionsPart
+        .split('\n')
+        .map(line => line.replace(/^[\s\-\*•]+/, '').trim())
+        .filter(line => line.length > 0);
+    }
+
+    const isFinished = turnCount >= 5;
+
+    return res.status(200).json({ 
+      reply: replyText,
+      options: isFinished ? [] : buttonOptions,
+      isFinished: isFinished,
+      userCategory: userCategory
+    });
+
+  } catch (error) {
+    console.error("Server Error:", error);
+    return res.status(500).json({ error: "サーバーエラーが発生しました。" });
+  }
+}
