@@ -1,163 +1,141 @@
-let conversationHistory = [];
-let turnCount = 0;
-let isSending = false;
-let usedButtonTexts = [];
-const contactUrl = "https://www.noahlivehome.jp/contact/";
+// チャットの状態管理
+const chatState = {
+    category: null, // 'rent', 'owner', 'sell', 'buy'
+    turnCount: 0    // ターン数制限用（5ターン目でお問い合わせへ誘導）
+};
 
-document.addEventListener("DOMContentLoaded", () => {
-  const userInput = document.getElementById("user-input");
-  if (userInput) {
-    userInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-  }
-});
+// 初期表示用選択肢データ
+const initialOptions = [
+    { text: "🏠 賃貸のお部屋を探したい", value: "rent" },
+    { text: "🔑 物件を貸したい（オーナー様）", value: "owner" },
+    { text: "🏢 物件を売却したい", value: "sell" },
+    { text: "🏡 物件を購入したい", value: "buy" }
+];
 
-function sendQuickMessage(text) {
-  if (isSending) return;
-  sendMessage(text);
+// ウェルカムメッセージ生成
+function getWelcomeMessage() {
+    return {
+        text: "いらっしゃいませ！\n不動産のご案内AIアシスタントです。\n\n本日はどのようなご相談でしょうか？\n下の選択肢よりお選びください。",
+        options: initialOptions
+    };
 }
-window.sendQuickMessage = sendQuickMessage;
 
-function sendMessage(textFromButton) {
-  if (isSending) return;
+/**
+ * 応答メッセージ生成関数
+ * ※ 将来的に自社サーバーや外部AI APIへ送信する場合は、この関数内で fetch() を呼び出します。
+ */
+async function sendChatMessage(userInputText) {
+    chatState.turnCount++;
 
-  const userInput = document.getElementById("user-input");
-  let message = "";
-
-  if (typeof textFromButton === "string" && textFromButton.trim() !== "") {
-    message = textFromButton.trim();
-  } else if (userInput && userInput.value.trim() !== "") {
-    message = userInput.value.trim();
-  }
-
-  if (!message) return;
-
-  usedButtonTexts.push(message);
-  isSending = true;
-
-  if (userInput) userInput.value = "";
-
-  // 1. ユーザーメッセージ表示
-  appendMessage("user-message", message);
-  turnCount++;
-
-  // 2. 返答文を作成（通信を行わず即時返答）
-  setTimeout(() => {
-    let replyText = getFallbackReply(message);
-
-    // 3. AI返答表示
-    appendMessage("bot-message", replyText);
-    conversationHistory.push({ role: "user", content: message });
-    conversationHistory.push({ role: "assistant", content: replyText });
-
-    // 4. ボタン更新
-    if (turnCount >= 5) {
-      renderContactButtonOnly();
-    } else {
-      renderAdaptiveButtons(message);
+    // 5ターン目以降はフォーム・相談窓口へ誘導
+    if (chatState.turnCount >= 5) {
+        return {
+            text: "詳細なご条件やお問合せにつきましては、担当スタッフより詳しく丁寧にご案内いたします。\n\nお手数ですが、下記よりお気軽にお問い合わせくださいませ。",
+            options: [
+                { text: "📅 無料相談・お問い合わせ", value: "contact", isPrimary: true }
+            ]
+        };
     }
 
-    isSending = false;
-  }, 300); // 0.3秒だけ自然なラグを入れる
-}
-window.sendMessage = sendMessage;
+    // 初回カテゴリ未選択の場合
+    if (!chatState.category) {
+        if (userInputText.includes("賃貸") || userInputText.includes("借り")) {
+            chatState.category = "rent";
+            return {
+                text: "お部屋探しですね！\nご希望のエリア、間取り、ご予算、ペット飼育などのこだわり条件はございますか？\n\n差し支えない範囲で教えていただけますと幸いです！",
+                options: [
+                    { text: "💰 家賃相場について確認する", value: "rent_market" },
+                    { text: "💭 条件（ペット・間取り等）を伝える", value: "rent_condition" },
+                    { text: "📅 無料で内見予約・物件問合せをする", value: "contact", isPrimary: true }
+                ]
+            };
+        } else if (userInputText.includes("貸したい") || userInputText.includes("オーナー")) {
+            chatState.category = "owner";
+            return {
+                text: "賃貸管理のご相談ですね！\n所有されている物件のエリアや種別（マンション・戸建てなど）、現在のお悩みについて教えていただけますか？",
+                options: [
+                    { text: "🏢 物件種別・エリアを伝える", value: "owner_info" },
+                    { text: "❓ 空室対策について相談する", value: "owner_vacancy" },
+                    { text: "📋 賃料試算・無料相談を予約する", value: "contact", isPrimary: true }
+                ]
+            };
+        } else if (userInputText.includes("売却") || userInputText.includes("売り")) {
+            chatState.category = "sell";
+            return {
+                text: "ご売却のご相談ですね！\nご売却をご検討中の物件エリアや時期、現状のお悩みなどについて教えていただけますか？",
+                options: [
+                    { text: "📍 エリア・時期を伝える", value: "sell_info" },
+                    { text: "📊 査定の流れを聞く", value: "sell_flow" },
+                    { text: "📝 無料査定を申し込む", value: "contact", isPrimary: true }
+                ]
+            };
+        } else if (userInputText.includes("購入") || userInputText.includes("買い")) {
+            chatState.category = "buy";
+            return {
+                text: "物件ご購入のご相談ですね！\nご希望のエリアや種別（新築・中古戸建て・マンションなど）、ご検討のきっかけなどを教えていただけますか？",
+                options: [
+                    { text: "🏠 希望種別・エリアを伝える", value: "buy_info" },
+                    { text: "💡 住宅ローンの相談をする", value: "buy_loan" },
+                    { text: "📱 来店・オンライン相談を予約する", value: "contact", isPrimary: true }
+                ]
+            };
+        }
+    }
 
-function getFallbackReply(msg) {
-  if (turnCount >= 5) {
-    return "これまでのご希望条件を元に、専門スタッフが最適なご提案資料をご用意いたします。詳しいご相談や最新の空室状況につきましては、下記のお問い合わせ画面よりお気軽にお進みくださいませ。";
-  }
-  if (msg.includes("賃貸") || msg.includes("探したい")) {
-    return "ご希望のエリア、間取り、ご予算、ペット飼育などのこだわり条件はございますか？差し支えない範囲で教えていただけますと幸いです！";
-  } else if (msg.includes("貸したい") || msg.includes("管理")) {
-    return "所有されている物件のエリアや種別（マンション・戸建てなど）、現在お困りのことについて教えていただけますか？";
-  } else if (msg.includes("売却") || msg.includes("売りたい")) {
-    return "ご売却をご検討中の物件エリアや時期、現状のお悩みなどについて教えていただけますか？";
-  } else if (msg.includes("購入") || msg.includes("買いたい")) {
-    return "ご希望のエリアや種別（新築・中古戸建て・マンションなど）、ご検討のきっかけなどを教えていただけますか？";
-  }
-  return "ご要望について承りました。さらに詳しい条件を教えていただけますか？";
-}
+    // 専門的トラブル等のハンドリング（ルール⑥）
+    if (userInputText.includes("トラブル") || userInputText.includes("契約") || userInputText.includes("法律") || userInputText.includes("違約金")) {
+        return {
+            text: "ご質問ありがとうございます。\nお約束事や専門的なご相談につきましては、専門スタッフより詳しくご案内いたします。\n\nお手数ですが直接お問い合わせいただけますでしょうか。",
+            options: [
+                { text: "📩 専門スタッフに相談する", value: "contact", isPrimary: true }
+            ]
+        };
+    }
 
-function appendMessage(senderClass, text) {
-  const chatBody = document.getElementById("chatBody");
-  if (!chatBody) return;
-
-  const messageElement = document.createElement("div");
-  messageElement.className = `message ${senderClass}`;
-
-  let cleanText = String(text)
-    .replace(/\[OPTIONS\].*/gs, '')
-    .replace(/\*\*/g, '')
-    .replace(/#/g, '')
-    .trim();
-
-  messageElement.innerHTML = cleanText.replace(/\n/g, '<br>');
-
-  chatBody.appendChild(messageElement);
-  chatBody.scrollTop = chatBody.scrollHeight;
-}
-
-function renderContactButtonOnly() {
-  const quickButtonsDiv = document.getElementById("quick-buttons");
-  if (!quickButtonsDiv) return;
-
-  quickButtonsDiv.innerHTML = "";
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "full-width";
-  button.innerText = "📩 無料相談・お問い合わせ画面へ進む";
-  button.onclick = () => window.open(contactUrl, '_blank');
-  quickButtonsDiv.appendChild(button);
-}
-
-function renderAdaptiveButtons(userMsg) {
-  const quickButtonsDiv = document.getElementById("quick-buttons");
-  if (!quickButtonsDiv) return;
-
-  const uMsg = userMsg ? String(userMsg) : "";
-  let candidateTexts = [];
-
-  if (uMsg.includes("賃貸") || uMsg.includes("探したい")) {
-    candidateTexts = [
-      "📍 エリア・間取りを相談したい",
-      "💰 家賃やご予算について相談したい",
-      "🐾 ペット可などこだわり条件がある",
-      "💬 直接スタッフに相談したい"
-    ];
-  } else if (uMsg.includes("貸したい")) {
-    candidateTexts = [
-      "🏢 所有物件のエリアや種別を伝える",
-      "💡 空室対策や管理内容を聞きたい"
-    ];
-  } else if (uMsg.includes("売りたい")) {
-    candidateTexts = [
-      "🏠 売却したい物件情報を伝える",
-      "📈 売却の流れや無料査定について聞く"
-    ];
-  } else if (uMsg.includes("買いたい")) {
-    candidateTexts = [
-      "🔍 探しているエリアや種別を伝える",
-      "🏦 住宅ローンや資金計画の相談をする"
-    ];
-  } else {
-    candidateTexts = [
-      "🔍 詳しい希望条件を伝える",
-      "💬 専門スタッフに直接相談する"
-    ];
-  }
-
-  const filteredTexts = candidateTexts.filter(text => !usedButtonTexts.includes(text));
-
-  quickButtonsDiv.innerHTML = "";
-  filteredTexts.forEach(text => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.innerText = text;
-    button.onclick = () => sendQuickMessage(text);
-    quickButtonsDiv.appendChild(button);
-  });
+    // カテゴリ別のシナリオ回答
+    switch (chatState.category) {
+        case "rent":
+            return {
+                text: "詳細なご希望をお知らせいただきありがとうございます！\nご希望の入居時期や、その他の譲れない条件（バストイレ別、2階以上など）はございますか？",
+                options: [
+                    { text: "🗓 入居時期を伝える", value: "rent_time" },
+                    { text: "✨ こだわり条件を伝える", value: "rent_detail" },
+                    { text: "📅 無料で内見予約・物件問合せをする", value: "contact", isPrimary: true }
+                ]
+            };
+        case "owner":
+            return {
+                text: "ありがとうございます！\n現在の運用状況（空室でお困り、現在の管理会社様からの変更をご検討中など）について詳しくお聞かせいただけますか？",
+                options: [
+                    { text: "📉 空室対策について", value: "owner_detail1" },
+                    { text: "🔄 管理会社の変更について", value: "owner_detail2" },
+                    { text: "📋 無料で管理相談をする", value: "contact", isPrimary: true }
+                ]
+            };
+        case "sell":
+            return {
+                text: "承知いたしました。\nおおよそのご売却希望時期（すぐに売却したい、良い条件があればなど）は決まっていらっしゃいますか？",
+                options: [
+                    { text: "⚡️ なるべく早く売却したい", value: "sell_soon" },
+                    { text: "🔍 まずは価格だけ知りたい", value: "sell_price" },
+                    { text: "📝 無料査定・ご相談予約へ", value: "contact", isPrimary: true }
+                ]
+            };
+        case "buy":
+            return {
+                text: "ありがとうございます！\nご予算のイメージや、住宅ローンのご利用計画につきましてはご検討中でしょうか？",
+                options: [
+                    { text: "💵 予算イメージを伝える", value: "buy_budget" },
+                    { text: "🏦 ローンについて相談したい", value: "buy_loan_detail" },
+                    { text: "📱 非公開物件の案内・ご相談予約", value: "contact", isPrimary: true }
+                ]
+            };
+        default:
+            return {
+                text: "お問合せありがとうございます！\nお客様のご要望に合わせた最適なプランをご案内いたします。\n\n下記よりご希望の手続きをお選びください。",
+                options: [
+                    { text: "📩 お問い合わせフォームへ", value: "contact", isPrimary: true }
+                ]
+            };
+    }
 }
