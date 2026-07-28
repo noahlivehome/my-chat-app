@@ -3,26 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ノアリブホーム お問い合わせチャット</title>
+  <title>ノアリブホーム AIアドバイザー</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <div class="chat-container">
+    <!-- ヘッダー -->
     <div class="chat-header">
-      ノアリブホーム お問い合わせチャット
+      <div class="chat-header-title">
+        💬 <span>ノアリブホーム お問い合わせチャット</span>
+      </div>
     </div>
 
-  <div class="quick-buttons" id="quick-buttons">
+    <!-- チャット本文エリア -->
+    <div class="chat-body" id="chatBody">
+      <div class="message bot-message">
+        こんにちは！ノアリブホームのAIアドバイザーです。<br>
+        お部屋探し（賃貸）、賃貸経営・管理、売却や購入など、何でもお気軽にご相談ください！
+      </div>
+    </div>
+
+    <!-- 初回用選択ボタン（2列配置） -->
+    <div class="quick-buttons" id="quick-buttons">
       <button type="button" onclick="sendQuickMessage('賃貸物件を探したいです')">🔍 賃貸を探したい</button>
       <button type="button" onclick="sendQuickMessage('所有している部屋を貸したい・管理の相談がしたいです')">🔑 貸したい</button>
       <button type="button" onclick="sendQuickMessage('不動産を売りたいです')">🏠 売却したい</button>
       <button type="button" onclick="sendQuickMessage('不動産を買いたいです')">💰 購入したい</button>
     </div>
 
+    <!-- 入力エリア -->
     <form class="chat-input-area" id="chat-form" onsubmit="return false;">
       <input type="text" id="user-input" placeholder="メッセージを入力..." autocomplete="off">
-      <button type="button" id="send-btn" onclick="sendMessage()">送信</button>
+      <button type="button" class="send-icon-btn" id="send-btn" onclick="sendMessage()">➤</button>
     </form>
   </div>
 
