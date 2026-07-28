@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ノアリブホーム AIチャット</title>
+  <title>ノアリブホーム AIサポート</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; }
-    .chat-container { max-width: 450px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); overflow: hidden; display: flex; flex-direction: column; height: 600px; }
+    .chat-container { max-width: 450px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); overflow: hidden; display: flex; flex-direction: column; height: 620px; }
     .chat-header { background: #8da288; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 16px; }
     .chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: #fdfdfd; }
     
@@ -14,7 +14,6 @@
     .msg.user { align-self: flex-end; background: #8da288; color: white; border-bottom-right-radius: 4px; }
     .msg.assistant { align-self: flex-start; background: #f0f2f0; color: #333; border-bottom-left-radius: 4px; }
 
-    /* 画像デザインを模したボタンエリア */
     .button-container { padding: 12px 15px; background: #fafafa; border-top: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 10px; }
     .cta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     
@@ -63,7 +62,6 @@
     <div class="msg assistant">こんにちは！ノアリブホームです。お部屋探しやご売却・賃貸管理など、どのようなご相談でしょうか？</div>
   </div>
   
-  <!-- 初期ボタン表示エリア -->
   <div id="actionArea">
     <div class="button-container">
       <div class="cta-grid">
@@ -93,7 +91,7 @@
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
-  // 1〜4ターン目の動的ボタン生成
+  // 動的ボタン生成（1〜4ターン目）
   function renderTurnButtons(options) {
     const actionArea = document.getElementById("actionArea");
     actionArea.innerHTML = "";
@@ -118,22 +116,36 @@
     actionArea.appendChild(container);
   }
 
-  // 5ターン目（会話終了時）のCTAボタン表示
-  function renderFinalCTAButtons() {
+  // ニーズに応じた最終CTAボタン生成（5ターン目）
+  function renderFinalCTAButtons(category) {
     const actionArea = document.getElementById("actionArea");
-    actionArea.innerHTML = [
-      '<div class="button-container">',
-      '  <div class="cta-grid">',
-      '    <button class="cta-sub-btn" onclick="sendOption(\'ノアリブホームの管理サポートを聞く\')">🏠 ノアリブホームの管理サポートを聞く</button>',
-      '    <button class="cta-sub-btn" onclick="sendOption(\'ご相談の流れを知りたい\')">💡 ご相談の流れを知りたい</button>',
-      '  </div>',
-      '  <button class="cta-main-btn" onclick="window.location.href=\'/contact\'">📊 無料で賃料査定・物件相談を申し込む</button>',
-      '</div>'
-    ].join('\n');
+    let mainBtnText = "📩 最新の物件・ご相談の問い合わせをする";
+    let subBtn1 = "🏠 おすすめ物件一覧を見る";
+    let subBtn2 = "💡 ご相談の流れを知りたい";
+
+    if (category === "owner_rent") {
+      mainBtnText = "📊 無料で賃料査定・管理相談を申し込む";
+      subBtn1 = "🏠 管理サポート内容を聞く";
+    } else if (category === "owner_sell") {
+      mainBtnText = "📊 無料で売却査定・ご相談を申し込む";
+      subBtn1 = "🏠 売却の流れを知りたい";
+    } else if (category === "buy_user") {
+      mainBtnText = "🔑 購入希望の物件・資金相談を申し込む";
+      subBtn1 = "🏡 おすすめの販売物件を見る";
+    }
+
+    actionArea.innerHTML = `
+      <div class="button-container">
+        <div class="cta-grid">
+          <button class="cta-sub-btn" onclick="sendOption('${subBtn1}')">${subBtn1}</button>
+          <button class="cta-sub-btn" onclick="sendOption('${subBtn2}')">${subBtn2}</button>
+        </div>
+        <button class="cta-main-btn" onclick="window.location.href='/contact'">${mainBtnText}</button>
+      </div>
+    `;
   }
 
   function sendOption(text) {
-    document.getElementById("actionArea").innerHTML = "";
     sendMessage(text);
   }
 
@@ -142,7 +154,6 @@
     const text = input.value.trim();
     if (!text) return;
     input.value = "";
-    document.getElementById("actionArea").innerHTML = "";
     sendMessage(text);
   }
 
@@ -151,6 +162,9 @@
   }
 
   async function sendMessage(userText) {
+    // 画面のボタンエリアを送信時に一時クリア
+    document.getElementById("actionArea").innerHTML = "";
+    
     appendMessage("user", userText);
 
     try {
@@ -168,16 +182,17 @@
       if (data.reply) {
         appendMessage("assistant", data.reply);
         
-        if (data.isFinished) {
-          renderFinalCTAButtons();
-        } else {
-          renderTurnButtons(data.options);
-        }
-
         chatHistory.push({ role: "user", content: userText });
         chatHistory.push({ role: "assistant", content: data.reply });
+
+        // 5ターン目かどうかで表示を分ける（手入力・ボタンクリック両対応）
+        if (data.isFinished) {
+          renderFinalCTAButtons(data.userCategory);
+        } else if (data.options && data.options.length > 0) {
+          renderTurnButtons(data.options);
+        }
       } else {
-        appendMessage("assistant", "エラーが発生しました。");
+        appendMessage("assistant", "一時的なエラーが発生しました。");
       }
     } catch (err) {
       console.error(err);
