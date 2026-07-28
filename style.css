@@ -11,8 +11,8 @@
 
 body {
   font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
-  background-color: #f7f4ef; /* やわらかいベージュ背景 */
-  color: #4a433d; /* 濃いブラウン文字 */
+  background-color: #f7f4ef; /* 温かみのあるベージュ背景 */
+  color: #4a433d; /* 落ち着いたダークブラウンテキスト */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -30,7 +30,7 @@ body {
   max-height: 800px;
   background: #ffffff;
   border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(112, 93, 76, 0.12); /* あたたかみのある影 */
+  box-shadow: 0 8px 30px rgba(112, 93, 76, 0.12);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -39,7 +39,7 @@ body {
 
 /* Header */
 .chat-header {
-  background: #8c7662; /* 落ち着いたシックなブラウン */
+  background: #8c7662; /* メインカラー（シープブラウン） */
   color: #ffffff;
   padding: 18px 20px;
   text-align: center;
@@ -47,9 +47,10 @@ body {
   font-size: 1.05rem;
   letter-spacing: 0.05em;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
 }
 
-/* Chat Body (Message History Area) */
+/* Chat Body (Message Area) */
 .chat-body {
   flex: 1;
   padding: 20px 16px;
@@ -57,7 +58,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  background-color: #faf8f5; /* ほんのり温かみのある白背景 */
+  background-color: #faf8f5;
 }
 
 /* Scrollbar Style */
@@ -124,8 +125,9 @@ body {
   gap: 8px;
   background: #ffffff;
   border-top: 1px solid #eee8df;
-  max-height: 150px;
+  max-height: 160px;
   overflow-y: auto;
+  flex-shrink: 0;
 }
 
 .quick-buttons button {
@@ -138,7 +140,7 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 .quick-buttons button:hover {
@@ -147,9 +149,9 @@ body {
   color: #3d3630;
 }
 
-/* Primary Action Button (Call to Action) */
+/* Primary CTA Button */
 .quick-buttons button.primary-action-btn {
-  background: #8c7662; /* ヘッダーと同系のブラウンで際立たせる */
+  background: #8c7662;
   color: #ffffff;
   border-color: #7a6653;
   font-weight: 600;
@@ -170,6 +172,7 @@ body {
   border-top: 1px solid #eee8df;
   background: #ffffff;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .chat-input-area input {
