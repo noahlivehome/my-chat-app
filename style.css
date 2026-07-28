@@ -216,3 +216,34 @@ body {
 .chat-input-area button:hover {
   background: #786452;
 }
+
+/* チャット全体のコンテナ（高さをしっかり確保する） */
+.chat-container {
+  width: 100%;
+  max-width: 440px;
+  height: 600px; /* ★高さを固定（または 80vh など）にして領域を確保します */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* チャットメッセージ表示エリア（余ったスペースをいっぱいに広げる） */
+.chat-body,
+#chatBody {
+  flex: 1 !important; /* ★ここが1つ上に押し広げられるように強制します */
+  min-height: 200px;  /* ★最低限のメッセージエリア高さを確保 */
+  overflow-y: auto;
+  padding: 16px;
+}
+
+/* ボタンエリア（下部に固定） */
+.quick-buttons,
+#quick-buttons {
+  flex-shrink: 0; /* ★潰れないように固定 */
+}
+
+/* 入力エリア（一番下に固定） */
+.chat-input-area,
+#chat-form {
+  flex-shrink: 0; /* ★潰れないように固定 */
+}
