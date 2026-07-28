@@ -3,200 +3,166 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ノアリブホーム AIサポート</title>
+  <title>ノアリブホーム チャットサポート</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; }
-    .chat-container { max-width: 450px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); overflow: hidden; display: flex; flex-direction: column; height: 620px; }
-    .chat-header { background: #8da288; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 16px; }
-    .chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: #fdfdfd; }
-    
-    .msg { max-width: 80%; padding: 12px 16px; border-radius: 16px; line-height: 1.5; font-size: 14px; white-space: pre-wrap; }
-    .msg.user { align-self: flex-end; background: #8da288; color: white; border-bottom-right-radius: 4px; }
-    .msg.assistant { align-self: flex-start; background: #f0f2f0; color: #333; border-bottom-left-radius: 4px; }
-
-    .button-container { padding: 12px 15px; background: #fafafa; border-top: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 10px; }
-    .cta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    
-    .cta-sub-btn {
-      background: #ffffff;
-      border: 1px solid #7c9878;
-      color: #333333;
-      padding: 10px 6px;
-      border-radius: 16px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      text-align: center;
-      line-height: 1.3;
-      transition: background 0.2s;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    /* 簡易的なスタイリング（環境に合わせて調整してください） */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
-    .cta-sub-btn:hover { background: #f0f4f0; }
-
-    .cta-main-btn {
+    body {
+      font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+      background-color: #f4f7f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .chat-container {
       width: 100%;
-      background-color: #8da288;
-      color: #ffffff;
-      border: none;
-      padding: 14px 10px;
+      max-width: 480px;
+      height: 90vh;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-header {
+      background: #1e3a8a;
+      color: #fff;
+      padding: 16px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    .chat-body {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background-color: #f9fafb;
+    }
+    .message {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+    .user-message {
+      align-self: flex-end;
+      background-color: #2563eb;
+      color: #fff;
+      border-bottom-right-radius: 2px;
+    }
+    .bot-message {
+      align-self: flex-start;
+      background-color: #e5e7eb;
+      color: #1f2937;
+      border-bottom-left-radius: 2px;
+    }
+    /* クイック選択ボタンエリア */
+    .quick-buttons {
+      padding: 8px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      background: #fff;
+      border-top: 1px solid #e5e7eb;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+    .quick-buttons button {
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #d1d5db;
+      padding: 6px 12px;
       border-radius: 16px;
-      font-size: 15px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+    .quick-buttons button:hover {
+      background: #e5e7eb;
+    }
+    /* 目立たせたいアクションボタン */
+    .quick-buttons button.primary-action-btn {
+      background: #2563eb;
+      color: #fff;
+      border-color: #1d4ed8;
+      font-weight: bold;
+    }
+    .quick-buttons button.primary-action-btn:hover {
+      background: #1d4ed8;
+    }
+    /* 入力フォーム */
+    .chat-input-area {
+      display: flex;
+      padding: 12px;
+      border-top: 1px solid #e5e7eb;
+      background: #fff;
+    }
+    .chat-input-area input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 20px;
+      outline: none;
+      font-size: 0.95rem;
+    }
+    .chat-input-area input:focus {
+      border-color: #2563eb;
+    }
+    .chat-input-area button {
+      margin-left: 8px;
+      padding: 0 16px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
       font-weight: bold;
       cursor: pointer;
-      text-align: center;
+      transition: background 0.2s;
     }
-
-    .input-area { display: flex; padding: 12px; background: #fff; border-top: 1px solid #eee; align-items: center; gap: 8px; }
-    .input-area input { flex: 1; padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 20px; outline: none; font-size: 14px; }
-    .input-area button { padding: 10px 16px; background: #8da288; color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; }
+    .chat-input-area button:hover {
+      background: #1d4ed8;
+    }
   </style>
 </head>
 <body>
 
-<div class="chat-container">
-  <div class="chat-header">ノアリブホーム AIサポート</div>
-  
-  <div class="chat-box" id="chatBox">
-    <div class="msg assistant">こんにちは！ノアリブホームです。不動産のご相談を承っております。どのようなご相談でしょうか？</div>
-  </div>
-  
-  <div id="actionArea">
-    <div class="button-container">
-      <div class="cta-grid">
-        <button class="cta-sub-btn" onclick="sendOption('賃貸を探したい')">🏠 賃貸を探したい</button>
-        <button class="cta-sub-btn" onclick="sendOption('貸したい（オーナー）')">💡 貸したい（オーナー）</button>
-        <button class="cta-sub-btn" onclick="sendOption('売却したい')">📊 売却したい</button>
-        <button class="cta-sub-btn" onclick="sendOption('購入したい')">🔑 購入したい</button>
+  <div class="chat-container">
+    <div class="chat-header">
+      ノアリブホーム お問い合わせチャット
+    </div>
+
+    <!-- メッセージ表示エリア -->
+    <div class="chat-body" id="chatBody">
+      <div class="message bot-message">
+        こんにちは！ノアリブホームへようこそ。<br>
+        お部屋探しや不動産のご相談など、気になることを選択するか、入力欄よりご質問ください！
       </div>
     </div>
+
+    <!-- 選択肢ボタンエリア -->
+    <div class="quick-buttons" id="quick-buttons">
+      <!-- 初期表示用のボタン（必要に応じてJavaScript等で追加可能） -->
+    </div>
+
+    <!-- 入力フォームエリア -->
+    <form class="chat-input-area" onsubmit="return false;">
+      <input type="text" id="user-input" placeholder="メッセージを入力..." autocomplete="off">
+      <button type="submit" id="send-btn">送信</button>
+    </form>
   </div>
 
-  <div class="input-area">
-    <input type="text" id="userInput" placeholder="メッセージを入力..." onkeypress="handleKeyPress(event)">
-    <button onclick="sendUserMessage()">送信</button>
-  </div>
-</div>
-
-<script>
-  let chatHistory = [];
-
-  function appendMessage(role, text) {
-    const chatBox = document.getElementById("chatBox");
-    const msgDiv = document.createElement("div");
-    msgDiv.className = `msg ${role}`;
-    msgDiv.innerText = text;
-    chatBox.appendChild(msgDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-
-  // 1〜4ターン目の動的ボタンレンダリング
-  function renderTurnButtons(options) {
-    const actionArea = document.getElementById("actionArea");
-    actionArea.innerHTML = "";
-
-    if (!options || options.length === 0) return;
-
-    const container = document.createElement("div");
-    container.className = "button-container";
-
-    const grid = document.createElement("div");
-    grid.className = "cta-grid";
-
-    options.forEach(optText => {
-      const btn = document.createElement("button");
-      btn.className = "cta-sub-btn";
-      btn.innerText = optText;
-      btn.onclick = () => sendOption(optText);
-      grid.appendChild(btn);
-    });
-
-    container.appendChild(grid);
-    actionArea.appendChild(container);
-  }
-
-  // 5ターン目の最終お問い合わせCTAボタン
-  function renderFinalCTAButtons(category) {
-    const actionArea = document.getElementById("actionArea");
-    let mainBtnText = "📩 最新の物件資料・ご相談を申し込む";
-    let subBtn1 = "🏠 おすすめ物件情報を見る";
-    let subBtn2 = "💡 ご相談の流れを知りたい";
-
-    if (category === "owner_rent") {
-      mainBtnText = "📊 無料で賃料査定・管理相談を申し込む";
-      subBtn1 = "🏠 管理サポート内容を聞く";
-    } else if (category === "owner_sell") {
-      mainBtnText = "📊 無料で売却査定・ご相談を申し込む";
-      subBtn1 = "🏠 売却の流れを知りたい";
-    } else if (category === "buy") {
-      mainBtnText = "🔑 個別相談（店舗・オンライン）を予約する";
-      subBtn1 = "🏡 未公開物件の情報をリクエスト";
-    }
-
-    actionArea.innerHTML = `
-      <div class="button-container">
-        <div class="cta-grid">
-          <button class="cta-sub-btn" onclick="sendOption('${subBtn1}')">${subBtn1}</button>
-          <button class="cta-sub-btn" onclick="sendOption('${subBtn2}')">${subBtn2}</button>
-        </div>
-        <button class="cta-main-btn" onclick="window.location.href='/contact'">${mainBtnText}</button>
-      </div>
-    `;
-  }
-
-  function sendOption(text) {
-    sendMessage(text);
-  }
-
-  function sendUserMessage() {
-    const input = document.getElementById("userInput");
-    const text = input.value.trim();
-    if (!text) return;
-    input.value = "";
-    sendMessage(text);
-  }
-
-  function handleKeyPress(e) {
-    if (e.key === "Enter") sendUserMessage();
-  }
-
-  async function sendMessage(userText) {
-    document.getElementById("actionArea").innerHTML = "";
-    appendMessage("user", userText);
-
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: userText,
-          history: chatHistory
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.reply) {
-        appendMessage("assistant", data.reply);
-        
-        chatHistory.push({ role: "user", content: userText });
-        chatHistory.push({ role: "assistant", content: data.reply });
-
-        if (data.isFinished) {
-          renderFinalCTAButtons(data.userCategory);
-        } else if (data.options && data.options.length > 0) {
-          renderTurnButtons(data.options);
-        }
-      } else {
-        appendMessage("assistant", "一時的なエラーが発生しました。");
-      }
-    } catch (err) {
-      console.error(err);
-      appendMessage("assistant", "通信エラーが発生しました。");
-    }
-  }
-</script>
-
+  <script src="chat.js"></script>
 </body>
 </html>
