@@ -1,22 +1,39 @@
-<div class="chat-container">
-  <div class="chat-header">
-    ノアリブホーム お問い合わせチャット
-  </div>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ノアリブホーム お問い合わせチャット</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-  <!-- メッセージ表示エリア -->
-  <div class="chat-body" id="chatBody">
-    <div class="message bot-message">
-      こんにちは！ノアリブホームへようこそ。<br>
-      お部屋探しや不動産のご相談など、気になることを選択するか、入力欄よりご質問ください！
+  <div class="chat-container">
+    <!-- ヘッダー -->
+    <div class="chat-header">
+      ノアリブホーム お問い合わせチャット
     </div>
+
+    <!-- メッセージ表示エリア -->
+    <div class="chat-body" id="chatBody">
+      <div class="message bot-message">
+        こんにちは！ノアリブホームへようこそ。<br>
+        お部屋探しや不動産のご相談など、気になることを選択するか、入力欄よりご質問ください！
+      </div>
+    </div>
+
+    <!-- クイック選択ボタンエリア -->
+    <div class="quick-buttons" id="quick-buttons">
+      <!-- JavaScriptによりここに動的ボタンが挿入されます -->
+    </div>
+
+    <!-- 入力フォームエリア -->
+    <form class="chat-input-area" onsubmit="return false;">
+      <input type="text" id="user-input" placeholder="メッセージを入力..." autocomplete="off">
+      <button type="submit" id="send-btn">送信</button>
+    </form>
   </div>
 
-  <!-- 選択肢ボタンエリア（ここが表示される場所です） -->
-  <div class="quick-buttons" id="quick-buttons"></div>
-
-  <!-- 入力フォームエリア -->
-  <form class="chat-input-area" onsubmit="return false;">
-    <input type="text" id="user-input" placeholder="メッセージを入力..." autocomplete="off">
-    <button type="submit" id="send-btn">送信</button>
-  </form>
-</div>
+  <script src="chat.js"></script>
+</body>
+</html>
