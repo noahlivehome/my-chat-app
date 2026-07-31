@@ -1,44 +1,45 @@
-/* ヘッダー全体の設定 */
+/* --- グリーン基調のプロ風ヘッダー --- */
 .chat-header {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 16px 20px;
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); /* 深みのあるモダンダーク */
+    padding: 14px 18px;
+    /* 上品なオリーブグリーンのグラデーション */
+    background: linear-gradient(135deg, #7c9578 0%, #5d7559 100%);
     color: #ffffff;
     border-radius: 16px 16px 0 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
 }
 
-/* アイコンとオンライン表示 */
+/* アイコン枠（白ベースにグリーンアイコンで清潔感UP） */
 .header-avatar {
     position: relative;
-    width: 44px;
-    height: 44px;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    width: 42px;
+    height: 42px;
+    background: #ffffff;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .avatar-icon {
-    width: 24px;
-    height: 24px;
-    fill: #ffffff;
+    width: 22px;
+    height: 22px;
+    fill: #6b8467; /* ヘッダーの色に合わせたくすみグリーン */
 }
 
-/* 緑色のピカピカ光るオンライン点 */
+/* オンラインを示す緑のライト */
 .status-indicator {
     position: absolute;
-    bottom: 2px;
-    right: 2px;
+    bottom: 0px;
+    right: 0px;
     width: 10px;
     height: 10px;
-    background-color: #10b981;
-    border: 2px solid #0f172a;
+    background-color: #52c41a; /* 鮮やかなグリーン */
+    border: 2px solid #ffffff;
     border-radius: 50%;
 }
 
@@ -59,26 +60,25 @@
     font-size: 1.05rem;
     font-weight: 700;
     margin: 0;
-    letter-spacing: 0.03em;
-    color: #f8fafc;
+    color: #ffffff;
+    letter-spacing: 0.02em;
 }
 
-/* 「24h対応」バッジ */
+/* 「24h対応」のバッジ（ほんのり透ける白） */
 .badge {
     font-size: 0.68rem;
     font-weight: 600;
-    background: rgba(255, 255, 255, 0.15);
-    color: #e2e8f0;
-    padding: 2px 7px;
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+    padding: 2px 8px;
     border-radius: 20px;
-    backdrop-filter: blur(4px);
 }
 
 /* サブタイトル */
 .header-subtitle {
-    font-size: 0.75rem;
-    color: #94a3b8;
+    font-size: 0.73rem;
+    color: rgba(255, 255, 255, 0.85);
     margin: 0;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.03em;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
