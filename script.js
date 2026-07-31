@@ -28,7 +28,7 @@ function getRandomAizuchi(word) {
         `「${word}」ですね！承知いたしました。`,
         `「${word}」ですね！`,
         `「${word}」ですね！かしこまりました。`,
-        `「${word}」ですね！ご選択ありがとうございます！`,
+        `「${word}」ですね！ありがとうございます！`,
         `「${word}」ですね！ご入力ありがとうございます！`
     ];
     return patterns[Math.floor(Math.random() * patterns.length)];
