@@ -14,19 +14,19 @@ const chatState = {
     history: []
 };
 
-// エリア魅力データ
+// ② エリア魅力データ（新しいエリア名に対応）
 const areaInfo = {
-    "赤羽": "JR各線が乗り入れていて都心や埼玉方面へのアクセスが抜群！商店街や飲食店も豊富で生活利便性が非常に高い人気の街です。",
-    "新宿": "複数路線が利用可能で通勤・通学の利便性は間違いなくトップクラス！商業施設も揃う大都会の真ん中です。",
-    "池袋": "山手線をはじめアクセスが良好で、ショッピングやエンタメ施設が充実した非常に便利なエリアです。"
+    "赤羽・北区": "JR各線が乗り入れていて都心や埼玉方面へのアクセスが抜群！商店街や飲食店も豊富で生活利便性が非常に高い人気のエリアです。",
+    "その他23区": "東京23区内は交通網が充実しており、通勤・通学やショッピングの利便性がトップクラスです。",
+    "埼玉県": "都心へのアクセスが良く、賃料コストパフォーマンスに優れた住みやすいおすすめのエリアです。"
 };
 
-// 初期表示選択肢
+// ① 初期表示選択肢（カッコ表記を削除）
 const initialOptions = [
-    { text: "🏠 部屋を借りたい（賃貸）", value: "rent" },
-    { text: "🔑 物件を貸したい（貸主）", value: "owner" },
-    { text: "🏢 物件を売りたい（売却）", value: "sell" },
-    { text: "🏡 物件を買いたい（購入）", value: "buy" }
+    { text: "🏠 部屋を借りたい", value: "rent" },
+    { text: "🔑 物件を貸したい", value: "owner" },
+    { text: "🏢 物件を売りたい", value: "sell" },
+    { text: "🏡 物件を買いたい", value: "buy" }
 ];
 
 // 画面読み込み完了時に初期メッセージを表示
@@ -43,7 +43,7 @@ function initChat() {
 }
 
 // ==========================================
-// 3. AI会話分岐ロジック（全モード修正版）
+// 3. AI会話分岐ロジック
 // ==========================================
 function getAIResponse(userInputText) {
     // モード切り替え判定
@@ -51,62 +51,71 @@ function getAIResponse(userInputText) {
         chatState.mode = "rent";
         chatState.step = 1;
         chatState.data = {};
+        // ② エリア選択肢の変更（常に4つ）
         return {
             text: "お部屋探し（賃貸）のご相談ですね！\nご希望の「エリア（駅名）」をお知らせいただくか、下からお選びください。",
             options: [
-                { text: "📍 赤羽エリア", value: "area_akabane" },
-                { text: "📍 新宿エリア", value: "area_shinjuku" },
-                { text: "📍 池袋エリア", value: "area_ikebukuro" },
-                { text: "💡 エリアから相談する", value: "area_other" }
+                { text: "📍 赤羽・北区エリア", value: "area_akabane" },
+                { text: "📍 その他23区", value: "area_23ku" },
+                { text: "📍 埼玉県", value: "area_saitama" },
+                { text: "💡 条件から相談する", value: "area_other" }
             ]
         };
     } else if (userInputText.includes("貸したい") || userInputText.includes("オーナー")) {
         chatState.mode = "owner";
         chatState.step = 1;
         chatState.data = {};
+        // ③ 選択肢を4つに調整
         return {
             text: "物件を貸したい（オーナー様）のご相談ですね！\nご所有物件の「種別」はどちらでしょうか？",
             options: [
-                { text: "🏢 マンション（1室/一棟）", value: "mansion" },
+                { text: "🏢 マンション（1室）", value: "mansion_single" },
+                { text: "🏢 一棟マンション・ビル", value: "mansion_building" },
                 { text: "🏠 一戸建て", value: "house" },
-                { text: "🏬 アパート・事業用", value: "apartment" }
+                { text: "🏬 アパート・店舗事務所", value: "apartment" }
             ]
         };
     } else if (userInputText.includes("売りたい") || userInputText.includes("売却")) {
         chatState.mode = "sell";
         chatState.step = 1;
         chatState.data = {};
+        // ③ 選択肢を4つに調整
         return {
             text: "物件のご売却のご相談ですね！\nご所有物件の「種別」をお選びください。",
             options: [
                 { text: "🏢 マンション", value: "sell_mansion" },
-                { text: "🏠 戸建て・土地", value: "sell_house" }
+                { text: "🏠 一戸建て", value: "sell_house" },
+                { text: "🏞 土地", value: "sell_land" },
+                { text: "🏬 一棟ビル・アパート", value: "sell_building" }
             ]
         };
     } else if (userInputText.includes("買いたい") || userInputText.includes("購入")) {
         chatState.mode = "buy";
         chatState.step = 1;
         chatState.data = {};
+        // ③ 選択肢を4つに調整
         return {
             text: "物件のご購入のご相談ですね！\nどのような種別をお探しでしょうか？",
             options: [
                 { text: "🏢 新築・中古マンション", value: "buy_mansion" },
-                { text: "🏡 新築・中古一戸建て", value: "buy_house" }
+                { text: "🏡 新築・中古一戸建て", value: "buy_house" },
+                { text: "🏞 土地", value: "buy_land" },
+                { text: "🏬 投資用・事業用物件", value: "buy_invest" }
             ]
         };
     }
 
-    // エリアキーワード判定
+    // ② エリアキーワード判定（魅力データの引き当て）
     let areaComment = "";
     for (const key in areaInfo) {
-        if (userInputText.includes(key)) {
+        if (userInputText.includes(key) || (key === "赤羽・北区" && (userInputText.includes("赤羽") || userInputText.includes("北区")))) {
             areaComment = `「${key}」ですね！\n${areaInfo[key]}\n\n`;
             chatState.area = key;
             break;
         }
     }
 
-    // ①【借りたい（賃貸）】ステップ進行
+    // ①【借りたい（賃貸）】ステップ進行（選択肢は各4つ）
     if (chatState.mode === "rent") {
         if (chatState.step === 1) {
             chatState.step = 2;
@@ -127,8 +136,9 @@ function getAIResponse(userInputText) {
                 text: "ご予算について承知いたしました！\n次に、ご希望の「間取り・広さ」をお選びください。",
                 options: [
                     { text: "🛋 ワンルーム・1K", value: "1k" },
-                    { text: "🛋 1LDK・2DK", value: "1ldk" },
-                    { text: "🛋 2LDK以上（ファミリー）", value: "2ldk" }
+                    { text: "🛋 1DK・1LDK", value: "1ldk" },
+                    { text: "🛋 2K・2DK・2LDK", value: "2ldk" },
+                    { text: "🛋 3LDK以上", value: "3ldk" }
                 ]
             };
         } else if (chatState.step === 3) {
@@ -139,7 +149,8 @@ function getAIResponse(userInputText) {
                 options: [
                     { text: "🛀 バストイレ別", value: "bt" },
                     { text: "🐶 ペット飼育可", value: "pet" },
-                    { text: "🔒 オートロック付き", value: "lock" }
+                    { text: "🔒 オートロック付き", value: "lock" },
+                    { text: "🚃 駅から徒歩5分以内", value: "station" }
                 ]
             };
         } else {
@@ -153,7 +164,7 @@ function getAIResponse(userInputText) {
         }
     }
 
-    // ②【貸したい（オーナー）】ステップ進行
+    // ②【貸したい（オーナー）】ステップ進行（選択肢は各4つ）
     if (chatState.mode === "owner") {
         if (chatState.step === 1) {
             chatState.step = 2;
@@ -161,9 +172,10 @@ function getAIResponse(userInputText) {
             return {
                 text: "ありがとうございます。\n物件のおおよその「所在地（エリア）」を教えていただけますか？",
                 options: [
-                    { text: "📍 赤羽エリア周辺", value: "akabane" },
-                    { text: "📍 東京都内", value: "tokyo" },
-                    { text: "📍 埼玉県内", value: "saitama" }
+                    { text: "📍 赤羽・北区エリア周辺", value: "akabane" },
+                    { text: "📍 その他東京23区内", value: "tokyo23" },
+                    { text: "📍 埼玉県内", value: "saitama" },
+                    { text: "📍 その他の地域", value: "other" }
                 ]
             };
         } else if (chatState.step === 2) {
@@ -189,7 +201,7 @@ function getAIResponse(userInputText) {
         }
     }
 
-    // ③【売りたい（売却）】ステップ進行
+    // ③【売りたい（売却）】ステップ進行（選択肢は各4つ）
     if (chatState.mode === "sell") {
         if (chatState.step === 1) {
             chatState.step = 2;
@@ -199,7 +211,8 @@ function getAIResponse(userInputText) {
                 options: [
                     { text: "⚡️ なるべく早く売りたい", value: "quick" },
                     { text: "📊 まずは相場を知りたい", value: "market" },
-                    { text: "🏡 住み替えに合わせて", value: "change" }
+                    { text: "🏡 住み替えに合わせて", value: "change" },
+                    { text: "🗓 半年〜1年以内", value: "future" }
                 ]
             };
         } else {
@@ -213,7 +226,7 @@ function getAIResponse(userInputText) {
         }
     }
 
-    // ④【買いたい（購入）】ステップ進行
+    // ④【買いたい（購入）】ステップ進行（選択肢は各4つ）
     if (chatState.mode === "buy") {
         if (chatState.step === 1) {
             chatState.step = 2;
@@ -240,7 +253,7 @@ function getAIResponse(userInputText) {
 
     // デフォルト応答
     return {
-        text: `「${userInputText}」ですね！承知いたしました。\nどのようなご相談（借りる・貸す・買う・売る）をお望みでしょうか？`,
+        text: `「${userInputText}」ですね！承知いたしました。\nどのようなご相談をお望みでしょうか？`,
         options: initialOptions
     };
 }
