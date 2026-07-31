@@ -7,7 +7,7 @@ const IELOVE_FORM_URL = "https://www.noahlivehome.jp/contact/";
 const NG_WORDS = [
     'くそ', 'クソ', 'ばか', 'バカ', '馬鹿', 'あほ', 'アホ', 
     '死ね', 'シネ', '殺す', 'ゴミ', 'カス', 'きも', 'キモ', 'うざ', 'ウザ',
-    'ぶす', 'ブス', 'へたくそ', 'ヘタクソ'
+    'ぶす', 'ブス', 'へたくそ', 'ヘタクソ', 'き違い', 'キチガイ'
 ];
 
 // ==========================================
@@ -21,7 +21,7 @@ const chatState = {
     history: []
 };
 
-// 初期表示選択肢
+// 初期表示選択肢（4つ）
 const initialOptions = [
     { text: "🏠 部屋を借りたい", value: "rent" },
     { text: "🔑 物件を貸したい", value: "owner" },
@@ -33,9 +33,9 @@ const initialOptions = [
 function getRandomAizuchi(word) {
     const patterns = [
         `「${word}」ですね！承知いたしました。`,
-        `「${word}」ですね！`,
+        `「${word}」についてですね！`,
         `「${word}」ですね！教えていただきありがとうございます！`,
-        `なるほど、「${word}」ですね！ありがとうございます。`,
+        `なるほど、「${word}」ですね！`,
         `「${word}」のご希望、しっかりメモいたしました！`
     ];
     return patterns[Math.floor(Math.random() * patterns.length)];
@@ -85,52 +85,59 @@ function initChat() {
     const msgContainer = document.getElementById("chatMessages");
     if (msgContainer) msgContainer.innerHTML = "";
     
-    appendBotMessage("いらっしゃいませ！\nノアリブホームAI住まいアシスタントです✨\n\n本日はどのようなご相談でしょうか？\n下の選択肢から選んでいただくか、チャット欄に「赤羽で賃貸探したい」「マンション売りたい」など直接メッセージを入力してくださいね！");
+    appendBotMessage("いらっしゃいませ！\nノアライブホーム AIコンシェルジュのノアです✨\n\n本日はどのようなご相談でしょうか？\n下の選択肢から選んでいただくか、チャット欄に「赤羽で賃貸探したい」「マンション売りたい」など直接メッセージを入力してくださいね！");
     renderOptions(initialOptions);
 }
 
 // ==========================================
-// 現在のステップに応じた質問・選択肢を取得
+// 現在のステップに応じた質問・選択肢を取得（すべて選択肢4つ＋最終ご要望ステップ追加）
 // ==========================================
 function getCurrentStepPrompt() {
     const mode = chatState.mode;
     const step = chatState.step;
 
+    // 共通の最終ボタン
+    const contactOption = [{ text: "📅 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }];
+
+    // 【賃貸】
     if (mode === "rent") {
         if (step === 1) return { text: "ご希望の「エリア（駅名や市区町村）」を教えてください！\n（例：赤羽駅、北区、川口など）", options: [{ text: "📍 赤羽・北区エリア", value: "赤羽・北区エリア" }, { text: "📍 その他23区", value: "その他23区" }, { text: "📍 埼玉県", value: "埼玉県" }, { text: "💡 条件から相談する", value: "条件から相談" }] };
         if (step === 2) return { text: "ご希望の「ご予算（家賃の上限）」はおいくら位でお考えですか？", options: [{ text: "💴 8万円以内", value: "8万円以内" }, { text: "💴 10万円以内", value: "10万円以内" }, { text: "💴 12万円以内", value: "12万円以内" }, { text: "💴 15万円以上", value: "15万円以上" }] };
         if (step === 3) return { text: "ご希望の「間取り」を教えていただけますか？", options: [{ text: "🛋 ワンルーム・1K", value: "ワンルーム・1K" }, { text: "🛋 1DK・1LDK", value: "1DK・1LDK" }, { text: "🛋 2K・2DK・2LDK", value: "2K・2DK・2LDK" }, { text: "🛋 3LDK以上", value: "3LDK以上" }] };
         if (step === 4) return { text: "「広さや築年数」について何かこだわりはありますか？", options: [{ text: "✨ 築浅希望（10年以内）", value: "築浅希望" }, { text: "📐 広さ重視", value: "広さ重視" }, { text: "💰 安さ重視（築年数不問）", value: "安さ重視" }, { text: "⚖️ バランス重視", value: "バランス重視" }] };
         if (step === 5) return { text: "お引っ越しの「ご希望時期」はいつ頃をお考えでしょうか？", options: [{ text: "⚡️ 即入居・今すぐ", value: "即入居・今すぐ" }, { text: "🗓 1ヶ月以内", value: "1ヶ月以内" }, { text: "🗓 2〜3ヶ月以内", value: "2〜3ヶ月以内" }, { text: "🔍 良い物件があれば", value: "良い物件があれば検討" }] };
-        if (step === 6) return { text: "ありがとうございます！\n最後に「2階以上」「バストイレ別」など、譲れない条件やご質問はありますか？\n\n特になければ、下のボタンからお問合せへお進みください！", options: [{ text: "📅 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }] };
+        if (step === 6) return { text: "ありがとうございます！\n最後に「2階以上」「バストイレ別」など、譲れない条件や事前のご相談・ご要望はありますか？\n（入力後、送信していただくか、特になければ下のボタンでお進みください）", options: contactOption };
     }
 
+    // 【オーナー様】
     if (mode === "owner") {
         if (step === 1) return { text: "ご所有物件の「種別」を教えてください。", options: [{ text: "🏢 マンション・アパート", value: "マンション・アパート" }, { text: "🏢 一棟マンション・ビル", value: "一棟マンション・ビル" }, { text: "🏠 一戸建て", value: "一戸建て" }, { text: "🏬 店舗事務所・その他", value: "店舗事務所・その他" }] };
-        if (step === 2) return { text: "物件の「所在地（エリア）」はどちらになりますか？", options: [{ text: "📍 赤羽・北区エリア", value: "赤羽・北区エリア" }, { text: "📍 その他東京23区内", value: "東京23区内" }, { text: "📍 埼玉県内", value: "埼玉県内" }] };
-        if (step === 3) return { text: "物件の「間取り」を教えていただけますか？", options: [{ text: "🛋 単身用（1K〜1LDK）", value: "単身用" }, { text: "🛋 ファミリー用（2LDK〜）", value: "ファミリー用" }, { text: "🏢 一棟まるごと", value: "一棟まるごと" }] };
-        if (step === 4) return { text: "おおよその「築年数」はどのくらいでしょうか？", options: [{ text: "✨ 築10年未満", value: "築10年未満" }, { text: "🏢 築10年〜20年", value: "築10年〜20年" }, { text: "🏚 築20年以上", value: "築20年以上" }] };
-        if (step === 5) return { text: "現在の「お部屋の現況（空室、賃貸中など）」を教えてください。", options: [{ text: "❓ 現在、空室中", value: "空室中" }, { text: "🚪 近々、退去予定", value: "退去予定" }, { text: "🏠 満室稼働中", value: "満室稼働中" }] };
-        if (step === 6) return { text: "ご検討中の「管理スタイルやご要望」はございますか？", options: [{ text: "🤝 全て任せたい（募集・管理）", value: "全て任せたい" }, { text: "📢 募集のみ頼みたい", value: "募集のみ" }, { text: "💡 賃料査定・相談のみ", value: "賃料査定のみ" }] };
-        if (step === 7) return { text: "ありがとうございます！条件の整理ができました。\n下記ボタンよりお問合せへお進みください✨", options: [{ text: "📋 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }] };
+        if (step === 2) return { text: "物件の「所在地（エリア）」はどちらになりますか？", options: [{ text: "📍 赤羽・北区エリア", value: "赤羽・北区エリア" }, { text: "📍 その他東京23区内", value: "東京23区内" }, { text: "📍 埼玉県内", value: "埼玉県内" }, { text: "📍 その他エリア", value: "その他" }] };
+        if (step === 3) return { text: "物件の「間取り」を教えていただけますか？", options: [{ text: "🛋 単身用（1K〜1LDK）", value: "単身用" }, { text: "🛋 ファミリー用（2LDK〜）", value: "ファミリー用" }, { text: "🏢 一棟まるごと", value: "一棟まるごと" }, { text: "🏬 店舗・事務所・その他", value: "その他" }] };
+        if (step === 4) return { text: "おおよその「築年数」はどのくらいでしょうか？", options: [{ text: "✨ 築10年未満", value: "築10年未満" }, { text: "🏢 築10年〜20年", value: "築10年〜20年" }, { text: "🏚 築20年以上", value: "築20年以上" }, { text: "❓ 築年数不明", value: "築年数不明" }] };
+        if (step === 5) return { text: "現在の「お部屋の現況（空室、賃貸中など）」を教えてください。", options: [{ text: "❓ 現在、空室中", value: "空室中" }, { text: "🚪 近々、退去予定", value: "退去予定" }, { text: "🏠 満室稼働中", value: "満室稼働中" }, { text: "🔑 相談して決めたい", value: "相談して決めたい" }] };
+        if (step === 6) return { text: "ご検討中の「管理スタイルやご要望」はございますか？", options: [{ text: "🤝 全て任せたい（募集・管理）", value: "全て任せたい" }, { text: "📢 募集のみ頼みたい", value: "募集のみ" }, { text: "💡 賃料査定・相談のみ", value: "賃料査定のみ" }, { text: "❓ 相談して決めたい", value: "相談して決めたい" }] };
+        if (step === 7) return { text: "ありがとうございます！\n最後に事前のご相談や特に気になっている点・ご要望などはありますか？\n（入力後、送信していただくか、特になければ下のボタンでお進みください）", options: contactOption };
     }
 
+    // 【売却】
     if (mode === "sell") {
         if (step === 1) return { text: "ご所有物件の「種別」をお聞かせください。", options: [{ text: "🏢 マンション", value: "マンション" }, { text: "🏠 一戸建て", value: "一戸建て" }, { text: "🏞 土地", value: "土地" }, { text: "🏬 一棟ビル・アパート", value: "一棟ビル・アパート" }] };
-        if (step === 2) return { text: "物件の「所在地（エリア）」はどちらでしょうか？", options: [{ text: "📍 赤羽・北区エリア", value: "赤羽・北区エリア" }, { text: "📍 その他東京23区内", value: "東京23区内" }, { text: "📍 埼玉県内", value: "埼玉県内" }] };
-        if (step === 3) return { text: "広さや間取りの目安を教えてください。", options: [{ text: "🛋 コンパクト（〜50㎡）", value: "コンパクト（〜50㎡）" }, { text: "🏠 ファミリー（50〜80㎡）", value: "ファミリー（50〜80㎡）" }, { text: "🏡 大型（80㎡以上）", value: "大型（80㎡以上）" }] };
-        if (step === 4) return { text: "「築年数」の目安を教えていただけますか？", options: [{ text: "✨ 築10年未満", value: "築10年未満" }, { text: "🏢 築10年〜20年", value: "築10年〜20年" }, { text: "🏚 築20年以上", value: "築20年以上" }] };
-        if (step === 5) return { text: "現在の「ご利用状況や売却のご希望時期」はいかがですか？", options: [{ text: "👤 居住中（早期希望）", value: "居住中（早期希望）" }, { text: "🚪 空家・空室", value: "空家・空室" }, { text: "🗓 条件が合えば検討", value: "条件が合えば検討" }] };
-        if (step === 6) return { text: "ご入力ありがとうございます！\n売却に関するヒアリングが完了しました。詳細査定のお申込みへお進みください！", options: [{ text: "📝 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }] };
+        if (step === 2) return { text: "物件の「所在地（エリア）」はどちらでしょうか？", options: [{ text: "📍 赤羽・北区エリア", value: "赤羽・北区エリア" }, { text: "📍 その他東京23区内", value: "東京23区内" }, { text: "📍 埼玉県内", value: "埼玉県内" }, { text: "📍 その他エリア", value: "その他" }] };
+        if (step === 3) return { text: "広さや間取りの目安を教えてください。", options: [{ text: "🛋 コンパクト（〜50㎡）", value: "コンパクト（〜50㎡）" }, { text: "🏠 ファミリー（50〜80㎡）", value: "ファミリー（50〜80㎡）" }, { text: "🏡 大型（80㎡以上）", value: "大型（80㎡以上）" }, { text: "📐 その他・不明", value: "その他" }] };
+        if (step === 4) return { text: "「築年数」の目安を教えていただけますか？", options: [{ text: "✨ 築10年未満", value: "築10年未満" }, { text: "🏢 築10年〜20年", value: "築10年〜20年" }, { text: "🏚 築20年以上", value: "築20年以上" }, { text: "❓ 築年数不明", value: "築年数不明" }] };
+        if (step === 5) return { text: "現在の「ご利用状況や売却のご希望時期」はいかがですか？", options: [{ text: "👤 居住中（早期希望）", value: "居住中（早期希望）" }, { text: "🚪 空家・空室", value: "空家・空室" }, { text: "🗓 条件が合えば検討", value: "条件が合えば検討" }, { text: "💡 まずは査定のみ", value: "まずは査定のみ" }] };
+        if (step === 6) return { text: "ありがとうございます！\n最後に「住宅ローンの残債がある」「周囲に秘密で売却したい」など事前のご要望・ご相談はありますか？\n（入力後、送信していただくか、特になければ下のボタンでお進みください）", options: contactOption };
     }
 
+    // 【購入】
     if (mode === "buy") {
-        if (step === 1) return { text: "どのような「種別」の物件をお探しですか？", options: [{ text: "🏢 新築・中古マンション", value: "マンション" }, { text: "🏡 新築・中古一戸建て", value: "一戸建て" }, { text: "🏞 土地", value: "土地" }] };
+        if (step === 1) return { text: "どのような「種別」の物件をお探しですか？", options: [{ text: "🏢 新築・中古マンション", value: "マンション" }, { text: "🏡 新築・中古一戸建て", value: "一戸建て" }, { text: "🏞 土地", value: "土地" }, { text: "🏢 一棟・投資用物件", value: "一棟・投資用物件" }] };
         if (step === 2) return { text: "ご予算の「上限イメージ」を教えてください。", options: [{ text: "💰 3,000万円以内", value: "3,000万円以内" }, { text: "💰 5,000万円以内", value: "5,000万円以内" }, { text: "💰 7,000万円以内", value: "7,000万円以内" }, { text: "💰 7,000万円以上", value: "7,000万円以上" }] };
-        if (step === 3) return { text: "ご購入をご希望の「エリア（駅・地域）」はどちらですか？", options: [{ text: "📍 赤羽・北区エリア", value: "赤羽・北区エリア" }, { text: "📍 その他東京23区内", value: "東京23区内" }, { text: "📍 埼玉県内", value: "埼玉県内" }] };
-        if (step === 4) return { text: "ご希望の「間取りや広さ」はいかがでしょうか？", options: [{ text: "🛋 1LDK〜2DK", value: "1LDK〜2DK" }, { text: "🛋 2LDK〜3LDK", value: "2LDK〜3LDK" }, { text: "🏠 4LDK以上", value: "4LDK以上" }] };
-        if (step === 5) return { text: "「築年数」のご希望はございますか？", options: [{ text: "✨ 新築・築浅（10年以内）", value: "築浅希望" }, { text: "🏢 築20年以内", value: "築20年以内" }, { text: "🛠 リノベーション前提", value: "リノベ前提" }] };
-        if (step === 6) return { text: "ありがとうございます！お伺いした条件でぴったりな物件をお探しします✨\n下記ボタンよりお問い合わせください！", options: [{ text: "📱 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }] };
+        if (step === 3) return { text: "ご購入をご希望の「エリア（駅・地域）」はどちらですか？", options: [{ text: "📍 赤羽・北区エリア", value: "赤羽・北区エリア" }, { text: "📍 その他東京23区内", value: "東京23区内" }, { text: "📍 埼玉県内", value: "埼玉県内" }, { text: "📍 その他・エリア不問", value: "エリア不問" }] };
+        if (step === 4) return { text: "ご希望の「間取りや広さ」はいかがでしょうか？", options: [{ text: "🛋 ワンルーム・1K", value: "ワンルーム・1K" }, { text: "🛋 1LDK〜2DK", value: "1LDK〜2DK" }, { text: "🛋 2LDK〜3LDK", value: "2LDK〜3LDK" }, { text: "🏠 4LDK以上", value: "4LDK以上" }] };
+        if (step === 5) return { text: "「築年数」のご希望はございますか？", options: [{ text: "✨ 新築・築浅（10年以内）", value: "築浅希望" }, { text: "🏢 築20年以内", value: "築20年以内" }, { text: "🛠 リノベーション前提", value: "リノベ前提" }, { text: "⚖️ 築年数は問わない", value: "築年数不問" }] };
+        if (step === 6) return { text: "ありがとうございます！\n最後に「住宅ローンについて相談したい」「ペット可」など、ご要望や事前のご相談はありますか？\n（入力後、送信していただくか、特になければ下のボタンでお進みください）", options: contactOption };
     }
 
     return { text: "まずはどのようなご相談をお望みか、下記よりお選びいただけますか？", options: initialOptions };
@@ -139,10 +146,10 @@ function getCurrentStepPrompt() {
 // ステップのフィールド名を取得
 function getStepFieldName(mode, step) {
     const fields = {
-        rent: { 1: "希望エリア", 2: "希望予算", 3: "希望間取り", 4: "築年数・広さ希望", 5: "入居時期" },
-        owner: { 1: "物件種別", 2: "物件所在地", 3: "物件の間取り", 4: "築年数", 5: "現況", 6: "ご希望の管理形態" },
-        sell: { 1: "物件種別", 2: "物件所在地", 3: "間取り・広さ", 4: "築年数", 5: "現況・売却時期" },
-        buy: { 1: "購入希望種別", 2: "ご予算上限", 3: "希望エリア", 4: "希望間取り", 5: "希望築年数" }
+        rent: { 1: "希望エリア", 2: "希望予算", 3: "希望間取り", 4: "築年数・広さ希望", 5: "入居時期", 6: "ご要望・補足" },
+        owner: { 1: "物件種別", 2: "物件所在地", 3: "物件の間取り", 4: "築年数", 5: "現況", 6: "ご希望の管理形態", 7: "ご要望・補足" },
+        sell: { 1: "物件種別", 2: "物件所在地", 3: "間取り・広さ", 4: "築年数", 5: "現況・売却時期", 6: "ご要望・補足" },
+        buy: { 1: "購入希望種別", 2: "ご予算上限", 3: "希望エリア", 4: "希望間取り", 5: "希望築年数", 6: "ご要望・補足" }
     };
     return fields[mode]?.[step] || "条件";
 }
@@ -166,7 +173,7 @@ function getAIResponse(userInputText, isFromButton = false) {
     }
 
     // --------------------------------------
-    // ★2. モード未決定の場合の判定（日本語・英語どちらも検知）
+    // ★2. モード未決定の場合の判定
     // --------------------------------------
     if (!chatState.mode) {
         if (text.includes("借り") || text.includes("賃貸") || text.includes("部屋探") || text.includes("rent")) {
@@ -196,24 +203,16 @@ function getAIResponse(userInputText, isFromButton = false) {
     if (!isFromButton) {
         let answer = "";
 
-        // 「おすすめ」に関する質問
         if (text.includes("おすすめ") || text.includes("オススメ") || text.includes("イチオシ")) {
-            answer = "ノアリブホームでは、赤羽・北区エリアを中心に、リノベーション物件や駅近の好立地物件など、お値打ちなおすすめ物件を多数取り扱っております！\nお客様にピッタリのおすすめをお出しするために、まずはご希望の条件を教えてくださいね✨";
-        }
-        // 「アクセス」に関する質問
-        else if (text.includes("アクセス") || text.includes("交通") || text.includes("通勤") || text.includes("通学")) {
+            answer = "ノアライブホームでは、赤羽・北区エリアを中心に、リノベーション物件や駅近の好立地物件など、お値打ちなおすすめ物件を多数取り扱っております！\nお客様にピッタリのおすすめをお出しするために、まずはご希望の条件を教えてくださいね✨";
+        } else if (text.includes("アクセス") || text.includes("交通") || text.includes("通勤") || text.includes("通学")) {
             answer = "赤羽エリアはJR各線（埼京線・京浜東北線・高崎線など）が通っており、新宿・東京・池袋へも電車で15分前後とアクセス抜群の人気エリアです！\nご通勤・ご通学先に合わせたおすすめ駅のご案内も可能です👍";
-        }
-        // 「ローン」に関する質問
-        else if (text.includes("ローン") || text.includes("金利") || text.includes("借入")) {
+        } else if (text.includes("ローン") || text.includes("金利") || text.includes("借入")) {
             answer = "住宅ローンについてですね！都市銀行からネット銀行まで、お客様の働き方や資金計画に合わせた最適なローン選びを無料サポートしております。\n事前審査のお手伝いも可能ですのでご安心ください！";
-        }
-        // 「費用」に関する質問
-        else if (text.includes("費用") || text.includes("料金") || text.includes("いくら") || text.includes("無料") || text.includes("手数料")) {
-            answer = "ご安心ください！ノリブホームでのご相談やご提案、物件の査定などは【すべて無料】で行っております✨";
+        } else if (text.includes("費用") || text.includes("料金") || text.includes("いくら") || text.includes("無料") || text.includes("手数料")) {
+            answer = "ご安心ください！ノアライブホームでのご相談やご提案、物件の査定などは【すべて無料】で行っております✨";
         }
 
-        // 個別回答があれば、その後に現在進行中の質問を再提示する
         if (answer !== "") {
             const currentPrompt = getCurrentStepPrompt();
             return {
@@ -224,9 +223,9 @@ function getAIResponse(userInputText, isFromButton = false) {
     }
 
     // --------------------------------------
-    // ★4. ヒアリング完了後の会話対応
+    // ★4. ヒアリング完了後の会話対応（全ステップ終了後）
     // --------------------------------------
-    const maxSteps = { rent: 5, owner: 6, sell: 5, buy: 5 };
+    const maxSteps = { rent: 6, owner: 7, sell: 6, buy: 6 };
     if (chatState.mode && chatState.step > maxSteps[chatState.mode]) {
         if (chatState.data["ご要望・補足"]) {
             chatState.data["ご要望・補足"] += ` / ${text}`;
@@ -240,14 +239,14 @@ function getAIResponse(userInputText, isFromButton = false) {
     }
 
     // --------------------------------------
-    // ★5. 通常のステップ進行（自由入力・ボタン共通）
+    // ★5. 通常のステップ進行
     // --------------------------------------
     if (chatState.mode) {
         const currentFieldName = getStepFieldName(chatState.mode, chatState.step);
         chatState.data[currentFieldName] = text;
 
         const currentStep = chatState.step;
-        chatState.step++; // ステップを進める
+        chatState.step++; 
 
         let aizuchi = getRandomAizuchi(text);
         let comment = getSmartComment(chatState.mode, currentStep);
@@ -263,7 +262,6 @@ function getAIResponse(userInputText, isFromButton = false) {
         };
     }
 
-    // 初期状態への安全弁
     let aizuchi = getRandomAizuchi(text);
     return {
         text: `${aizuchi}\nまずはどのようなご相談をお望みか、下記よりお選びいただけますか？`,
@@ -311,7 +309,6 @@ function renderOptions(options) {
             const btn = document.createElement("button");
             btn.className = "option-btn";
             btn.innerText = opt.text;
-            // 修正ポイント：ボタンの見た目（日本語テキスト）をそのまま送信・表示するように変更
             btn.onclick = () => handleOptionClick(opt.text, opt.value);
             gridDiv.appendChild(btn);
         });
@@ -329,13 +326,11 @@ function renderOptions(options) {
     scrollToBottom();
 }
 
-// ボタン選択・テキスト送信の共通処理
 function processUserInput(displayText, internalValue = null, isFromButton = false) {
     appendUserMessage(displayText);
 
     const checkText = internalValue || displayText;
 
-    // フォーム遷移・お問合せボタン時の挙動
     if (checkText.includes("予約") || checkText.includes("申込む") || checkText.includes("問合せ") || checkText.includes("進む") || checkText === "contact") {
         setTimeout(() => {
             appendBotMessage("ありがとうございます！\nこれまでのご相談内容をお問い合わせフォームへ自動で引き継ぎます。\n\nまもなくお問合せページへ移動しますので、そのまま送信してくださいね✨");
@@ -365,7 +360,6 @@ function processUserInput(displayText, internalValue = null, isFromButton = fals
         return;
     }
 
-    // AIからのレスポンスを生成して描画
     setTimeout(() => {
         const response = getAIResponse(checkText, isFromButton);
         appendBotMessage(response.text);
