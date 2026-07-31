@@ -7,7 +7,7 @@ const IELOVE_FORM_URL = "https://www.noahlivehome.jp/contact/";
 const NG_WORDS = [
     'くそ', 'クソ', 'ばか', 'バカ', '馬鹿', 'あほ', 'アホ', 
     '死ね', 'シネ', '殺す', 'ゴミ', 'カス', 'きも', 'キモ', 'うざ', 'ウザ',
-    'ぶす', 'ブス', 'へたくそ', 'ヘタクソ', 'き違い', 'キチガイ'
+    'ぶす', 'ブス', 'へたくそ', 'ヘタクソ'
 ];
 
 // ==========================================
@@ -33,9 +33,9 @@ const initialOptions = [
 function getRandomAizuchi(word) {
     const patterns = [
         `「${word}」ですね！承知いたしました。`,
-        `「${word}」についてですね！`,
+        `「${word}」ですね！`,
         `「${word}」ですね！教えていただきありがとうございます！`,
-        `なるほど、「${word}」ですね！`,
+        `なるほど、「${word}」ですね！ありがとうございます。`,
         `「${word}」のご希望、しっかりメモいたしました！`
     ];
     return patterns[Math.floor(Math.random() * patterns.length)];
@@ -85,7 +85,7 @@ function initChat() {
     const msgContainer = document.getElementById("chatMessages");
     if (msgContainer) msgContainer.innerHTML = "";
     
-    appendBotMessage("いらっしゃいませ！\nノアリブホーム AIコンシェルジュのノアです✨\n\n本日はどのようなご相談でしょうか？\n下の選択肢から選んでいただくか、チャット欄に「赤羽で賃貸探したい」「マンション売りたい」など直接メッセージを入力してくださいね！");
+    appendBotMessage("いらっしゃいませ！\nノアリブホームAI住まいアシスタントです✨\n\n本日はどのようなご相談でしょうか？\n下の選択肢から選んでいただくか、チャット欄に「赤羽で賃貸探したい」「マンション売りたい」など直接メッセージを入力してくださいね！");
     renderOptions(initialOptions);
 }
 
@@ -166,13 +166,18 @@ function getAIResponse(userInputText, isFromButton = false) {
     }
 
     // --------------------------------------
-    // ★2. モード未決定の場合の判定
+    // ★2. モード未決定の場合の判定（日本語・英語どちらも検知）
     // --------------------------------------
     if (!chatState.mode) {
-        if (text.includes("借り") || text.includes("賃貸") || text.includes("部屋探し")) chatState.mode = "rent";
-        else if (text.includes("貸し") || text.includes("オーナー") || text.includes("管理")) chatState.mode = "owner";
-        else if (text.includes("売り") || text.includes("売却") || text.includes("査定")) chatState.mode = "sell";
-        else if (text.includes("買い") || text.includes("購入")) chatState.mode = "buy";
+        if (text.includes("借り") || text.includes("賃貸") || text.includes("部屋探") || text.includes("rent")) {
+            chatState.mode = "rent";
+        } else if (text.includes("貸し") || text.includes("オーナー") || text.includes("管理") || text.includes("owner")) {
+            chatState.mode = "owner";
+        } else if (text.includes("売り") || text.includes("売却") || text.includes("査定") || text.includes("sell")) {
+            chatState.mode = "sell";
+        } else if (text.includes("買い") || text.includes("購入") || text.includes("buy")) {
+            chatState.mode = "buy";
+        }
 
         if (chatState.mode) {
             chatState.step = 1;
@@ -205,7 +210,7 @@ function getAIResponse(userInputText, isFromButton = false) {
         }
         // 「費用」に関する質問
         else if (text.includes("費用") || text.includes("料金") || text.includes("いくら") || text.includes("無料") || text.includes("手数料")) {
-            answer = "ご安心ください！ノアリブホームでのご相談やご提案、物件の査定などは【すべて無料】で行っております✨";
+            answer = "ご安心ください！ノリブホームでのご相談やご提案、物件の査定などは【すべて無料】で行っております✨";
         }
 
         // 個別回答があれば、その後に現在進行中の質問を再提示する
@@ -306,7 +311,8 @@ function renderOptions(options) {
             const btn = document.createElement("button");
             btn.className = "option-btn";
             btn.innerText = opt.text;
-            btn.onclick = () => handleOptionClick(opt.value || opt.text);
+            // 修正ポイント：ボタンの見た目（日本語テキスト）をそのまま送信・表示するように変更
+            btn.onclick = () => handleOptionClick(opt.text, opt.value);
             gridDiv.appendChild(btn);
         });
         container.appendChild(gridDiv);
@@ -316,7 +322,7 @@ function renderOptions(options) {
         const btn = document.createElement("button");
         btn.className = "option-btn primary";
         btn.innerText = opt.text;
-        btn.onclick = () => handleOptionClick(opt.value || opt.text);
+        btn.onclick = () => handleOptionClick(opt.text, opt.value);
         container.appendChild(btn);
     });
 
@@ -324,11 +330,13 @@ function renderOptions(options) {
 }
 
 // ボタン選択・テキスト送信の共通処理
-function processUserInput(text, isFromButton = false) {
-    appendUserMessage(text);
+function processUserInput(displayText, internalValue = null, isFromButton = false) {
+    appendUserMessage(displayText);
+
+    const checkText = internalValue || displayText;
 
     // フォーム遷移・お問合せボタン時の挙動
-    if (text.includes("予約") || text.includes("申込む") || text.includes("問合せ") || text.includes("進む") || text === "contact") {
+    if (checkText.includes("予約") || checkText.includes("申込む") || checkText.includes("問合せ") || checkText.includes("進む") || checkText === "contact") {
         setTimeout(() => {
             appendBotMessage("ありがとうございます！\nこれまでのご相談内容をお問い合わせフォームへ自動で引き継ぎます。\n\nまもなくお問合せページへ移動しますので、そのまま送信してくださいね✨");
             
@@ -359,14 +367,14 @@ function processUserInput(text, isFromButton = false) {
 
     // AIからのレスポンスを生成して描画
     setTimeout(() => {
-        const response = getAIResponse(text, isFromButton);
+        const response = getAIResponse(checkText, isFromButton);
         appendBotMessage(response.text);
         renderOptions(response.options);
     }, 300);
 }
 
-function handleOptionClick(selectedText) {
-    processUserInput(selectedText, true);
+function handleOptionClick(displayText, valueText) {
+    processUserInput(displayText, valueText, true);
 }
 
 function sendMessage() {
@@ -376,7 +384,7 @@ function sendMessage() {
     if (text === "") return;
 
     input.value = "";
-    processUserInput(text, false);
+    processUserInput(text, null, false);
 }
 
 function handleKeyPress(event) {
