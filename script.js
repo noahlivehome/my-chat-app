@@ -132,9 +132,10 @@ function getAIResponse(userInputText) {
 
     // --------------------------------------
     // B. モードの新規開始・切り替え判定（Turn 1）
+    // ※「賃貸中」などの単語で誤作動しないよう「借りたい」等で厳密判定
     // --------------------------------------
-    if (chatState.step === 0 || text.includes("借りたい") || text.includes("賃貸")) {
-        if (text.includes("借りたい") || text.includes("賃貸")) {
+    if (chatState.step === 0 || text.includes("部屋を借りたい") || text.includes("物件を貸したい") || text.includes("物件を売りたい") || text.includes("物件を買いたい")) {
+        if (text.includes("借りたい") || text.includes("賃貸で探す") || text.includes("お部屋探し")) {
             chatState.mode = "rent";
             chatState.step = 1;
             chatState.data = {};
