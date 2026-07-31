@@ -69,10 +69,10 @@ function getAIResponse(userInputText) {
         return {
             text: "物件を貸したい（オーナー様）のご相談ですね！\nご所有物件の「種別」はどちらでしょうか？",
             options: [
-                { text: "🏢 マンション（1室）", value: "mansion_single" },
+                { text: "🏢 マンション・アパート", value: "mansion_single" },
                 { text: "🏢 一棟マンション・ビル", value: "mansion_building" },
                 { text: "🏠 一戸建て", value: "house" },
-                { text: "🏬 アパート・店舗事務所", value: "apartment" }
+                { text: "🏬 店舗・事務所", value: "apartment" }
             ]
         };
     } else if (userInputText.includes("売りたい") || userInputText.includes("売却")) {
@@ -83,7 +83,7 @@ function getAIResponse(userInputText) {
         return {
             text: "物件のご売却のご相談ですね！\nご所有物件の「種別」をお選びください。",
             options: [
-                { text: "🏢 マンション", value: "sell_mansion" },
+                { text: "🏢 マンション（1室）", value: "sell_mansion" },
                 { text: "🏠 一戸建て", value: "sell_house" },
                 { text: "🏞 土地", value: "sell_land" },
                 { text: "🏬 一棟ビル・アパート", value: "sell_building" }
