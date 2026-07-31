@@ -25,70 +25,51 @@ const initialOptions = [
 // 相槌のバリエーションをランダムに返す関数
 function getRandomAizuchi(word) {
     const patterns = [
-        `「${word}」ですね！承知いたしました。`,
-        `「${word}」のご希望ですね！`,
-        `「${word}」でお探しですね！かしこまりました。`,
-        `「${word}」についてですね！`,
-        `「${word}」ですね！ご入力ありがとうございます。`
+        `「${word}」ですね！承知いたしました😊`,
+        `「${word}」のご希望ですね！メモいたしました👍`,
+        `「${word}」でお探しですね！かしこまりました✨`,
+        `「${word}」についてですね！しっかり記録いたしました！`,
+        `「${word}」ですね！ご入力ありがとうございます🙌`
     ];
     return patterns[Math.floor(Math.random() * patterns.length)];
 }
 
 // ------------------------------------------
-// 的確な一言コメントを取得する万能関数
+// 的確な一言コメントを取得する万能関数（1〜2文・テーマ別）
 // ------------------------------------------
 function getSmartComment(mode, step, text) {
-    // A. エリアに関する一言（全モード共通）
-    if (text.includes("王子")) {
-        return "💡【エリア情報】王子・王子神谷エリアは南北線やJRが使えて都心アクセス良好！飛鳥山公園など緑も豊かで生活利便性の高い人気の街です✨";
-    }
-    if (text.includes("赤羽")) {
-        return "💡【エリア情報】赤羽エリアはJR各線が乗り入れていて都心や埼玉方面へのアクセスが抜群！商店街や飲食店も豊富で活気溢れる大人気エリアです！";
-    }
-    if (text.includes("北区")) {
-        return "💡【エリア情報】東京北区は交通の利便性が高く、下町情緒と住みやすさが両立した非常におすすめのエリアです！";
-    }
-    if (text.includes("埼玉") || text.includes("川口") || text.includes("大宮") || text.includes("浦和")) {
-        return "💡【エリア情報】埼玉県エリアは都心へのアクセスが良く、コストパフォーマンスに優れていて住みやすい人気のエリアです！";
-    }
-    if (text.includes("23区") || text.includes("東京")) {
-        return "💡【エリア情報】東京23区内は交通網が充実しており、通勤・通学や休日のお買い物にも利便性が抜群です！";
-    }
-
-    // B. 各モード・ステップごとの的確な一言
-    // --- 賃貸（rent） ---
+    // --- 1. 部屋を借りたい（rent） ---
     if (mode === "rent") {
-        if (step === 2) return "💡【アドバイス】ご希望の予算帯で条件に合うおすすめ物件を幅広くピックアップいたしますね！";
-        if (step === 3) return "💡【アドバイス】ご家族構成やライフスタイルにピッタリの使いやすい間取りをご提案いたします！";
-        if (step === 4) return "💡【ワンポイント】リノベーション物件や築浅など、条件次第でお得で掘り出し物の物件が見つかることもあります！";
-        if (step === 5) return "💡【ワンポイント】時期に合わせたスムーズな契約・ご入居スケジュールをご案内いたしますね！";
+        if (step === 1) return "💡【エリア】人気のエリアですね！利便性や住環境も含めてぴったりのお部屋をご提案いたします！";
+        if (step === 2) return "💡【予算（相場やコツ）】周辺相場に合わせたご予算設定で、条件を満たす魅力的なお部屋を幅広くピックアップいたします！";
+        if (step === 3) return "💡【間取り（ライフスタイル）】生活動線や家具配置を見据え、お客様のライフスタイルにピッタリフィットする間取りをご提案します！";
+        if (step === 4) return "💡【築年数・広さ（設備・リノベ）】築年数が経っていても内装リノベーション済みでお得な掘り出し物物件が見つかることもあります✨";
+        if (step === 5) return "💡【時期（スケジュール感）】ご希望の入居時期から逆算し、申し込みや契約までのスムーズなスケジュールをご案内します！";
     }
 
-    // --- 貸したい（owner） ---
+    // --- 2. 物件を貸したい（owner：全8ターン構成） ---
     if (mode === "owner") {
-        if (step === 1) return "💡【管理のアドバイス】物件種別に合わせた適切な賃料設定と、ターゲット層に合わせた募集戦略が重要になります！";
-        if (step === 2) return "💡【管理のワンポイント】賃貸管理は「高い稼働率の維持」と「安心の集客・滞納保証」がカギです！収益最大化を全力でサポートいたします😊";
-        if (step === 3) return "💡【ワンポイント】単身用・ファミリー用など、間取りに応じた需要と最適な賃料相場をお調べいたします！";
-        if (step === 4) return "💡【ワンポイント】築年数に応じた原状回復や設備交換のアドバイスもお任せください！";
-        if (step === 5) return "💡【ワンポイント】空室対策やオーナーチェンジなど、現在の状況に合わせた最適なプランをご提示します！";
+        if (step === 1) return "💡【種別（管理のポイント）】物件種別に合わせた適切な賃料設定と、効率的な募集体制づくりが安定経営・高稼働率の鍵となります！";
+        if (step === 2) return "💡【エリア（需要傾向）】周辺エリアの賃貸需要や競合物件の状況を分析し、最適な募集条件・プランをご提示いたします！";
+        if (step === 3) return "💡【間取り（入居者ターゲット）】単身・ファミリーなど間取りごとの入居者ターゲットに合わせた設備訴求が非常に効果的です！";
+        if (step === 4) return "💡【築年数・現況（リフォームや修繕）】築年数に応じた原状回復や適切なリフォーム・設備交換提案で、物件価値と賃料水準を維持・向上させます！";
+        if (step === 5) return "💡【現況（空室対策）】現在の稼働状況に合わせた早期集客アプローチや条件の見直しを行い、空室リスクを最小限に抑えます✨";
     }
 
-    // --- 売りたい（sell） ---
+    // --- 3. 物件を売りたい（sell） ---
     if (mode === "sell") {
-        if (step === 1) return "💡【売却のアドバイス】物件種別ごとの市場相場や、直近の成約事例をもとに正確な査定を行います！";
-        if (step === 2) return "💡【売却のワンポイント】ご売却は査定額だけでなく、販売スピードや秘密厳守、税金対策も重要です✨";
-        if (step === 3) return "💡【ワンポイント】お部屋の広さや使い勝手は購入検討者様への大きなアピールポイントになります！";
-        if (step === 4) return "💡【ワンポイント】築年数に応じたリフォーム提案や、現状のままでの売却など最適な方法をご提案します！";
-        if (step === 5) return "💡【ワンポイント】居住中の内覧対応や空家の管理など、負担の少ない売却活動をサポートいたします！";
+        if (step === 1) return "💡【種別（売却手法）】種別やご事情（仲介での高値売却・買取での早期現金化など）に応じた最適な売却戦略をご提示します！";
+        if (step === 2) return "💡【エリア（需要傾向）】近隣の最新成約事例や競合状況を分析し、高値かつスムーズな売却が狙える適正価格を査定いたします！";
+        if (step === 3) return "💡【広さ（ターゲット層）】お部屋の広さや使い勝手を活かし、最も購入意欲の高いターゲット層へピンポイントでアピールします！";
+        if (step === 4) return "💡【現況・時期（売り出し・税金）】居住中・空家の状態に応じた魅せ方や、買い替え時期・売却にかかる税金や特別控除もサポートします！";
     }
 
-    // --- 買いたい（buy） ---
+    // --- 4. 物件を買いたい（buy） ---
     if (mode === "buy") {
-        if (step === 1) return "💡【購入のアドバイス】新築・中古それぞれのメリットや資産価値を見据えた物件選びをお手伝いします！";
-        if (step === 2) return "💡【ローン・資金計画】住宅ローンは金利タイプや控除の活用で総支払額が大きく変わります！資金計画もご安心ください👍";
-        if (step === 3) return "💡【ワンポイント】ご予算内で妥協しないお部屋探しができるよう、市場に出ている全物件からサーチします！";
-        if (step === 4) return "💡【ワンポイント】将来のライフスタイルの変化にも柔軟に対応できる使いやすい間取りをご案内します！";
-        if (step === 5) return "💡【ワンポイント】住宅ローン控除の適用条件や耐震基準など、専門的なチェックもお任せください！";
+        if (step === 1) return "💡【種別（物件選びのコツ）】新築・中古それぞれの特徴や、将来の資産価値・住み心地を見据えた失敗しない物件選びをお手伝いします！";
+        if (step === 2) return "💡【予算（ローン・資金計画）】住宅ローンの金利タイプや税制優遇、諸費用も含めた無理のない資金計画をご提案いたします👍";
+        if (step === 3) return "💡【間取り（将来の資産性）】将来のライフステージの変化にも柔軟に対応でき、再販時にも高い資産性を維持できる間取りをご案内します！";
+        if (step === 4) return "💡【築年数（耐震・控除）】住宅ローン控除の適用条件や耐震基準の適合など、専門的な重要チェック項目もしっかりお伝えします！";
     }
 
     return "";
@@ -103,7 +84,7 @@ function initChat() {
     const msgContainer = document.getElementById("chatMessages");
     if (msgContainer) msgContainer.innerHTML = "";
     
-    appendBotMessage("いらっしゃいませ！\nノアリブホームAIアシスタントです。\n\n本日はどのようなご相談でしょうか？\n下の選択肢から選ぶか、ご相談内容を直接入力してください。");
+    appendBotMessage("いらっしゃいませ！\nノアライブホーム AIアシスタントです。\n\n本日はどのようなご相談でしょうか？\n下の選択肢から選ぶか、ご相談内容を直接入力してくださいね！");
     renderOptions(initialOptions);
 }
 
@@ -114,9 +95,12 @@ function getAIResponse(userInputText) {
     const text = userInputText.trim();
 
     // --------------------------------------
-    // 最終ステップ（ターン6以上）の場合の共通処理
+    // 最終ステップ完了後の共通処理（完了判定）
     // --------------------------------------
-    if (chatState.step >= 6) {
+    const maxSteps = { rent: 5, owner: 6, sell: 4, buy: 4 };
+    const isFinished = chatState.mode && chatState.step > maxSteps[chatState.mode];
+
+    if (isFinished || chatState.step >= 7) {
         if (chatState.data["ご要望・メッセージ"]) {
             chatState.data["ご要望・メッセージ"] += ` / ${text}`;
         } else {
@@ -125,7 +109,7 @@ function getAIResponse(userInputText) {
 
         let replyPrefix = `「${text}」ですね！ご要望・メッセージとしてしっかり記録いたしました！`;
         if (text.includes("費用") || text.includes("料金") || text.includes("いくら")) {
-            replyPrefix = `「${text}」についてですね！\nちなみに、ご相談・査定やご提案にかかる費用は【すべて無料】ですのでご安心ください。\nしっかりと記録いたしました！`;
+            replyPrefix = `「${text}」についてですね！\nちなみに、ご相談・査定やご提案にかかる費用は【すべて無料】ですのでご安心ください😊\nしっかりと記録いたしました！`;
         }
 
         return {
@@ -137,25 +121,17 @@ function getAIResponse(userInputText) {
     }
 
     // --------------------------------------
-    // A. 途中での質問・疑問に対する臨機応変な回答（FAQ）※ステップ0〜5のみ適用
+    // A. 途中での質問・疑問に対する回答（FAQ）
     // --------------------------------------
     if (text.includes("費用") || text.includes("料金") || text.includes("いくら")) {
         return {
-            text: "ご相談や査定・お部屋探しのご提案は【すべて無料】で行っております！ご安心ください。\n\n引き続きご希望の条件をお聞かせいただけますか？",
-            options: getStepOptions()
-        };
-    }
-    if (text.includes("電話") || text.includes("話したい") || text.includes("直接")) {
-        return {
-            text: "お電話でのご相談も大歓迎です！\nスタッフがお電話にて詳しく伺いますので、よろしければこのままフォームへお進みいただくか、お電話でお気軽にご連絡ください📞",
-            options: [
-                { text: "📝 お問合せフォームへ進む", value: "contact", isPrimary: true }
-            ]
+            text: "ご相談や査定・お部屋探しのご提案は【すべて無料】で行っております！ご安心ください😊\n\n引き続きご希望の条件をお聞かせいただけますか？",
+            options: initialOptions
         };
     }
 
     // --------------------------------------
-    // B. モードの新規開始・切り替え判定
+    // B. モードの新規開始・切り替え判定（Turn 1）
     // --------------------------------------
     if (chatState.step === 0 || text.includes("借りたい") || text.includes("賃貸")) {
         if (text.includes("借りたい") || text.includes("賃貸")) {
@@ -178,10 +154,10 @@ function getAIResponse(userInputText) {
             return {
                 text: "物件を貸したい（オーナー様）のご相談ですね！\nご所有物件の「種別」をお選びいただくか、入力してください。",
                 options: [
-                    { text: "🏢 マンション・アパート", value: "mansion_single" },
+                    { text: "🏢 マンション（1室）", value: "mansion_single" },
                     { text: "🏢 一棟マンション・ビル", value: "mansion_building" },
                     { text: "🏠 一戸建て", value: "house" },
-                    { text: "🏬 店舗事務所・その他", value: "apartment" }
+                    { text: "🏬 アパート・店舗事務所", value: "apartment" }
                 ]
             };
         } else if (text.includes("売りたい") || text.includes("売却") || text.includes("査定")) {
@@ -214,7 +190,7 @@ function getAIResponse(userInputText) {
     }
 
     // --------------------------------------
-    // C. ①【部屋を借りたい（賃貸）】ステップ分岐
+    // C. ①【部屋を借りたい（賃貸）】
     // --------------------------------------
     if (chatState.mode === "rent") {
         if (chatState.step === 1) {
@@ -222,9 +198,8 @@ function getAIResponse(userInputText) {
             chatState.data["希望エリア"] = text;
             let aizuchi = getRandomAizuchi(text);
             let comment = getSmartComment("rent", 1, text);
-            let extra = comment ? `\n\n${comment}` : "";
             return {
-                text: `${aizuchi}${extra}\n\n続いて、ご希望の「ご予算（家賃上限）」を教えてください。`,
+                text: `${aizuchi}\n\n${comment}\n\n続いて、ご希望の「ご予算（家賃上限）」を教えてください。`,
                 options: [
                     { text: "💴 8万円以内", value: "b_8" },
                     { text: "💴 10万円以内", value: "b_10" },
@@ -237,9 +212,8 @@ function getAIResponse(userInputText) {
             chatState.data["希望予算"] = text;
             let aizuchi = getRandomAizuchi(text);
             let comment = getSmartComment("rent", 2, text);
-            let extra = comment ? `\n\n${comment}` : "";
             return {
-                text: `${aizuchi}${extra}\n\n次にご希望の「間取り」をお選びいただくか、入力してください。`,
+                text: `${aizuchi}\n\n${comment}\n\n次にご希望の「間取り」をお選びいただくか、入力してください。`,
                 options: [
                     { text: "🛋 ワンルーム・1K", value: "1k" },
                     { text: "🛋 1DK・1LDK", value: "1ldk" },
@@ -252,9 +226,8 @@ function getAIResponse(userInputText) {
             chatState.data["希望間取り"] = text;
             let aizuchi = getRandomAizuchi(text);
             let comment = getSmartComment("rent", 3, text);
-            let extra = comment ? `\n\n${comment}` : "";
             return {
-                text: `${aizuchi}${extra}\n\nお部屋の「広さや築年数」についてのご要望はいかがでしょうか？`,
+                text: `${aizuchi}\n\n${comment}\n\nお部屋の「広さや築年数」についてのご要望はいかがでしょうか？`,
                 options: [
                     { text: "✨ 築浅（築10年以内）希望", value: "new" },
                     { text: "📐 広さ重視（広めが良い）", value: "wide" },
@@ -267,9 +240,8 @@ function getAIResponse(userInputText) {
             chatState.data["築年数・広さ希望"] = text;
             let aizuchi = getRandomAizuchi(text);
             let comment = getSmartComment("rent", 4, text);
-            let extra = comment ? `\n\n${comment}` : "";
             return {
-                text: `${aizuchi}${extra}\n\nお引っ越し・ご入居ご希望の「時期」はいつ頃をお考えでしょうか？`,
+                text: `${aizuchi}\n\n${comment}\n\nお引っ越し・ご入居ご希望の「時期」はいつ頃をお考えでしょうか？`,
                 options: [
                     { text: "⚡️ 即入居・今すぐ", value: "now" },
                     { text: "🗓 1ヶ月以内", value: "1month" },
@@ -282,9 +254,8 @@ function getAIResponse(userInputText) {
             chatState.data["入居時期"] = text;
             let aizuchi = getRandomAizuchi(text);
             let comment = getSmartComment("rent", 5, text);
-            let extra = comment ? `\n\n${comment}` : "";
             return {
-                text: `${aizuchi}${extra}\n\n最後に「譲れないこだわり条件」があれば教えてください！\n\n💡【ご相談・ご要望の入力】\nほかにも気になる点やメッセージ（例：連絡はメール希望、初期費用が知りたい等）がございましたら、下のメッセージ入力欄から送信してください。\n\n特になければ、下記ボタンよりお問合せへお進みください！`,
+                text: `${aizuchi}\n\n${comment}\n\n最後に「譲れないこだわり条件」があれば教えてください！\n\n💡【ご相談・ご要望の入力】\nほかにも気になる点やメッセージがございましたら、下のメッセージ入力欄から送信してください😊\n\n特になければ、下記ボタンよりお問合せへお進みください！`,
                 options: [
                     { text: "📅 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }
                 ]
@@ -293,7 +264,7 @@ function getAIResponse(userInputText) {
     }
 
     // --------------------------------------
-    // D. ②【物件を貸したい（オーナー）】ステップ分岐
+    // D. ②【物件を貸したい（オーナー：全8ターン）】
     // --------------------------------------
     if (chatState.mode === "owner") {
         if (chatState.step === 1) {
@@ -301,9 +272,8 @@ function getAIResponse(userInputText) {
             chatState.data["物件種別"] = text;
             let aizuchi = getRandomAizuchi(text);
             let comment = getSmartComment("owner", 1, text);
-            let extra = comment ? `\n\n${comment}` : "";
             return {
-                text: `${aizuchi}${extra}\n\n物件のおおよその「所在地（エリア）」を教えてください。`,
+                text: `${aizuchi}\n\n${comment}\n\n物件のおおよその「所在地（エリア）」を教えてください。`,
                 options: [
                     { text: "📍 赤羽・北区エリア周辺", value: "akabane" },
                     { text: "📍 その他東京23区内", value: "tokyo23" },
@@ -316,9 +286,8 @@ function getAIResponse(userInputText) {
             chatState.data["物件所在地"] = text;
             let aizuchi = getRandomAizuchi(text);
             let comment = getSmartComment("owner", 2, text);
-            let extra = comment ? `\n\n${comment}` : "";
             return {
-                text: `${aizuchi}${extra}\n\nご所有物件の「間取り」をお聞かせいただけますか？`,
+                text: `${aizuchi}\n\n${comment}\n\nご所有物件の「間取り」をお聞かせいただけますか？`,
                 options: [
                     { text: "🛋 単身用（1K〜1LDK）", value: "single" },
                     { text: "🛋 ファミリー用（2LDK〜3LDK）", value: "family" },
@@ -331,9 +300,8 @@ function getAIResponse(userInputText) {
             chatState.data["物件の間取り"] = text;
             let aizuchi = getRandomAizuchi(text);
             let comment = getSmartComment("owner", 3, text);
-            let extra = comment ? `\n\n${comment}` : "";
             return {
-                text: `${aizuchi}${extra}\n\nおおよその「築年数」はどちらになりますでしょうか？`,
+                text: `${aizuchi}\n\n${comment}\n\nおおよその「築年数」はどちらになりますでしょうか？`,
                 options: [
                     { text: "✨ 築10年未満（築浅）", value: "under10" },
                     { text: "🏢 築10年〜20年程度", value: "under20" },
@@ -346,9 +314,8 @@ function getAIResponse(userInputText) {
             chatState.data["築年数"] = text;
             let aizuchi = getRandomAizuchi(text);
             let comment = getSmartComment("owner", 4, text);
-            let extra = comment ? `\n\n${comment}` : "";
             return {
-                text: `${aizuchi}${extra}\n\n現在の「お部屋の現況（空室、賃貸中など）」を教えてください。`,
+                text: `${aizuchi}\n\n${comment}\n\n現在の「お部屋の現況（空室、賃貸中など）」を教えてください。`,
                 options: [
                     { text: "❓ 現在、空室中", value: "vacancy" },
                     { text: "🚪 近々、退去予定", value: "leaving" },
@@ -361,9 +328,21 @@ function getAIResponse(userInputText) {
             chatState.data["現況"] = text;
             let aizuchi = getRandomAizuchi(text);
             let comment = getSmartComment("owner", 5, text);
-            let extra = comment ? `\n\n${comment}` : "";
             return {
-                text: `${aizuchi}${extra}\n\nご検討されている「管理形態やご希望」があれば教えてください！\n\n💡【ご相談・ご要望の入力】\nほかにも気になる点やご相談内容がございましたら、下のメッセージ入力欄から送信してください。\n\n特になければ、下記ボタンよりお問合せ・無料査定へお進みください！`,
+                text: `${aizuchi}\n\n${comment}\n\nご検討・ご希望の「管理スタイルやプラン」はございますか？`,
+                options: [
+                    { text: "🤝 集客〜集金・管理まで全て任せたい", value: "full_manage" },
+                    { text: "📢 集客（入居者募集）のみ依頼したい", value: "recruit_only" },
+                    { text: "🛡 空室保証・サブリースを相談したい", value: "sublease" },
+                    { text: "💡 まずは賃料査定・相談のみ", value: "estimate_only" }
+                ]
+            };
+        } else if (chatState.step === 6) {
+            chatState.step = 7;
+            chatState.data["ご希望の管理形態"] = text;
+            let aizuchi = getRandomAizuchi(text);
+            return {
+                text: `${aizuchi}\n\n最後に「ご要望や気になっている点」があれば教えてください！\n\n💡【ご相談・ご要望の入力】\nほかにも気になる点（例：管理手数料、原状回復、節税など）がございましたら、下のメッセージ入力欄から送信してください😊\n\n特になければ、下記ボタンよりお問合せ・無料査定へお進みください！`,
                 options: [
                     { text: "📋 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }
                 ]
@@ -372,7 +351,7 @@ function getAIResponse(userInputText) {
     }
 
     // --------------------------------------
-    // E. ③【物件を売りたい（売却）】ステップ分岐
+    // E. ③【物件を売りたい（売却）】
     // --------------------------------------
     if (chatState.mode === "sell") {
         if (chatState.step === 1) {
@@ -380,9 +359,8 @@ function getAIResponse(userInputText) {
             chatState.data["物件種別"] = text;
             let aizuchi = getRandomAizuchi(text);
             let comment = getSmartComment("sell", 1, text);
-            let extra = comment ? `\n\n${comment}` : "";
             return {
-                text: `${aizuchi}${extra}\n\n物件の「所在地（エリア）」をお選びいただくか、入力してください。`,
+                text: `${aizuchi}\n\n${comment}\n\n物件の「所在地（エリア）」をお選びいただくか、入力してください。`,
                 options: [
                     { text: "📍 赤羽・北区エリア周辺", value: "akabane" },
                     { text: "📍 その他東京23区内", value: "tokyo23" },
@@ -395,9 +373,8 @@ function getAIResponse(userInputText) {
             chatState.data["物件所在地"] = text;
             let aizuchi = getRandomAizuchi(text);
             let comment = getSmartComment("sell", 2, text);
-            let extra = comment ? `\n\n${comment}` : "";
             return {
-                text: `${aizuchi}${extra}\n\n物件の「間取りや広さの目安」を教えていただけますか？`,
+                text: `${aizuchi}\n\n${comment}\n\n物件の「間取りや広さの目安」を教えていただけますか？`,
                 options: [
                     { text: "🛋 コンパクト（〜50㎡ / 1〜2LDK）", value: "small" },
                     { text: "🏠 標準ファミリー（50〜80㎡ / 3LDK）", value: "medium" },
@@ -410,39 +387,22 @@ function getAIResponse(userInputText) {
             chatState.data["間取り・広さ"] = text;
             let aizuchi = getRandomAizuchi(text);
             let comment = getSmartComment("sell", 3, text);
-            let extra = comment ? `\n\n${comment}` : "";
             return {
-                text: `${aizuchi}${extra}\n\nおおよその「築年数」はどれくらいでしょうか？`,
+                text: `${aizuchi}\n\n${comment}\n\n現在の「物件のご利用状況やご売却時期」を教えてください。`,
                 options: [
-                    { text: "✨ 築10年以内", value: "under10" },
-                    { text: "🏢 築10年〜20年程度", value: "under20" },
-                    { text: "🏚 築20年以上", value: "over20" },
-                    { text: "🏞 土地のため築年数なし", value: "none" }
+                    { text: "👤 自身で居住中（早期売却希望）", value: "living_now" },
+                    { text: "🚪 現在、空家・空室", value: "empty" },
+                    { text: "💰 賃貸中（オーナーチェンジ）", value: "rented" },
+                    { text: "🗓 良い条件があれば時期問わず検討", value: "someday" }
                 ]
             };
         } else if (chatState.step === 4) {
             chatState.step = 5;
-            chatState.data["築年数"] = text;
+            chatState.data["現況・売却時期"] = text;
             let aizuchi = getRandomAizuchi(text);
             let comment = getSmartComment("sell", 4, text);
-            let extra = comment ? `\n\n${comment}` : "";
             return {
-                text: `${aizuchi}${extra}\n\n現在の「物件のご利用状況（居住中、空家など）」を教えてください。`,
-                options: [
-                    { text: "👤 自身で居住中", value: "living" },
-                    { text: "🚪 現在、空家・空室", value: "empty" },
-                    { text: "💰 賃貸中（オーナーチェンジ）", value: "rented" },
-                    { text: "👨‍👩‍👧 相続・代理所有", value: "inherited" }
-                ]
-            };
-        } else if (chatState.step === 5) {
-            chatState.step = 6;
-            chatState.data["物件の現況"] = text;
-            let aizuchi = getRandomAizuchi(text);
-            let comment = getSmartComment("sell", 5, text);
-            let extra = comment ? `\n\n${comment}` : "";
-            return {
-                text: `${aizuchi}${extra}\n\nご売却をご検討の「時期や目的」を教えてください！\n\n💡【ご相談・ご要望の入力】\nほかにも気になる点（例：秘密厳守で進めたい等）がございましたら、下のメッセージ入力欄から送信してください。\n\n特になければ、下記ボタンよりお問合せ・無料査定へお進みください！`,
+                text: `${aizuchi}\n\n${comment}\n\nご売却に関する「その他ご要望」があれば教えてください！\n\n💡【ご相談・ご要望の入力】\nほかにも気になる点（例：秘密厳守で進めたい、買い替え相談など）がございましたら、下のメッセージ入力欄から送信してください😊\n\n特になければ、下記ボタンよりお問合せ・無料査定へお進みください！`,
                 options: [
                     { text: "📝 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }
                 ]
@@ -451,7 +411,7 @@ function getAIResponse(userInputText) {
     }
 
     // --------------------------------------
-    // F. ④【物件を買いたい（購入）】ステップ分岐
+    // F. ④【物件を買いたい（購入）】
     // --------------------------------------
     if (chatState.mode === "buy") {
         if (chatState.step === 1) {
@@ -459,24 +419,8 @@ function getAIResponse(userInputText) {
             chatState.data["購入希望種別"] = text;
             let aizuchi = getRandomAizuchi(text);
             let comment = getSmartComment("buy", 1, text);
-            let extra = comment ? `\n\n${comment}` : "";
             return {
-                text: `${aizuchi}${extra}\n\nご希望の「エリア（地域）」はお決まりでしょうか？`,
-                options: [
-                    { text: "📍 赤羽・北区エリア限定", value: "akabane" },
-                    { text: "📍 その他東京23区内", value: "tokyo23" },
-                    { text: "📍 埼玉県内", value: "saitama" },
-                    { text: "💡 広域で探している", value: "wide" }
-                ]
-            };
-        } else if (chatState.step === 2) {
-            chatState.step = 3;
-            chatState.data["希望エリア"] = text;
-            let aizuchi = getRandomAizuchi(text);
-            let comment = getSmartComment("buy", 2, text);
-            let extra = comment ? `\n\n${comment}` : "";
-            return {
-                text: `${aizuchi}${extra}\n\nご予算の「イメージ上限」をお聞かせください。`,
+                text: `${aizuchi}\n\n${comment}\n\nご予算の「イメージ上限」をお聞かせください。`,
                 options: [
                     { text: "💰 3,000万円以内", value: "3000" },
                     { text: "💰 5,000万円以内", value: "5000" },
@@ -484,14 +428,13 @@ function getAIResponse(userInputText) {
                     { text: "💰 7,000万円以上", value: "over7000" }
                 ]
             };
-        } else if (chatState.step === 3) {
-            chatState.step = 4;
+        } else if (chatState.step === 2) {
+            chatState.step = 3;
             chatState.data["ご予算上限"] = text;
             let aizuchi = getRandomAizuchi(text);
-            let comment = getSmartComment("buy", 3, text);
-            let extra = comment ? `\n\n${comment}` : "";
+            let comment = getSmartComment("buy", 2, text);
             return {
-                text: `${aizuchi}${extra}\n\nご希望の「間取りや広さ」はいかがでしょうか？`,
+                text: `${aizuchi}\n\n${comment}\n\nご希望の「間取りや広さ」はいかがでしょうか？`,
                 options: [
                     { text: "🛋 1LDK〜2DK", value: "1ldk" },
                     { text: "🛋 2LDK〜3LDK", value: "3ldk" },
@@ -499,14 +442,13 @@ function getAIResponse(userInputText) {
                     { text: "🏬 一棟・事業用", value: "business" }
                 ]
             };
-        } else if (chatState.step === 4) {
-            chatState.step = 5;
+        } else if (chatState.step === 3) {
+            chatState.step = 4;
             chatState.data["希望間取り"] = text;
             let aizuchi = getRandomAizuchi(text);
-            let comment = getSmartComment("buy", 4, text);
-            let extra = comment ? `\n\n${comment}` : "";
+            let comment = getSmartComment("buy", 3, text);
             return {
-                text: `${aizuchi}${extra}\n\n「築年数」のご希望はございますか？`,
+                text: `${aizuchi}\n\n${comment}\n\n「築年数」のご希望はございますか？`,
                 options: [
                     { text: "✨ 新築・築浅（10年以内）", value: "new" },
                     { text: "🏢 築20年以内", value: "under20" },
@@ -514,14 +456,13 @@ function getAIResponse(userInputText) {
                     { text: "⚖️ 特に拘らない", value: "any" }
                 ]
             };
-        } else if (chatState.step === 5) {
-            chatState.step = 6;
+        } else if (chatState.step === 4) {
+            chatState.step = 5;
             chatState.data["希望築年数"] = text;
             let aizuchi = getRandomAizuchi(text);
-            let comment = getSmartComment("buy", 5, text);
-            let extra = comment ? `\n\n${comment}` : "";
+            let comment = getSmartComment("buy", 4, text);
             return {
-                text: `${aizuchi}${extra}\n\n「住宅ローンのご相談」やご検討状況はいかがでしょうか？\n\n💡【ご相談・ご要望の入力】\nほかにも気になる点やご要望がございましたら、下のメッセージ入力欄から送信してください。\n\n特になければ、下記ボタンよりお問合せへお進みください！`,
+                text: `${aizuchi}\n\n${comment}\n\nご希望エリアやローン相談など「ご要望」はございますか？\n\n💡【ご相談・ご要望の入力】\nほかにも気になる点（例：住宅ローン審査が不安、希望エリアなど）がございましたら、下のメッセージ入力欄から送信してください😊\n\n特になければ、下記ボタンよりお問合せへお進みください！`,
                 options: [
                     { text: "📱 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }
                 ]
