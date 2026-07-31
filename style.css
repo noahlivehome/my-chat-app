@@ -1,84 +1,167 @@
-/* --- グリーン基調のプロ風ヘッダー --- */
-.chat-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 18px;
-    /* 上品なオリーブグリーンのグラデーション */
-    background: linear-gradient(135deg, #7c9578 0%, #5d7559 100%);
-    color: #ffffff;
-    border-radius: 16px 16px 0 0;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
 }
 
-/* アイコン枠（白ベースにグリーンアイコンで清潔感UP） */
-.header-avatar {
-    position: relative;
-    width: 42px;
-    height: 42px;
-    background: #ffffff;
-    border-radius: 50%;
+body {
+    background-color: #f4f6f8;
     display: flex;
-    align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    align-items: center;
+    min-height: 100vh;
 }
 
-.avatar-icon {
-    width: 22px;
-    height: 22px;
-    fill: #6b8467; /* ヘッダーの色に合わせたくすみグリーン */
-}
-
-/* オンラインを示す緑のライト */
-.status-indicator {
-    position: absolute;
-    bottom: 0px;
-    right: 0px;
-    width: 10px;
-    height: 10px;
-    background-color: #52c41a; /* 鮮やかなグリーン */
-    border: 2px solid #ffffff;
-    border-radius: 50%;
-}
-
-/* タイトルエリア */
-.header-info {
+/* チャットコンテナ */
+.chat-container {
+    width: 380px;
+    height: 640px;
+    background-color: #f0f0f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    overflow: hidden;
+    position: relative;
 }
 
-.header-title-wrap {
+/* ヘッダー */
+.chat-header {
+    background-color: #8da287;
+    color: #ffffff;
+    padding: 14px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+}
+
+/* メッセージ表示エリア */
+.chat-messages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* 共通バブル */
+.message {
+    max-width: 85%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Botメッセージ（白背景） */
+.message.bot {
+    align-self: flex-start;
+    background-color: #ffffff;
+    color: #333333;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* ユーザーメッセージ（緑背景） */
+.message.user {
+    align-self: flex-end;
+    background-color: #8da287;
+    color: #ffffff;
+    border-bottom-right-radius: 4px;
+}
+
+/* ボタン表示エリア */
+.chat-options-container {
+    padding: 8px 12px;
+    background-color: #f0f0f0;
+    display: flex;
+    flex-direction: column;
     gap: 8px;
 }
 
-.header-title {
-    font-size: 1.05rem;
-    font-weight: 700;
-    margin: 0;
-    color: #ffffff;
-    letter-spacing: 0.02em;
+/* 2列配置用のCSS Grid */
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    width: 100%;
 }
 
-/* 「24h対応」のバッジ（ほんのり透ける白） */
-.badge {
-    font-size: 0.68rem;
-    font-weight: 600;
-    background: rgba(255, 255, 255, 0.22);
+/* 通常ボタン */
+.option-btn {
+    background-color: #ffffff;
+    border: 1.5px solid #8da287;
+    color: #333333;
+    padding: 10px 6px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.3;
+    width: 100%;
+}
+
+.option-btn:hover {
+    background-color: #f0f7ef;
+}
+
+/* コンバージョン（CV）ボタン */
+.option-btn.primary {
+    width: 100%;
+    background-color: #8da287;
     color: #ffffff;
-    padding: 2px 8px;
+    border: none;
+    padding: 12px;
+    font-size: 14px;
+    border-radius: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.option-btn.primary:hover {
+    background-color: #7a8f74;
+}
+
+/* 入力エリア */
+.chat-input-area {
+    display: flex;
+    padding: 10px 12px;
+    background-color: #ffffff;
+    border-top: 1px solid #e0e0e0;
+}
+
+.chat-input-area input {
+    flex: 1;
+    border: 1px solid #cccccc;
+    padding: 8px 12px;
     border-radius: 20px;
+    outline: none;
+    font-size: 14px;
 }
 
-/* サブタイトル */
-.header-subtitle {
-    font-size: 0.73rem;
-    color: rgba(255, 255, 255, 0.85);
-    margin: 0;
-    letter-spacing: 0.03em;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+.chat-input-area button {
+    background-color: #8da287;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    margin-left: 8px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.chat-input-area button:hover {
+    background-color: #7a8f74;
 }
