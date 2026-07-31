@@ -27,7 +27,7 @@ function getRandomAizuchi(word) {
     const patterns = [
         `「${word}」ですね！承知いたしました。`,
         `「${word}」ですね！`,
-        `「${word}」でですね！かしこまりました。`,
+        `「${word}」ですね！かしこまりました。`,
         `「${word}」ですね！ご選択ありがとうございます！`,
         `「${word}」ですね！ご入力ありがとうございます！`
     ];
