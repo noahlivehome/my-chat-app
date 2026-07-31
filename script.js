@@ -112,7 +112,7 @@ function initChat() {
     const msgContainer = document.getElementById("chatMessages");
     if (msgContainer) msgContainer.innerHTML = "";
     
-    appendBotMessage("いらっしゃいませ！\nノアライブホーム AIアシスタントです。\n\n本日はどのようなご相談でしょうか？\n下の選択肢から選ぶか、ご相談内容を直接入力してくださいね！");
+    appendBotMessage("いらっしゃいませ！\nノアリブホーム AIアシスタントです。\n\n本日はどのようなご相談でしょうか？\n下の選択肢から選ぶか、ご相談内容を直接入力してくださいね！");
     renderOptions(initialOptions);
 }
 
