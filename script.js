@@ -85,7 +85,7 @@ function initChat() {
     const msgContainer = document.getElementById("chatMessages");
     if (msgContainer) msgContainer.innerHTML = "";
     
-    appendBotMessage("いらっしゃいませ！\nノアライブホーム AIコンシェルジュのノアです✨\n\n本日はどのようなご相談でしょうか？\n下の選択肢から選んでいただくか、チャット欄に「赤羽で賃貸探したい」「マンション売りたい」など直接メッセージを入力してくださいね！");
+    appendBotMessage("いらっしゃいませ！\nノアリブホーム AIコンシェルジュのノアです✨\n\n本日はどのようなご相談でしょうか？\n下の選択肢から選んでいただくか、チャット欄に「赤羽で賃貸探したい」「マンション売りたい」など直接メッセージを入力してくださいね！");
     renderOptions(initialOptions);
 }
 
@@ -97,7 +97,7 @@ function getCurrentStepPrompt() {
     const step = chatState.step;
 
     if (mode === "rent") {
-        if (step === 1) return { text: "ご希望の「エリア（駅名や市区町村）」を教えてください！\n（例：赤羽駅、北区、川口など）", options: [{ text: "📍 赤羽・北区エリア", value: "赤羽・北区エリア" }, { text: "📍 その他23区", value: "その他23区" }, { text: "📍 埼玉県", value: "埼玉県" }] };
+        if (step === 1) return { text: "ご希望の「エリア（駅名や市区町村）」を教えてください！\n（例：赤羽駅、北区、川口など）", options: [{ text: "📍 赤羽・北区エリア", value: "赤羽・北区エリア" }, { text: "📍 その他23区", value: "その他23区" }, { text: "📍 埼玉県", value: "埼玉県" }, { text: "💡 条件から相談する", value: "条件から相談" }] };
         if (step === 2) return { text: "ご希望の「ご予算（家賃の上限）」はおいくら位でお考えですか？", options: [{ text: "💴 8万円以内", value: "8万円以内" }, { text: "💴 10万円以内", value: "10万円以内" }, { text: "💴 12万円以内", value: "12万円以内" }, { text: "💴 15万円以上", value: "15万円以上" }] };
         if (step === 3) return { text: "ご希望の「間取り」を教えていただけますか？", options: [{ text: "🛋 ワンルーム・1K", value: "ワンルーム・1K" }, { text: "🛋 1DK・1LDK", value: "1DK・1LDK" }, { text: "🛋 2K・2DK・2LDK", value: "2K・2DK・2LDK" }, { text: "🛋 3LDK以上", value: "3LDK以上" }] };
         if (step === 4) return { text: "「広さや築年数」について何かこだわりはありますか？", options: [{ text: "✨ 築浅希望（10年以内）", value: "築浅希望" }, { text: "📐 広さ重視", value: "広さ重視" }, { text: "💰 安さ重視（築年数不問）", value: "安さ重視" }, { text: "⚖️ バランス重視", value: "バランス重視" }] };
@@ -106,7 +106,7 @@ function getCurrentStepPrompt() {
     }
 
     if (mode === "owner") {
-        if (step === 1) return { text: "ご所有物件の「種別」を教えてください。", options: [{ text: "🏢 マンション・アパート", value: "マンション・アパート" }, { text: "🏢 一棟マンション・ビル", value: "一棟マンション・ビル" }, { text: "🏠 一戸建て", value: "一戸建て" }] };
+        if (step === 1) return { text: "ご所有物件の「種別」を教えてください。", options: [{ text: "🏢 マンション・アパート", value: "マンション・アパート" }, { text: "🏢 一棟マンション・ビル", value: "一棟マンション・ビル" }, { text: "🏠 一戸建て", value: "一戸建て" }, { text: "🏬 店舗事務所・その他", value: "店舗事務所・その他" }] };
         if (step === 2) return { text: "物件の「所在地（エリア）」はどちらになりますか？", options: [{ text: "📍 赤羽・北区エリア", value: "赤羽・北区エリア" }, { text: "📍 その他東京23区内", value: "東京23区内" }, { text: "📍 埼玉県内", value: "埼玉県内" }] };
         if (step === 3) return { text: "物件の「間取り」を教えていただけますか？", options: [{ text: "🛋 単身用（1K〜1LDK）", value: "単身用" }, { text: "🛋 ファミリー用（2LDK〜）", value: "ファミリー用" }, { text: "🏢 一棟まるごと", value: "一棟まるごと" }] };
         if (step === 4) return { text: "おおよその「築年数」はどのくらいでしょうか？", options: [{ text: "✨ 築10年未満", value: "築10年未満" }, { text: "🏢 築10年〜20年", value: "築10年〜20年" }, { text: "🏚 築20年以上", value: "築20年以上" }] };
@@ -153,7 +153,9 @@ function getStepFieldName(mode, step) {
 function getAIResponse(userInputText, isFromButton = false) {
     const text = userInputText.trim();
 
-    // NGワード判定
+    // --------------------------------------
+    // ★1. NGワード判定
+    // --------------------------------------
     const hasNgWord = NG_WORDS.some(word => text.includes(word));
     if (hasNgWord) {
         const currentPrompt = getCurrentStepPrompt();
@@ -163,75 +165,104 @@ function getAIResponse(userInputText, isFromButton = false) {
         };
     }
 
-    // モードが未決定の場合の初期判定
+    // --------------------------------------
+    // ★2. モード未決定の場合の判定
+    // --------------------------------------
     if (!chatState.mode) {
-        if (text.includes("借り") || text.includes("賃賃") || text.includes("部屋探し") || text.includes("rent")) {
-            chatState.mode = "rent";
-        } else if (text.includes("貸し") || text.includes("オーナー") || text.includes("管理") || text.includes("owner")) {
-            chatState.mode = "owner";
-        } else if (text.includes("売り") || text.includes("売却") || text.includes("査定") || text.includes("sell")) {
-            chatState.mode = "sell";
-        } else if (text.includes("買い") || text.includes("購入") || text.includes("buy")) {
-            chatState.mode = "buy";
-        }
+        if (text.includes("借り") || text.includes("賃貸") || text.includes("部屋探し")) chatState.mode = "rent";
+        else if (text.includes("貸し") || text.includes("オーナー") || text.includes("管理")) chatState.mode = "owner";
+        else if (text.includes("売り") || text.includes("売却") || text.includes("査定")) chatState.mode = "sell";
+        else if (text.includes("買い") || text.includes("購入")) chatState.mode = "buy";
 
         if (chatState.mode) {
             chatState.step = 1;
             const prompt = getCurrentStepPrompt();
             const modeNames = { rent: "お部屋探し（賃貸）", owner: "物件を貸したい（オーナー様）", sell: "物件のご売却", buy: "物件のご購入" };
             return {
-                text: `${modeNames[chatState.mode]}のご相談ですね！かしこまりました😊\n\nそれでは、${prompt.text}`,
+                text: `${modeNames[chatState.mode]}のご相談ですね！かしこまりました😊\n\n${prompt.text}`,
                 options: prompt.options
-            };
-        } else {
-            return {
-                text: `「${text}」ですね！ありがとうございます。\nノアリブブホームでは賃貸・売買・管理など幅広くサポートしております！\n\nまずはどのようなご相談か、以下よりお選びいただくか教えていただけますか？`,
-                options: initialOptions
             };
         }
     }
 
-    // 費用に関する質問への回答（会話として反応する）
-    if (text.includes("費用") || text.includes("料金") || text.includes("いくら") || text.includes("無料")) {
-        const currentPrompt = getCurrentStepPrompt();
-        return {
-            text: "ご安心ください！ノアライブホームでのご相談やご提案、物件の査定などは【すべて無料】で行っております✨\nお金は一切かかりませんので、なんでもお気軽にご相談くださいね！\n\n引き続きですが、" + currentPrompt.text,
-            options: currentPrompt.options
-        };
+    // --------------------------------------
+    // ★3. ユーザーからの個別質問・雑談への回答（自由入力時）
+    // --------------------------------------
+    if (!isFromButton) {
+        let answer = "";
+
+        // 「おすすめ」に関する質問
+        if (text.includes("おすすめ") || text.includes("オススメ") || text.includes("イチオシ")) {
+            answer = "ノアリブホームでは、赤羽・北区エリアを中心に、リノベーション物件や駅近の好立地物件など、お値打ちなおすすめ物件を多数取り扱っております！\nお客様にピッタリのおすすめをお出しするために、まずはご希望の条件を教えてくださいね✨";
+        }
+        // 「アクセス」に関する質問
+        else if (text.includes("アクセス") || text.includes("交通") || text.includes("通勤") || text.includes("通学")) {
+            answer = "赤羽エリアはJR各線（埼京線・京浜東北線・高崎線など）が通っており、新宿・東京・池袋へも電車で15分前後とアクセス抜群の人気エリアです！\nご通勤・ご通学先に合わせたおすすめ駅のご案内も可能です👍";
+        }
+        // 「ローン」に関する質問
+        else if (text.includes("ローン") || text.includes("金利") || text.includes("借入")) {
+            answer = "住宅ローンについてですね！都市銀行からネット銀行まで、お客様の働き方や資金計画に合わせた最適なローン選びを無料サポートしております。\n事前審査のお手伝いも可能ですのでご安心ください！";
+        }
+        // 「費用」に関する質問
+        else if (text.includes("費用") || text.includes("料金") || text.includes("いくら") || text.includes("無料") || text.includes("手数料")) {
+            answer = "ご安心ください！ノアリブホームでのご相談やご提案、物件の査定などは【すべて無料】で行っております✨";
+        }
+
+        // 個別回答があれば、その後に現在進行中の質問を再提示する
+        if (answer !== "") {
+            const currentPrompt = getCurrentStepPrompt();
+            return {
+                text: `${answer}\n\n引き続き、下記の質問についてもぜひ教えていただけますか？😊\n\n${currentPrompt.text}`,
+                options: currentPrompt.options
+            };
+        }
     }
 
-    // すでにヒアリング完了後の自由会話
+    // --------------------------------------
+    // ★4. ヒアリング完了後の会話対応
+    // --------------------------------------
     const maxSteps = { rent: 5, owner: 6, sell: 5, buy: 5 };
-    if (chatState.step > maxSteps[chatState.mode]) {
+    if (chatState.mode && chatState.step > maxSteps[chatState.mode]) {
         if (chatState.data["ご要望・補足"]) {
             chatState.data["ご要望・補足"] += ` / ${text}`;
         } else {
             chatState.data["ご要望・補足"] = text;
         }
         return {
-            text: `「${text}」ですね！ご要望としてしっかりメモいたしました！メモを残しましたので、下記ボタンよりお気軽にお問合せフォームへお進みくださいね✨`,
+            text: `「${text}」ですね！ご要望としてしっかりメモいたしました！\n下記ボタンよりお気軽にお問合せフォームへお進みください✨`,
             options: [{ text: "📅 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }]
         };
     }
 
-    // 自由入力のテキストでも、ヒアリング回答として記憶してステップを進める処理
-    const currentFieldName = getStepFieldName(chatState.mode, chatState.step);
-    chatState.data[currentFieldName] = text;
+    // --------------------------------------
+    // ★5. 通常のステップ進行（自由入力・ボタン共通）
+    // --------------------------------------
+    if (chatState.mode) {
+        const currentFieldName = getStepFieldName(chatState.mode, chatState.step);
+        chatState.data[currentFieldName] = text;
 
-    const currentStep = chatState.step;
-    chatState.step++; // 次のステップへ
+        const currentStep = chatState.step;
+        chatState.step++; // ステップを進める
 
+        let aizuchi = getRandomAizuchi(text);
+        let comment = getSmartComment(chatState.mode, currentStep);
+        let nextPrompt = getCurrentStepPrompt();
+
+        let responseText = `${aizuchi}`;
+        if (comment) responseText += `\n\n${comment}`;
+        responseText += `\n\n${nextPrompt.text}`;
+
+        return {
+            text: responseText,
+            options: nextPrompt.options
+        };
+    }
+
+    // 初期状態への安全弁
     let aizuchi = getRandomAizuchi(text);
-    let comment = getSmartComment(chatState.mode, currentStep);
-    let nextPrompt = getCurrentStepPrompt();
-
-    let responseText = `${aizuchi}`;
-    if (comment) responseText += `\n\n${comment}`;
-    responseText += `\n\nさて、次は${nextPrompt.text}`;
-
     return {
-        text: responseText,
-        options: nextPrompt.options
+        text: `${aizuchi}\nまずはどのようなご相談をお望みか、下記よりお選びいただけますか？`,
+        options: initialOptions
     };
 }
 
@@ -292,10 +323,11 @@ function renderOptions(options) {
     scrollToBottom();
 }
 
-// ボタン・送信共通のアクション
+// ボタン選択・テキスト送信の共通処理
 function processUserInput(text, isFromButton = false) {
     appendUserMessage(text);
 
+    // フォーム遷移・お問合せボタン時の挙動
     if (text.includes("予約") || text.includes("申込む") || text.includes("問合せ") || text.includes("進む") || text === "contact") {
         setTimeout(() => {
             appendBotMessage("ありがとうございます！\nこれまでのご相談内容をお問い合わせフォームへ自動で引き継ぎます。\n\nまもなくお問合せページへ移動しますので、そのまま送信してくださいね✨");
@@ -325,6 +357,7 @@ function processUserInput(text, isFromButton = false) {
         return;
     }
 
+    // AIからのレスポンスを生成して描画
     setTimeout(() => {
         const response = getAIResponse(text, isFromButton);
         appendBotMessage(response.text);
@@ -357,5 +390,4 @@ function scrollToBottom() {
     if (container) {
         container.scrollTop = container.scrollHeight;
     }
-}
 }
