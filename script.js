@@ -90,10 +90,10 @@ function getAIResponse(userInputText) {
             return {
                 text: "物件を貸したい（オーナー様）のご相談ですね！\nご所有物件の「種別」をお選びいただくか、入力してください。",
                 options: [
-                    { text: "🏢 マンション・アパート", value: "mansion_single" },
+                    { text: "🏢 マンション（1室）", value: "mansion_single" },
                     { text: "🏢 一棟マンション・ビル", value: "mansion_building" },
                     { text: "🏠 一戸建て", value: "house" },
-                    { text: "🏬 店舗事務所・その他", value: "apartment" }
+                    { text: "🏬 アパート・店舗事務所", value: "apartment" }
                 ]
             };
         } else if (text.includes("売りたい") || text.includes("売却") || text.includes("査定")) {
@@ -109,12 +109,12 @@ function getAIResponse(userInputText) {
                     { text: "🏬 一棟ビル・アパート", value: "sell_building" }
                 ]
             };
-        } else if (text.includes("買いたい") || text.includes("購入") || text.includes("買いたい")) {
+        } else if (text.includes("買いたい") || text.includes("購入")) {
             chatState.mode = "buy";
             chatState.step = 1;
             chatState.data = {};
             return {
-                text: "物件のご購入のご相談ですね！\nどのような「種別」をお探しでしょうか？",
+                text: "物件のごご購入のご相談ですね！\nどのような「種別」をお探しでしょうか？",
                 options: [
                     { text: "🏢 新築・中古マンション", value: "buy_mansion" },
                     { text: "🏡 新築・中古一戸建て", value: "buy_house" },
@@ -191,14 +191,15 @@ function getAIResponse(userInputText) {
                     { text: "🚃 駅から徒歩5分以内", value: "station" }
                 ]
             };
-} else {
-        chatState.data["こだわり条件・ご自由な要望"] = text;
-        return {
-            text: `「${text}」ですね！しっかりと記録いたしました。\nこれでお伺いした条件の整理が完了いたしました！\n\n💡【ご相談・ご要望の入力】\nほかにも気になる点やご要望（例：連絡はメール希望、初期費用を抑えたい等）がございましたら、下のメッセージ入力欄から送信してください。\n\n特になければ、下記ボタンよりお問合せフォームへお進みください！`,
-            options: [
-                { text: "📅 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }
-            ]
-        };
+        } else {
+            chatState.data["こだわり条件・ご自由な要望"] = text;
+            return {
+                text: `「${text}」ですね！しっかりと記録いたしました。\n\n💡【ご相談・ご要望の入力】\nほかにも気になる点やご要望（例：連絡はメール希望、初期費用を抑えたい等）がございましたら、下のメッセージ入力欄から送信してください😊\n\n特になければ、下記ボタンよりお問合せフォームへお進みください！`,
+                options: [
+                    { text: "📅 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }
+                ]
+            };
+        }
     }
 
     // --------------------------------------
@@ -259,20 +260,21 @@ function getAIResponse(userInputText) {
             return {
                 text: `現況「${text}」ですね。\nご検討されている「管理形態やご希望」はございますか？`,
                 options: [
-                    { text: "🏢 入居者募集", value: "manage" },
-                    { text: "🤝 管理を任せたい", value: "sublease" },
+                    { text: "🤝 入居者募集・管理委託したい", value: "manage" },
+                    { text: "🛡 サブリース（一括借り上げ）", value: "sublease" },
                     { text: "💰 査定賃料だけ知りたい", value: "estimate" },
                     { text: "💡 初めてなので相談して決めたい", value: "consult" }
                 ]
             };
-　　　　} else {
-        chatState.data["ご要望・管理形態"] = text;
-        return {
-            text: `「${text}」ですね。詳細をお知らせいただきありがとうございます！\n\n💡【ご相談・ご要望の入力】\nほかにも気になる点やご相談内容（例：連絡はメール希望、まずは概算のみ知りたい等）がございましたら、下のメッセージ入力欄から送信してください😊\n\n特になければ、下記ボタンよりお問合せ・無料査定へお進みください！`,
-            options: [
-                { text: "📋 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }
-            ]
-        };
+        } else {
+            chatState.data["ご要望・管理形態"] = text;
+            return {
+                text: `「${text}」ですね。詳細をお知らせいただきありがとうございます！\n\n💡【ご相談・ご要望の入力】\nほかにも気になる点やご相談内容（例：連絡はメール希望、まずは概算のみ知りたい等）がございましたら、下のメッセージ入力欄から送信してください😊\n\n特になければ、下記ボタンよりお問合せ・無料査定へお進みください！`,
+                options: [
+                    { text: "📋 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }
+                ]
+            };
+        }
     }
 
     // --------------------------------------
@@ -339,14 +341,15 @@ function getAIResponse(userInputText) {
                     { text: "🗓 半年〜1年以内に売却検討", value: "future" }
                 ]
             };
-} else {
-        chatState.data["売却希望時期・ご要望"] = text;
-        return {
-            text: `「${text}」ですね！ご入力いただきありがとうございます。\n\n💡【ご相談・ご要望の入力】\nほかにも気になる点やご相談（例：秘密厳守で進めたい、近隣相場も知りたい等）がございましたら、下のメッセージ入力欄から送信してください😊\n\n特になければ、下記ボタンよりお問合せ・無料査定へお進みください！`,
-            options: [
-                { text: "📝 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }
-            ]
-        };
+        } else {
+            chatState.data["売却希望時期・ご要望"] = text;
+            return {
+                text: `「${text}」ですね！ご入力いただきありがとうございます。\n\n💡【ご相談・ご要望の入力】\nほかにも気になる点やご相談（例：秘密厳守で進めたい、近隣相場も知りたい等）がございましたら、下のメッセージ入力欄から送信してください😊\n\n特になければ、下記ボタンよりお問合せ・無料査定へお進みください！`,
+                options: [
+                    { text: "📝 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }
+                ]
+            };
+        }
     }
 
     // --------------------------------------
@@ -413,15 +416,15 @@ function getAIResponse(userInputText) {
                     { text: "💡 まずは物件探しから", value: "first_search" }
                 ]
             };
-} else {
-        chatState.data["住宅ローン・ご状況"] = text;
-        return {
-            text: `「${text}」ですね！ご希望をお聞かせいただきありがとうございます。\n\n💡【ご相談・ご要望の入力】\nほかにも気になる点やご要望（例：土日祝に連絡してほしい、学区指定がある等）がございましたら、下のメッセージ入力欄から送信してください😊\n\n特になければ、下記ボタンよりお問合せへお進みください！`,
-            options: [
-                { text: "📱 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }
-            ]
-        };
-    }
+        } else {
+            chatState.data["住宅ローン・ご状況"] = text;
+            return {
+                text: `「${text}」ですね！ご希望をお聞かせいただきありがとうございます。\n\n💡【ご相談・ご要望の入力】\nほかにも気になる点やご要望（例：土日祝に連絡してほしい、学区指定がある等）がございましたら、下のメッセージ入力欄から送信してください😊\n\n特になければ、下記ボタンよりお問合せへお進みください！`,
+                options: [
+                    { text: "📱 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }
+                ]
+            };
+        }
     }
 
     // デフォルト・会話の振り戻し
@@ -509,7 +512,8 @@ function handleOptionClick(selectedText) {
 
     if (selectedText.includes("予約") || selectedText.includes("申込む") || selectedText.includes("問合せ") || selectedText.includes("進む")) {
         setTimeout(() => {
-            appendBotMessage("ありがとうございます！\n入力いただいたお打合せ条件をまとめて、お問合せフォームへ遷移します...");
+            // ▼ ボタンを押したときに詳しくわかりやすい説明を表示するように改善
+            appendBotMessage("ありがとうございます！\nこれまでのヒアリング内容（ご希望条件や現況など）をお問い合わせフォームへすべて自動で引き継ぎます。\n\nまもなくお問合せページへ移動しますので、フォームにてお名前やご連絡先をご入力の上ご送信ください✨");
             
             const optContainer = document.getElementById("chatOptions");
             if (optContainer) optContainer.innerHTML = "";
@@ -533,7 +537,7 @@ function handleOptionClick(selectedText) {
                 const targetUrl = `${IELOVE_FORM_URL}?message=${encodeURIComponent(summaryText)}`;
                 window.location.href = targetUrl;
 
-            }, 1200);
+            }, 1800); // 読めるように少し時間を調整
 
         }, 300);
         return;
