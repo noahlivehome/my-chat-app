@@ -5,7 +5,7 @@ const IELOVE_FORM_URL = "https://www.noahlivehome.jp/contact/";
 
 const NG_WORDS = [
     "死ね", "殺す", "バカ", "馬鹿", "アホ", "ゴミ", "カス", 
-    "キチガイ", "詐欺", "風俗", "金よこせ"
+    "しね", "殺す", "ばか", "あほ", "詐欺", "最低", "ぼけ", 
 ];
 
 // ==========================================
@@ -67,11 +67,17 @@ function getSmartComment(mode, step, text) {
             4: ["💡【構造】将来の家族構成変化に対応できる可動性や、リフォーム可能な構造かどうかも見極めます！"],
             5: ["💡【管理】中古物件は管理組合の財務状況や修繕積立金の蓄積状況までプロの目で調査します！"]
         },
-        // 自由入力から入った「ローン相談」専用のプロ知識
         loan: {
-            1: ["💡【雇用形態・年収】事前審査では勤続年数や雇用形態も確認されます。状況に合わせた最適な金融機関を選定します！"],
-            2: ["💡【予算・金利】変動金利・固定金利の特性を踏まえ、返済負担率（DTI）が安全圏におさまる資金計画を立てます！"],
-            3: ["💡【優遇・控除】住宅ローン控除の適用条件や、各銀行の金利優遇幅を比較してトータルコストを抑えます！"]
+            1: ["💡【事前審査】事前審査を早めに行うことで、購入・契約時の手続きがスムーズになります！"],
+            2: ["💡【借入額】年収に応じた無理のない返済負担率（DTI）で資金計画を立てることが重要です！"],
+            3: ["💡【金利選択】変動金利と固定金利の特徴を理解し、ライフプランに合わせたご提案をいたします！"]
+        },
+        reform: {
+            1: ["💡【リノベ提案】表装（クロス・床）張替えから間取り変更まで、予算とご要望に合わせた施工プランをご案内します！"],
+            2: ["💡【資産価値】売却前のリノベーションや賃貸の空室対策リフォームは、投資回収率を意識することがポイントです！"]
+        },
+        cost: {
+            1: ["💡【初期費用】敷金・礼金の交渉やフリーレント適用など、初期費用を抑えるプランもご案内可能です！"]
         }
     };
 
@@ -101,10 +107,10 @@ function getCurrentStepPrompt() {
     const mode = chatState.mode;
     const step = chatState.step;
 
-    // --- フリーワード「ローン相談」などの専用会話フロー ---
+    // --- ローン相談専用フロー ---
     if (mode === "loan") {
         if (step === 1) return {
-            text: "住宅ローンのご相談ですね！プロの立場から丁寧にご案内いたします。\n\nまずは、現在「住宅ローンの事前審査」はお済みでしょうか？",
+            text: "住宅ローンのご相談ですね！プロの視点から丁寧にご案内いたします。\n\nまずは、現在「住宅ローンの事前審査」はお済みでしょうか？",
             options: [
                 { text: "📝 これから検討・審査したい", value: "before_review" },
                 { text: "✅ すでに審査通過済み", value: "after_review" },
@@ -137,7 +143,55 @@ function getCurrentStepPrompt() {
         };
     }
 
-    // --- 既存のボタンフロー ---
+    // --- リフォーム相談専用フロー ---
+    if (mode === "reform") {
+        if (step === 1) return {
+            text: "リフォーム・リノベーションのご相談ですね！\nどのような目的・場所のリフォームをご検討中でしょうか？",
+            options: [
+                { text: "🏠 居住中マイホームの改修", value: "reform_home" },
+                { text: "🔨 中古購入と同時にリノベ", value: "reform_buy" },
+                { text: "🏢 賃貸・オーナー様の空室対策", value: "reform_owner" },
+                { text: "🏷 売却前の価値向上リフォーム", value: "reform_sell" }
+            ]
+        };
+        if (step === 2) return {
+            text: "承知いたしました！ご予算やお見積りのご案内も可能です。\nリフォームの「具体的な箇所やご予算感」はお決まりですか？",
+            options: [
+                { text: "🚿 水まわり（キッチン・お風呂等）", value: "water" },
+                { text: "🎨 内装（壁紙・床張替え）", value: "interior" },
+                { text: "🛋 フルリノベーション", value: "full_renov" },
+                { text: "💡 プロに相談して決めたい", value: "consult" }
+            ]
+        };
+        if (step === 3) return {
+            text: "ありがとうございます！\nリフォームに関するご相談内容を受け付けました。\n\n下記ボタンよりお問い合わせへお進みください😊",
+            options: [
+                { text: "📩 この内容でお問合せへ進む", value: "contact", isPrimary: true },
+                { text: "🏠 メインメニューに戻る", value: "reset", isPrimary: false }
+            ]
+        };
+    }
+
+    // --- 初期費用・費用相談専用フロー ---
+    if (mode === "cost") {
+        if (step === 1) return {
+            text: "お費用や初期費用に関するご質問ですね！\n具体的にどちらの費用について気になられていますか？",
+            options: [
+                { text: "💴 賃貸の契約初期費用・安くしたい", value: "rent_cost" },
+                { text: "🏛 売買の諸費用（仲介手数料・税金等）", value: "buy_cost" },
+                { text: "💰 相談料・査定料について（無料か）", value: "free_check" }
+            ]
+        };
+        if (step === 2) return {
+            text: "当店での事前査定やお部屋探しのご相談は【完全無料】ですのでご安心ください！\n\n初期費用の分割支払いや抑え方についても柔軟に対応いたします。\nご要望があれば下記よりお進みください！",
+            options: [
+                { text: "📩 この内容でお問合せへ進む", value: "contact", isPrimary: true },
+                { text: "🏠 メインメニューに戻る", value: "reset", isPrimary: false }
+            ]
+        };
+    }
+
+    // --- 既存標準フロー ---
     if (mode === "rent") {
         if (step === 1) return { text: "ご希望の「エリア（駅名や市区町村）」をお選びいただくか、直接入力してください。", options: [{ text: "📍 赤羽・北区エリア", value: "area_akabane" }, { text: "📍 その他23区", value: "area_23ku" }, { text: "📍 埼玉県", value: "area_saitama" }, { text: "💡 条件から相談する", value: "area_other" }] };
         if (step === 2) return { text: "ご希望の「ご予算（家賃上限）」を教えてください。", options: [{ text: "💴 8万円以内", value: "b_8" }, { text: "💴 10万円以内", value: "b_10" }, { text: "💴 12万円以内", value: "b_12" }, { text: "💴 15万円以上", value: "b_15" }] };
@@ -184,14 +238,41 @@ function getStepFieldName(mode, step) {
         owner: { 1: "物件種別", 2: "物件所在地", 3: "物件の間取り", 4: "築年数", 5: "現況", 6: "ご希望の管理形態" },
         sell: { 1: "物件種別", 2: "物件所在地", 3: "間取り・広さ", 4: "築年数", 5: "現況・売却時期" },
         buy: { 1: "購入希望種別", 2: "ご予算上限", 3: "希望エリア", 4: "希望間取り", 5: "希望築年数" },
-        loan: { 1: "事前審査状況", 2: "借入・予算希望", 3: "金利タイプ希望" }
+        loan: { 1: "事前審査状況", 2: "借入・予算希望", 3: "金利タイプ希望" },
+        reform: { 1: "リフォーム目的", 2: "改修箇所・予算" },
+        cost: { 1: "費用に関する相談内容" }
     };
     return fields[mode]?.[step] || "ご相談内容";
 }
 
 // ==========================================
-// 3. AI会話ロジック
+// 3. AI会話ロジック（割り込み入力検知エンジン）
 // ==========================================
+function detectInterruptIntent(text) {
+    if (text.includes("ローン") || text.includes("借入") || text.includes("金利") || text.includes("事前審査")) {
+        return "loan";
+    }
+    if (text.includes("リフォーム") || text.includes("リノベ") || text.includes("修繕") || text.includes("工事")) {
+        return "reform";
+    }
+    if (text.includes("費用") || text.includes("料金") || text.includes("いくら") || text.includes("初期費用") || text.includes("手数料")) {
+        return "cost";
+    }
+    if (text.includes("売りたい") || text.includes("売却") || text.includes("査定")) {
+        return "sell";
+    }
+    if (text.includes("買いたい") || text.includes("購入")) {
+        return "buy";
+    }
+    if (text.includes("貸したい") || text.includes("オーナー") || text.includes("管理")) {
+        return "owner";
+    }
+    if (text.includes("借りたい") || text.includes("賃貸") || text.includes("部屋探し")) {
+        return "rent";
+    }
+    return null;
+}
+
 function getAIResponse(userInputText, isFromButton = false) {
     const text = userInputText.trim();
 
@@ -216,23 +297,27 @@ function getAIResponse(userInputText, isFromButton = false) {
     }
 
     // --------------------------------------
-    // 自由入力テキスト（新規相談・会話の途中入力）
+    // 【割り込み判定】ボタン以外からの入力時、キーワードに応じてモードを強制変更
     // --------------------------------------
-    if (!isFromButton && chatState.step === 0) {
-        // 「ローン」ワードが含まれる場合、ローンモードへ引き入れる
-        if (text.includes("ローン") || text.includes("借入") || text.includes("金利") || text.includes("事前審査")) {
-            chatState.mode = "loan";
+    if (!isFromButton) {
+        const detectedMode = detectInterruptIntent(text);
+
+        if (detectedMode && detectedMode !== chatState.mode) {
+            // モードを即座に切り替え
+            chatState.mode = detectedMode;
             chatState.step = 1;
-            chatState.data = { "相談テーマ": text };
-            
+            chatState.data["相談テーマ"] = text;
+
             const prompt = getCurrentStepPrompt();
             return {
                 text: prompt.text,
                 options: prompt.options
             };
         }
+    }
 
-        // その他の自由入力（初期状態）
+    // 初期状態からの通常自由入力（どのキーワードにも一致しない場合）
+    if (!isFromButton && chatState.step === 0) {
         chatState.data["自由相談"] = text;
         return {
             text: `「${text}」ですね！承知いたしました。\nより詳しいご提案のため、差し支えなければご相談のカテゴリをお選びいただけますでしょうか？`,
@@ -240,7 +325,7 @@ function getAIResponse(userInputText, isFromButton = false) {
         };
     }
 
-    // 会話途中でテキスト入力があった場合（メモリ保存して質問を再表示）
+    // 通常の会話途中の補足テキスト（同モード内での入力）
     if (!isFromButton && chatState.mode) {
         const key = `補足メモ(Step${chatState.step})`;
         chatState.data[key] = text;
@@ -274,7 +359,7 @@ function getAIResponse(userInputText, isFromButton = false) {
         }
     }
 
-    // ステップを1進める
+    // ステップ進行
     if (chatState.mode) {
         const fieldName = getStepFieldName(chatState.mode, chatState.step);
         chatState.data[fieldName] = text;
@@ -377,7 +462,9 @@ function handleOptionClick(selectedText) {
                     owner: "物件の賃貸管理・貸出（オーナー様）",
                     sell: "物件のご売却（売却希望）",
                     buy: "物件のご購入（購入希望）",
-                    loan: "住宅ローンのご相談"
+                    loan: "住宅ローンのご相談",
+                    reform: "リフォーム・リノベーションのご相談",
+                    cost: "初期費用・諸費用のお問合せ"
                 };
                 
                 if (chatState.mode) summaryText += `ご相談区分：${modeNames[chatState.mode] || chatState.mode}\n`;
