@@ -1,247 +1,115 @@
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 body {
-    background-color: #f4f6f8;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+  background-color: #f4f7f6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
 
-/* チャットコンテナ */
 .chat-container {
-    width: 380px;
-    height: 640px;
-    background-color: #f0f0f0;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    position: relative;
+  width: 100%;
+  max-width: 480px;
+  height: 90vh;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-/* ヘッダー */
-/* --- 1. ヘッダー全体の設定 --- */
 .chat-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background: linear-gradient(135deg, #7c9578 0%, #5d7559 100%);
-    color: #ffffff;
-    border-radius: 16px 16px 0 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    height: auto; /* 高さが広がらないように固定化 */
+  background-color: #2c3e50;
+  color: #ffffff;
+  padding: 16px;
 }
 
-/* --- 2. アイコン枠（ここが大きくなりすぎるのを防ぎます） --- */
-.header-avatar {
-    position: relative;
-    width: 40px !important;       /* 幅を40pxに固定 */
-    height: 40px !important;      /* 高さを40pxに固定 */
-    min-width: 40px;              /* 崩れ防止 */
-    min-height: 40px;             /* 崩れ防止 */
-    background: #ffffff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;               /* つぶれ・広がり防止 */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+.chat-header h1 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
 }
 
-/* --- 3. SVGアイコン本体のサイズ制御 --- */
-.avatar-icon, 
-.header-avatar svg {
-    width: 22px !important;       /* アイコンの幅 */
-    height: 22px !important;      /* アイコンの高さ */
-    max-width: 22px;
-    max-height: 22px;
-    fill: #6b8467;
+.scenario-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
 }
 
-/* オンラインを示す緑の点 */
-.status-indicator {
-    position: absolute;
-    bottom: 0px;
-    right: 0px;
-    width: 10px;
-    height: 10px;
-    background-color: #52c41a;
-    border: 2px solid #ffffff;
-    border-radius: 50%;
+.scenario-selector select {
+  flex: 1;
+  padding: 6px;
+  border-radius: 4px;
+  border: none;
+  font-size: 0.85rem;
 }
 
-/* --- 4. テキスト表示部分 --- */
-.header-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 2px;
-}
-
-.header-title-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.header-title {
-    font-size: 0.95rem; /* サイズ調整 */
-    font-weight: 700;
-    margin: 0;
-    color: #ffffff;
-    line-height: 1.2;
-}
-
-.badge {
-    font-size: 0.65rem;
-    font-weight: 600;
-    background: rgba(255, 255, 255, 0.25);
-    color: #ffffff;
-    padding: 2px 6px;
-    border-radius: 12px;
-    white-space: nowrap;
-}
-
-.header-subtitle {
-    font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.85);
-    margin: 0;
-    line-height: 1.2;
-}
-
-/* メッセージ表示エリア */
 .chat-messages {
-    flex: 1;
-    padding: 16px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: #f9fbfb;
 }
 
-/* 共通バブル */
 .message {
-    max-width: 85%;
-    padding: 12px 16px;
-    border-radius: 16px;
-    font-size: 14px;
-    line-height: 1.6;
-    white-space: pre-wrap;
-    word-break: break-word;
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  word-wrap: break-word;
 }
 
-/* Botメッセージ（白背景） */
-.message.bot {
-    align-self: flex-start;
-    background-color: #ffffff;
-    color: #333333;
-    border-bottom-left-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+.message.ai {
+  align-self: flex-start;
+  background-color: #e9ecef;
+  color: #333;
+  border-bottom-left-radius: 4px;
 }
 
-/* ユーザーメッセージ（緑背景） */
 .message.user {
-    align-self: flex-end;
-    background-color: #8da287;
-    color: #ffffff;
-    border-bottom-right-radius: 4px;
+  align-self: flex-end;
+  background-color: #007bff;
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
 }
 
-/* ボタン表示エリア */
-.chat-options-container {
-    padding: 8px 12px;
-    background-color: #f0f0f0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-/* 2列配置用のCSS Grid */
-.options-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    width: 100%;
-}
-
-/* 通常ボタン */
-.option-btn {
-    background-color: #ffffff;
-    border: 1.5px solid #8da287;
-    color: #333333;
-    padding: 10px 6px;
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: bold;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1.3;
-    width: 100%;
-}
-
-.option-btn:hover {
-    background-color: #f0f7ef;
-}
-
-/* コンバージョン（CV）ボタン */
-.option-btn.primary {
-    width: 100%;
-    background-color: #8da287;
-    color: #ffffff;
-    border: none;
-    padding: 12px;
-    font-size: 14px;
-    border-radius: 12px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.option-btn.primary:hover {
-    background-color: #7a8f74;
-}
-
-/* 入力エリア */
 .chat-input-area {
-    display: flex;
-    padding: 10px 12px;
-    background-color: #ffffff;
-    border-top: 1px solid #e0e0e0;
+  padding: 12px;
+  background: #ffffff;
+  border-top: 1px solid #eeeeee;
+  display: flex;
+  gap: 8px;
 }
 
 .chat-input-area input {
-    flex: 1;
-    border: 1px solid #cccccc;
-    padding: 8px 12px;
-    border-radius: 20px;
-    outline: none;
-    font-size: 14px;
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  outline: none;
 }
 
 .chat-input-area button {
-    background-color: #8da287;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    margin-left: 8px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: bold;
+  padding: 10px 18px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
 }
 
 .chat-input-area button:hover {
-    background-color: #7a8f74;
+  background-color: #0056b3;
 }
