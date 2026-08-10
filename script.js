@@ -1089,7 +1089,7 @@ function getCurrentStepPrompt() {
             ]
         };
         if (step === 2) return {
-            text: "承知いたしました！お探しのお住まい形態（賃貸または購入）について教えていただけますか？",
+            text: "お探しのお住まい形態（賃貸または購入）について教えていただけますか？",
             options: [
                 { text: "🏢 賃貸物件を探したい", value: "pet_rent" },
                 { text: "🏡 購入（新築・中古一戸建て）", value: "pet_house" },
@@ -1131,28 +1131,29 @@ function getCurrentStepPrompt() {
             ]
         };
     }
-    // --- 2. 相続・税金相談フロー (全6ステップ) ---
+
+// --- 相続・税金相談フロー (全6ステップ) ---
     if (mode === "tax") {
         if (step === 1) return {
-            text: "不動産相続や税金に関するご相談ですね！\nどのような内容についてご検討でしょうか？",
+            text: "不動産相続や税金に関するご相談ですね！『何から始めればいいかわからない』という場合もご安心ください！まずは現在の状況を整理するところからお手伝いします。\nまずは、どのような内容についてご検討されているか教えていただけますか？",
             options: [
-                { text: "📜 相続した不動産の売却・有効活用", value: "inherit_sell" },
-                { text: "💰 贈与税・生前対策について", value: "tax_gift" },
+                { text: "📜 相続した（する予定の）不動産売却・有効活用", value: "inherit_sell" },
+                { text: "💰 生前贈与・相続税対策について", value: "tax_gift" },
                 { text: "⚖️ 権利関係の整理・名義変更（登記）", value: "rights_manage" },
                 { text: "🏚 相続空き家の管理・解体相談", value: "vacant_house" }
             ]
         };
         if (step === 2) return {
-            text: "対象となる不動産の「種別」や「現在の状況」を教えていただけますか？",
+            text: "対象となる不動産の「種別」や「現在の状況」について教えていただけますか？",
             options: [
                 { text: "🏠 一戸建て・実家", value: "type_house" },
                 { text: "🏢 マンション", value: "type_mansion" },
                 { text: "🌱 土地・農地・アパート等", value: "type_land" },
-                { text: "💡 複数ある・まだ把握できていない", value: "type_unknown" }
+                { text: "💡 複数ある・把握できていない", value: "type_unknown" }
             ]
         };
         if (step === 3) return {
-            text: "現在、権利者（相続人）のご状況や名義についてお決まりの点はございますか？",
+            text: "現在、権利者（相続人）のご状況や名義のお話し合いについて、お決まりの点はございますか？",
             options: [
                 { text: "👤 単独相続（自分が引き継ぐ予定）", value: "single_owner" },
                 { text: "👥 兄弟・親族で共有・分割協議中", value: "multi_owner" },
@@ -1160,15 +1161,15 @@ function getCurrentStepPrompt() {
             ]
         };
         if (step === 4) return {
-            text: "相続税の控除（小規模宅地等の特例や空き家の3000万控除など）の診断や査定はご希望ですか？",
+            text: "相続税の控除（小規模宅地等の特例や空き家の3,000万円特別控除など）の診断や査定のご希望はございますか？",
             options: [
                 { text: "📊 簡易査定とあわせて控除可能性を知りたい", value: "need_assessment" },
                 { text: "⚖️ 提携司法書士・税理士と連携して相談したい", value: "need_expert" },
-                { text: "💡 まずは概要だけ把握したい", value: "just_info" }
+                { text: "💡 まずは概要や進め方だけ把握したい", value: "just_info" }
             ]
         };
         if (step === 5) return {
-            text: "ご相談や各種手続き・実行のご希望時期（スケジュール）をお教えください。",
+            text: "ご相談や手続き・ご売却などの実行のご希望時期（スケジュール）はお考えでしょうか？",
             options: [
                 { text: "⚡️ 相続が発生済み・至急相談したい", value: "timing_urgent" },
                 { text: "📅 数ヶ月以内〜1年以内に進めたい", value: "timing_1year" },
@@ -1176,67 +1177,121 @@ function getCurrentStepPrompt() {
             ]
         };
         if (step === 6) return {
-            text: "ヒアリングへのご協力ありがとうございます！\n相続登記の義務化対応や節税特例を踏まえ、専門スタッフが最適なアドバイスをいたします😊\n\n下記ボタンよりお問合せへお進みください！",
+            text: "詳細なヒアリングへのご協力ありがとうございます！\n相続登記の義務化対応や節税特例を踏まえ、不動産のプロが最適なアドバイスをいたします！\n\nほかに気になる点があればご入力いただくか、下記ボタンよりお問合せへお進みください😊",
             options: [
                 { text: "📩 この内容でお問合せへ進む", value: "contact", isPrimary: true },
                 { text: "🏠 メインメニューに戻る", value: "reset", isPrimary: false }
             ]
         };
     }
-
-    // --- 学区・子育て相談フロー (3ステップ) ---
+   // --- 学区・子育て相談フロー (全6ステップ) ---
     if (mode === "school") {
         if (step === 1) return {
-            text: "学区や子育て環境重視のお問い合わせですね！\nご希望のエリアや特定の小中学校指定などはございますか？",
+            text: "学区や子育て環境を重視したお住まい探しですね！\nご希望の条件として、当てはまるものを教えていただけますか？",
             options: [
-                { text: "🏫 特定の指定校エリアで探したい", value: "school_target" },
-                { text: "👶 保育園・公園が近い環境重視", value: "child_env" },
-                { text: "💡 おすすめの学区を提案してほしい", value: "school_recommend" }
+                { text: "🏫 特定の小・中学校（指定校エリア）で探したい", value: "school_target" },
+                { text: "👶 保育園・幼稚園・学童が近い環境重視", value: "nursery_env" },
+                { text: "🌳 公園や小児科が近く、住環境が良いエリア", value: "child_park" },
+                { text: "💡 子育てしやすく評判の良い学区を提案してほしい", value: "school_recommend" }
             ]
         };
         if (step === 2) return {
-            text: "ありがとうございます！次に、お探しのお住まい形態について教えてください。",
+            text: "お探しのお住まい形態について教えていただけますか？",
             options: [
-                { text: "🏡 ご希望のお住まい形態", value: "home_type" },
-                { text: "💡 プロにトータルでお任せ", value: "all_trust" }
+                { text: "🏢 賃貸物件を探したい", value: "school_rent" },
+                { text: "🏡 購入（新築・中古一戸建て）", value: "school_house" },
+                { text: "🏢 購入（分譲マンション）", value: "school_mansion" },
+                { text: "💡 賃貸か購入かプロに相談したい", value: "school_consult" }
             ]
         };
         if (step === 3) return {
-            text: "子育て世帯に最適な住環境のご提案準備が整いました！ほかに「ご要望や条件・気になっている点」があれば教えてください！特になければ、下記ボタンよりお問合せへお進みください！\n\n下記ボタンよりお問い合わせへお進みください😊",
+            text: "お子様のおおよその年齢（または学年）を教えていただけますか？（最適な時期や学区情報をご案内するため）",
+            options: [
+                { text: "👶 未就学児（0〜2歳程度）", value: "age_baby" },
+                { text: "🎒 幼稚園・保育園生（3〜5歳）", value: "age_preschool" },
+                { text: "🏫 小学生", value: "age_elemental" },
+                { text: "🏫 中学生以上・これから出産予定", value: "age_other" }
+            ]
+        };
+        if (step === 4) return {
+            text: "ご検討中の「ご予算（月々の賃料やご購入予算）」の目安はお決まりでしょうか？",
+            options: [
+                { text: "💰 賃貸：家賃12万円前後まで", value: "budget_rent_low" },
+                { text: "💰 賃貸：家賃15万円以上〜", value: "budget_rent_high" },
+                { text: "💰 売買：4,000万円前後〜", value: "budget_buy_low" },
+                { text: "💰 売買：6,000万円以上〜", value: "budget_buy_high" }
+            ]
+        };
+        if (step === 5) return {
+            text: "新学期やご入園・ご入学にあわせた、お引越しのご希望時期をお聞かせください。",
+            options: [
+                { text: "⚡️ 良い物件があればすぐにでも", value: "timing_asap" },
+                { text: "🌸 新年度（4月入居）にあわせたい", value: "timing_april" },
+                { text: "📅 1年以内・将来的に検討", value: "timing_future" }
+            ]
+        };
+        if (step === 6) return {
+            text: "詳細なヒアリングへのご協力ありがとうございます！\n地域の通学路・公園環境や人気学区に詳しいプロの視点から、最適な物件資料をご用意いたします！\n\nほかに気になる点があればご入力いただくか、下記ボタンよりお問合せへお進みください😊",
             options: [
                 { text: "📩 この内容でお問合せへ進む", value: "contact", isPrimary: true },
                 { text: "🏠 メインメニューに戻る", value: "reset", isPrimary: false }
             ]
         };
     }
-
-    // --- セキュリティ・防犯相談フロー (3ステップ) ---
+    // --- セキュリティ・防犯相談フロー (全6ステップ) ---
     if (mode === "security") {
         if (step === 1) return {
-            text: "セキュリティや防犯面を重視したお住まい探しですね！\n特に重視される防犯設備をお教えいただけますか？",
+            text: "セキュリティや防犯面を重視したお住まい探しですね！セキュリティや防犯面を重視したお住まい探しですね！女性の一人暮らしからファミリーまで、安心して暮らせる物件選びをサポートいたします。😊\n特に重視される防犯設備やご希望について教えていただけますか？",
             options: [
-                { text: "🔒 オートロック・モニター付きインターホン", value: "autolock" },
-                { text: "🏢 2階以上・防犯カメラ設置", value: "second_floor" },
-                { text: "防犯重視（一人暮らし女性等）", value: "woman_safe" }
+                { text: "🔒 オートロック・TVモニター付きインターホン", value: "autolock" },
+                { text: "📹 防犯カメラ設置・2階以上のお部屋", value: "second_floor" },
+                { text: "🛡 セキュリティ会社（SECOM等）導入・スマートロック", value: "secom" },
+                { text: "👩 女性の一人暮らし向け（防犯対策が手厚い物件）", value: "woman_safe" }
             ]
         };
         if (step === 2) return {
-            text: "承知いたしました！防犯面とあわせて重視したい「周辺環境」についてお聞かせください。",
+            text: "お探しのお住まい形態について教えていただけますか？",
             options: [
-                { text: "📍 重視したい周辺環境", value: "env_choice" },
-                { text: "💡 特になし・おまかせ", value: "no_pref" }
+                { text: "🏢 賃貸物件を探したい", value: "security_rent" },
+                { text: "🏡 購入（新築・中古一戸建て）", value: "security_house" },
+                { text: "🏢 購入（分譲マンション）", value: "security_mansion" },
+                { text: "💡 賃貸か購入かプロに相談したい", value: "security_consult" }
             ]
         };
         if (step === 3) return {
-            text: "安心・安全な生活をサポートする最適な物件資料の準備ができました！ほかに「ご要望や条件・気になっている点」があれば教えてください！特になければ、下記ボタンよりお問合せへお進みください！\n\n下記ボタンよりお問い合わせへお進みください😊",
+            text: "防犯面とあわせて重視したい「周辺環境や立地」のこだわりはございますか？",
+            options: [
+                { text: "🚶‍♀️ 駅から近く明るい夜道を歩ける立地", value: "near_station" },
+                { text: "🏪 近くにコンビニや24時間営業スーパーがある", value: "convenient" },
+                { text: "🚓 治安が良く閑静な住宅街", value: "quiet_area" },
+                { text: "💡 特に指定なし・プロにおまかせ", value: "env_none" }
+            ]
+        };
+        if (step === 4) return {
+            text: "ご検討中の「ご予算（月々の賃料やご購入予算）」の目安はお決まりでしょうか？",
+            options: [
+                { text: "💰 賃貸：家賃8万〜10万円前後", value: "budget_rent_low" },
+                { text: "💰 賃貸：家賃12万円以上〜", value: "budget_rent_high" },
+                { text: "💰 売買：3,000万円前後〜", value: "budget_buy_low" },
+                { text: "💰 売買：5,000万円以上〜", value: "budget_buy_high" }
+            ]
+        };
+        if (step === 5) return {
+            text: "お引越し・お探し開始のご希望時期（スケジュール）をお聞かせください。",
+            options: [
+                { text: "⚡️ 良い物件があればすぐにでも", value: "timing_asap" },
+                { text: "📅 1〜2ヶ月以内", value: "timing_2months" },
+                { text: "🏠 半年以内・将来的に検討", value: "timing_future" }
+            ]
+        };
+        if (step === 6) return {
+            text: "詳細なヒアリングへのご協力ありがとうございます！\n安心・安全な暮らしをサポートする、防犯性の高い厳選物件資料をご用意いたします！\n\nほかに気になる点があればご入力いただくか、下記ボタンよりお問合せへお進みください😊",
             options: [
                 { text: "📩 この内容でお問合せへ進む", value: "contact", isPrimary: true },
                 { text: "🏠 メインメニューに戻る", value: "reset", isPrimary: false }
             ]
         };
     }
-
-    // --- ローン相談フロー (4ステップ) ---
    // --- ローン相談フロー (全6ステップ) ---
     if (mode === "loan") {
         if (step === 1) return {
@@ -1290,54 +1345,107 @@ function getCurrentStepPrompt() {
         };
     }
 
-    // --- リフォーム相談フロー (3ステップ) ---
+   // --- リフォーム相談フロー (全6ステップ) ---
     if (mode === "reform") {
         if (step === 1) return {
-            text: "リフォーム・リノベーションのご相談ですね！どのような目的・場所のリフォームをご検討中でしょうか？",
+            text: "リフォーム・リノベーションのご相談ですね！マイホームの修繕から『中古購入＋リノベーション』のご相談まで承っております。将来の資産価値や快適な暮らしを見据えた資金計画・施工プランをご案内いたします😊\nまずは、今回のご検討目的について教えていただけますか？",
             options: [
-                { text: "🏠 居住中マイホームの改修", value: "reform_home" },
-                { text: "🔨 中古購入と同時にリノベ", value: "reform_buy" },
-                { text: "🏢 賃貸・オーナー様の空室対策", value: "reform_owner" },
-                { text: "🏷 売却前の価値向上リフォーム", value: "reform_sell" }
+                { text: "🛠 古くなった設備の修繕・交換", value: "reform_repair" },
+                { text: "✨ 間取り変更やフルリノベーション", value: "reform_full" },
+                { text: "🏠 中古物件を購入してリフォームしたい", value: "reform_buy" },
+                { text: "♿️ バリアフリー化・省エネ改修", value: "reform_barrier" }
             ]
         };
         if (step === 2) return {
-            text: "承知いたしました！リフォームの「具体的な箇所やご予算感」はお決まりですか？",
+            text: "特に気になっている「工事したい箇所」はどちらでしょうか？",
             options: [
-                { text: "🚿 水まわり（キッチン・お風呂等）", value: "water" },
-                { text: "🎨 内装（壁紙・床張替え）", value: "interior" },
-                { text: "🛋 フルリノベーション", value: "full_renov" },
-                { text: "💡 プロに相談して決めたい", value: "consult" }
+                { text: "🛁 水まわり（キッチン・お風呂・トイレ等）", value: "part_water" },
+                { text: "🛋 内装（壁紙・床・リビングの間取り変更）", value: "part_interior" },
+                { text: "🏡 外装・屋根・外構・防水工事", value: "part_exterior" },
+                { text: "🏠 家全体（全体的な全面リフォーム）", value: "part_whole" }
             ]
         };
         if (step === 3) return {
-            text: "リフォームに関するご相談内容を受け付けました！ほかにも気になる点があればご入力いただくか、下記ボタンよりお問合せへお進みください😊",
+            text: "対象となる「物件の種別」や「現在の状況」について教えていただけますか？",
+            options: [
+                { text: "🏡 持ち家（戸建て）", value: "home_house" },
+                { text: "🏢 持ち家（分譲マンション）", value: "home_mansion" },
+                { text: "🔑 これから購入・所有予定の物件", value: "home_future" }
+            ]
+        };
+        if (step === 4) return {
+            text: "ご検討中の「概算ご予算」の目安はお決まりでしょうか？",
+            options: [
+                { text: "💰 100万円未満（部分的な修繕など）", value: "budget_under_100" },
+                { text: "💰 100万〜500万円程度", value: "budget_500" },
+                { text: "💰 500万〜1,000万円程度", value: "budget_1000" },
+                { text: "💰 1,000万円以上（大規模リノベ等）", value: "budget_over_1000" }
+            ]
+        };
+        if (step === 5) return {
+            text: "リフォーム工事のご希望時期（スケジュール）はお考えでしょうか？",
+            options: [
+                { text: "⚡️ 痛みが気になるため至急進めたい", value: "timing_asap" },
+                { text: "📅 1〜3ヶ月以内", value: "timing_3months" },
+                { text: "🏠 半年以内・じっくりプランを練りたい", value: "timing_future" }
+            ]
+        };
+        if (step === 6) return {
+            text: "詳細なヒアリングへのご協力ありがとうございます！\n現地調査のご案内や、ご要望に合わせた概算お見積もり・施工事例をご用意いたします！\n\nほかに気になる点があればご入力いただくか、下記ボタンよりお問合せへお進みください😊",
             options: [
                 { text: "📩 この内容でお問合せへ進む", value: "contact", isPrimary: true },
                 { text: "🏠 メインメニューに戻る", value: "reset", isPrimary: false }
             ]
         };
     }
-
-    // --- 費用相談フロー (3ステップ) ---
+   // --- 費用相談フロー (全6ステップ) ---
     if (mode === "cost") {
         if (step === 1) return {
-            text: "お費用や初期費用に関するご質問ですね！具体的にどちらの費用について気になられていますか？",
+            text: "お費用や初期費用に関するご相談ですね！\n当店の事前査定やご相談は【完全無料】ですのでご安心ください。\nまずは、具体的にどちらの費用について気になられていますか？",
             options: [
-                { text: "💴 賃貸の契約初期費用・安くしたい", value: "rent_cost" },
-                { text: "🏛 売買の諸費用（仲介手数料・税金等）", value: "buy_cost" },
-                { text: "💰 相談料・査定料について（無料か）", value: "free_check" }
+                { text: "💴 賃貸の契約初期費用を抑えたい・分割したい", value: "cost_rent" },
+                { text: "🏛 物件購入時の諸費用（仲介手数料・税金等）", value: "cost_buy" },
+                { text: "🏷 売却時の手数料や仲介料・手残りの計算", value: "cost_sell" },
+                { text: "💡 住宅ローンや資金計画の目安を知りたい", value: "cost_loan" }
             ]
         };
         if (step === 2) return {
-            text: "当店での事前査定やお部屋探しのご相談は【完全無料】ですのでご安心ください！初期費用の分割や抑え方についてのご要望も承ります。",
+            text: "ご検討中のお住まい形態や、ご相談の背景について教えていただけますか？",
             options: [
-                { text: "💡 初期費用分割や交渉について相談する", value: "negotiate" },
-                { text: "📩 このままお問合せへ進む", value: "contact", isPrimary: true }
+                { text: "🏢 賃貸物件（お引越し・一人暮らし・ファミリー）", value: "type_rent" },
+                { text: "🏡 マイホーム購入（新築・中古一戸建て/マンション）", value: "type_buy" },
+                { text: "🔑 所有不動産の売却・買い替え", value: "type_sell" },
+                { text: "💡 まずは概要や費用の仕組みだけ知りたい", value: "type_info" }
             ]
         };
         if (step === 3) return {
-            text: "費用に関するヒアリング内容がまとまりました！ほかにも気になる点があればご入力いただくか、下記ボタンよりお問合せへお進みください😊",
+            text: "費用面で特にご要望・重視したいポイントはございますか？",
+            options: [
+                { text: "💳 クレジットカード決済や分割払いを利用したい", value: "point_card" },
+                { text: "💰 敷金・礼金0円など、初期費用ゼロ物件を探したい", value: "point_zero" },
+                { text: "📊 諸費用コミコミの総額シミュレーションがほしい", value: "point_estimate" },
+                { text: "⚖️ 他社で見積もりを取っており安くなるか相談したい", value: "point_compare" }
+            ]
+        };
+        if (step === 4) return {
+            text: "想定されている「ご予算感」や「初期費用のご希望額」の目安はお決まりでしょうか？",
+            options: [
+                { text: "💰 初期費用は20万〜30万円程度に抑えたい", value: "budget_low" },
+                { text: "💰 家賃や購入価格に応じた一般的な相場を知りたい", value: "budget_normal" },
+                { text: "💰 諸費用も含めてフルローン・組み込みを検討したい", value: "budget_full" },
+                { text: "💡 プロに相談して資金計画を決めたい", value: "budget_consult" }
+            ]
+        };
+        if (step === 5) return {
+            text: "お引越しやご契約・実行のご希望時期（スケジュール）はお考えでしょうか？",
+            options: [
+                { text: "⚡️ 条件が合えばすぐにでも進めたい", value: "timing_asap" },
+                { text: "📅 1〜3ヶ月以内", value: "timing_3months" },
+                { text: "🏠 半年以内・将来的に検討", value: "timing_future" }
+            ]
+        };
+        if (step === 6) return {
+            text: "ヒアリングへのご協力ありがとうございます！\n不動産のプロの視点から、費用を最小限に抑えるコツや明瞭な資金計画書をご用意いたします！\n\nほかに気になる点があればご入力いただくか、下記ボタンよりお問合せへお進みください😊",
             options: [
                 { text: "📩 この内容でお問合せへ進む", value: "contact", isPrimary: true },
                 { text: "🏠 メインメニューに戻る", value: "reset", isPrimary: false }
