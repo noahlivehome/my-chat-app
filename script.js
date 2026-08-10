@@ -1059,16 +1059,40 @@ function getSmartComment(mode, step, text) {
     return "";
 }
 
+// ==========================================
+// チャット状態・履歴管理の修正
+// ==========================================
+
+// 1. ページ読み込み時の初期化
 window.addEventListener("load", () => {
-    initChat();
+    initChat(true); // 初回起動時は履歴をクリアして初期化
 });
 
-function initChat() {
+// 2. チャット初期化・メインメニュー復帰関数
+function initChat(isFirstLoad = false) {
     const msgContainer = document.getElementById("chatMessages");
-    if (msgContainer) msgContainer.innerHTML = "";
-    
-    appendBotMessage("いらっしゃいませ！\nノアリブホームAI住まいアシスタントです。\n\n本日はどのようなご相談でしょうか？\n選択肢から選ぶか、ご相談内容をそのまま入力してくださいね！");
+
+    // チャット状態（入力データ）をリセット
+    chatState.mode = null;
+    chatState.step = 0;
+    chatState.data = {};
+
+    // 初回読み込み時のみメッセージをクリア
+    if (isFirstLoad && msgContainer) {
+        msgContainer.innerHTML = "";
+        appendBotMessage("いらっしゃいませ！\nノアリブホームAI住まいアシスタントです。\n\n本日はどのようなご相談でしょうか？\n選択肢から選ぶか、ご相談内容をそのまま入力してくださいね！");
+    } else {
+        // メインメニューへ戻った時は履歴を消さずに案内メッセージのみ追加
+        appendBotMessage("メインメニューへ戻りました。\nほかにお手伝いできるご相談はございますか？");
+    }
+
+    // 初期選択肢の表示
     renderOptions(initialOptions);
+}
+
+// 3. メインメニューへ戻るアクション用関数（ボタン押下時などに呼び出し）
+function resetToMainMenu() {
+    initChat(false); // 履歴を残したままメインメニューを表示
 }
 
 // ==========================================
