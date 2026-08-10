@@ -1071,13 +1071,13 @@ function initChat() {
 }
 
 // ==========================================
-// 現在のステップに応じた質問・選択肢を取得（全多段階フロー完備）
+// 現在のステップに応じた質問・選択肢を取得（全フロー6ステップ完備）
 // ==========================================
 function getCurrentStepPrompt() {
     const mode = chatState.mode;
     const step = chatState.step;
 
-    // --- ペット相談フロー (3ステップ) ---
+    // --- 1. ペット相談フロー (全6ステップ) ---
     if (mode === "pet") {
         if (step === 1) return {
             text: "ペットと暮らせるお住まいをお探しですね！\n飼育される（または予定している）ペットの種類を教えていただけますか？",
@@ -1089,14 +1089,42 @@ function getCurrentStepPrompt() {
             ]
         };
         if (step === 2) return {
-            text: "ありがとうございます！次に、物件探しの際により重視したいポイントはどちらですか？",
+            text: "承知いたしました！お探しのお住まい形態について教えていただけますか？",
             options: [
-                { text: "💡 お部屋の設備・こだわり条件を指定", value: "pet_cond" },
-                { text: "📍 エリア・周辺環境を重視", value: "pet_env" }
+                { text: "🏢 賃貸物件を探したい", value: "pet_rent" },
+                { text: "🏡 購入（新築・中古一戸建て）", value: "pet_house" },
+                { text: "🏢 購入（分譲マンション）", value: "pet_mansion" },
+                { text: "💡 プロに相談して決めたい", value: "pet_consult" }
             ]
         };
         if (step === 3) return {
-            text: "ありがとうございます！ほかに「ご要望や条件・気になっている点」があれば教えてください！特になければ、下記ボタンよりお問合せへお進みください！\nペット可物件のプロの知識を踏まえ、最適な物件資料をご用意いたします。\n\n下記ボタンよりお問い合わせへお進みください😊",
+            text: "お部屋探しの際、特に重視したいこだわり設備や条件はございますか？",
+            options: [
+                { text: "🧼 足洗い場・キャットウォーク等の専用設備", value: "pet_facility" },
+                { text: "🔇 防音性・一階・角部屋重視", value: "pet_sound" },
+                { text: "🌳 近くに公園やドッグラン・動物病院", value: "pet_park" },
+                { text: "💡 特に指定なし・おまかせ", value: "pet_none" }
+            ]
+        };
+        if (step === 4) return {
+            text: "ご検討中の「ご予算（月々の賃料や購入予算）」はお決まりでしょうか？",
+            options: [
+                { text: "💰 賃貸：家賃10万円前後以内", value: "budget_rent_low" },
+                { text: "💰 賃貸：家賃15万円以上〜", value: "budget_rent_high" },
+                { text: "💰 売買：3,000万円前後〜", value: "budget_buy_low" },
+                { text: "💰 売買：5,000万円以上〜", value: "budget_buy_high" }
+            ]
+        };
+        if (step === 5) return {
+            text: "お引越し・お探し開始のご希望時期（スケジュール）をお聞かせください。",
+            options: [
+                { text: "⚡️ 良い物件があればすぐにでも", value: "timing_asap" },
+                { text: "📅 1〜3ヶ月以内", value: "timing_3months" },
+                { text: "🏠 半年以内・将来的に検討", value: "timing_future" }
+            ]
+        };
+        if (step === 6) return {
+            text: "ペット可物件に詳しいプロの視点から、最適な物件資料をご用意いたします！\nほかに気になる点があれば入力いただくか、下記ボタンよりお問合せへお進みください😊",
             options: [
                 { text: "📩 この内容でお問合せへ進む", value: "contact", isPrimary: true },
                 { text: "🏠 メインメニューに戻る", value: "reset", isPrimary: false }
@@ -1104,25 +1132,52 @@ function getCurrentStepPrompt() {
         };
     }
 
-    // --- 相続・税金相談フロー (3ステップ) ---
+    // --- 2. 相続・税金相談フロー (全6ステップ) ---
     if (mode === "tax") {
         if (step === 1) return {
             text: "不動産相続や税金に関するご相談ですね！\nどのような内容についてご検討でしょうか？",
             options: [
                 { text: "📜 相続した不動産の売却・有効活用", value: "inherit_sell" },
                 { text: "💰 贈与税・生前対策について", value: "tax_gift" },
-                { text: "⚖️ 権利関係の整理・名義変更", value: "rights_manage" }
+                { text: "⚖️ 権利関係の整理・名義変更（登記）", value: "rights_manage" },
+                { text: "🏚 相続空き家の管理・解体相談", value: "vacant_house" }
             ]
         };
         if (step === 2) return {
-            text: "承知いたしました。スケジュールや実行時期についてのお考えも教えていただけますか？",
+            text: "対象となる不動産の「種別」や「現在の状況」を教えていただけますか？",
             options: [
-                { text: "📅 いつ頃の実行・解決をご希望ですか？", value: "timing" },
-                { text: "💡 まずは専門家に個別相談したい", value: "consult_only" }
+                { text: "🏠 一戸建て・実家", value: "type_house" },
+                { text: "🏢 マンション", value: "type_mansion" },
+                { text: "🌱 土地・農地・アパート等", value: "type_land" },
+                { text: "💡 複数ある・まだ把握できていない", value: "type_unknown" }
             ]
         };
         if (step === 3) return {
-            text: "ありがとうございます！ほかに「ご要望や条件・気になっている点」があれば教えてください！特になければ、下記ボタンよりお問合せへお進みください！\n\n下記ボタンよりお問い合わせへお進みください😊",
+            text: "現在、権利者（相続人）のご状況や名義についてお決まりの点はございますか？",
+            options: [
+                { text: "👤 単独相続（自分が引き継ぐ予定）", value: "single_owner" },
+                { text: "👥 兄弟・親族で共有・分割協議中", value: "multi_owner" },
+                { text: "❓ これから相続人の確認・整理を行う", value: "check_owner" }
+            ]
+        };
+        if (step === 4) return {
+            text: "相続税の控除（小規模宅地等の特例や空き家の3000万控除など）の診断や査定はご希望ですか？",
+            options: [
+                { text: "📊 簡易査定とあわせて控除可能性を知りたい", value: "need_assessment" },
+                { text: "⚖️ 提携司法書士・税理士と連携して相談したい", value: "need_expert" },
+                { text: "💡 まずは概要だけ把握したい", value: "just_info" }
+            ]
+        };
+        if (step === 5) return {
+            text: "ご相談や各種手続き・実行のご希望時期（スケジュール）をお教えください。",
+            options: [
+                { text: "⚡️ 相続が発生済み・至急相談したい", value: "timing_urgent" },
+                { text: "📅 数ヶ月以内〜1年以内に進めたい", value: "timing_1year" },
+                { text: "🏠 生前対策として将来に備えたい", value: "timing_future" }
+            ]
+        };
+        if (step === 6) return {
+            text: "ヒアリングへのご協力ありがとうございます！\n相続登記の義務化対応や節税特例を踏まえ、専門スタッフが最適なアドバイスをいたします😊\n\n下記ボタンよりお問合せへお進みください！",
             options: [
                 { text: "📩 この内容でお問合せへ進む", value: "contact", isPrimary: true },
                 { text: "🏠 メインメニューに戻る", value: "reset", isPrimary: false }
