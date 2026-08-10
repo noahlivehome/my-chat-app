@@ -1183,9 +1183,10 @@ function getCurrentStepPrompt() {
     }
 
     // --- ローン相談フロー (4ステップ) ---
+   // --- ローン相談フロー (全6ステップ) ---
     if (mode === "loan") {
         if (step === 1) return {
-            text: "住宅ローンのご相談ですね！プロの視点から丁寧にご案内いたします。\nまずは、現在「住宅ローンの事前審査」はお済みでしょうか？",
+            text: "住宅ローンのご相談ですね！金利タイプの比較や資金計画の目安など、不動産のプロ・FPの視点から、後悔しない資金計画のポイント丁寧にご案内いたします。\nまずは、現在「住宅ローンの事前審査」はお済みでしょうか？",
             options: [
                 { text: "📝 これから検討・審査したい", value: "before_review" },
                 { text: "✅ すでに審査通過済み", value: "after_review" },
@@ -1193,7 +1194,7 @@ function getCurrentStepPrompt() {
             ]
         };
         if (step === 2) return {
-            text: "承知いたしました！ご検討中の「借入ご希望額」または「物件のご予算」はお決まりでしょうか？",
+            text: "承知いたしました！ご検討中の「物件のご予算」または「借入ご希望額」はお決まりでしょうか？",
             options: [
                 { text: "💰 3,000万円前後", value: "loan_3000" },
                 { text: "💰 5,000万円前後", value: "loan_5000" },
@@ -1210,7 +1211,24 @@ function getCurrentStepPrompt() {
             ]
         };
         if (step === 4) return {
-            text: "ローンのヒアリング内容がまとまりました！\nほかにも気になる点があれば入力いただくか、下記ボタンよりお問合せへお進みください😊",
+            text: "資金計画をより正確にするため、頭金（自己資金）のご準備状況について教えていただけますか？",
+            options: [
+                { text: "💵 フルローン希望（頭金0円）", value: "down_0" },
+                { text: "💰 100万〜300万円程度", value: "down_small" },
+                { text: "🏛 物件価格の1〜2割用意できる", value: "down_standard" },
+                { text: "💡 諸費用も含めて相談したい", value: "down_consult" }
+            ]
+        };
+        if (step === 5) return {
+            text: "お引越し・お買い替えのご希望時期（スケジュール）はいつ頃をお考えでしょうか？",
+            options: [
+                { text: "⚡️ 良い物件があればすぐにでも", value: "timing_asap" },
+                { text: "📅 半年〜1年以内", value: "timing_1year" },
+                { text: "🏠 1年以上先・じっくり検討", value: "timing_future" }
+            ]
+        };
+        if (step === 6) return {
+            text: "詳細なヒアリングへのご協力ありがとうございます！\n無理のない返済計画と最適な金融機関をご提案いたします！\n\nほかに気になる点があれば入力いただくか、下記ボタンよりお問合せへお進みください！",
             options: [
                 { text: "📩 この内容でお問合せへ進む", value: "contact", isPrimary: true },
                 { text: "🏠 メインメニューに戻る", value: "reset", isPrimary: false }
