@@ -3,42 +3,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ノアリブホームのAI住まいアシスタント</title>
-    <link rel="stylesheet" href="style.css">
+    <title>ご希望条件の確認・お問合せ連携</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+        }
+        body {
+            background-color: #f4f6f8;
+            padding: 24px 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 520px;
+            background: #ffffff;
+            padding: 28px 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        h2 {
+            font-size: 18px;
+            color: #333333;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .description {
+            font-size: 13px;
+            color: #666666;
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.5;
+        }
+        /* チャット条件表示ボックス */
+        .summary-box {
+            background-color: #f0f7ef;
+            border: 1.5px solid #8da287;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .summary-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .summary-content {
+            font-size: 13px;
+            color: #444444;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            background: #ffffff;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        /* ボタンエリア */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .copy-btn {
+            width: 100%;
+            background-color: #ffffff;
+            border: 1.5px solid #8da287;
+            color: #8da287;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .copy-btn:hover {
+            background-color: #f0f7ef;
+        }
+        .submit-btn {
+            width: 100%;
+            background-color: #8da287;
+            color: #ffffff;
+            border: none;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            transition: all 0.2s ease;
+        }
+        .submit-btn:hover {
+            background-color: #7a8f74;
+        }
+        .notice {
+            font-size: 11px;
+            color: #888888;
+            margin-top: 12px;
+            text-align: center;
+            line-height: 1.4;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- チャットウィジェット本体 -->
-    <div class="chat-container">
-        <!-- ヘッダー -->
-        <div class="chat-header">
-            <div class="header-avatar">
-                <!-- ノアリブホーム ロゴ画像 -->
-                <img src="https://site.noahlivehome.jp/images/ai.png" alt="ノアリブホーム" class="avatar-image">
-                <span class="status-indicator"></span>
-            </div>
-            <div class="header-info">
-                <div class="header-title-wrap">
-                    <h2 class="header-title">ノアリブホームのAI住まいアシスタント</h2>
-                </div>
-                <p class="header-subtitle">Noah Live Home AI Home Assistant</p>
-            </div>
-        </div>
+<div class="container">
+    <h2>🤖 ご希望条件の引き継ぎ</h2>
+    <p class="description">AIチャットでお伺いしたご条件をまとめました。<br>この内容で「いえらぶお問合せフォーム」へ移動します。</p>
 
-        <!-- メッセージ表示エリア -->
-        <div class="chat-messages" id="chatMessages"></div>
-
-        <!-- ボタン選択肢エリア -->
-        <div class="chat-options-container" id="chatOptions"></div>
-
-        <!-- 入力エリア -->
-        <div class="chat-input-area">
-            <input type="text" id="userInput" placeholder="メッセージを入力..." onkeypress="handleKeyPress(event)">
-            <button id="sendBtn" onclick="sendMessage()">送信</button>
-        </div>
+    <!-- チャット引き継ぎ内容の表示エリア -->
+    <div class="summary-box">
+        <div class="summary-title">📋 引き継ぎ内容・会話履歴</div>
+        <div class="summary-content" id="summaryText">読み込み中...</div>
     </div>
 
-    <!-- メイン処理JavaScript -->
-    <script src="script.js"></script>
+    <!-- アクションボタン -->
+    <div class="btn-group">
+        <button class="copy-btn" id="copyBtn" onclick="copySummaryText()">✂️ 上記の引き継ぎ内容をコピー</button>
+        <a id="ieloveLink" href="#" target="_blank" class="submit-btn">
+            いえらぶのお問合せフォームを開く ➔
+        </a>
+    </div>
+
+    <p class="notice">
+        ※ボタンを押すと別タブで「いえらぶお問合せフォーム」が開きます。<br>
+        フォームの「内容（備考欄）」へ貼り付けてご送信ください。
+    </p>
+</div>
+
+<script>
+const IELOVE_FORM_URL = "https://www.noahlivehome.jp/contact/";
+
+const modeNames = {
+    rent: "お部屋探し（賃貸希望）",
+    owner: "物件の賃貸管理・貸出（オーナー様）",
+    sell: "物件のご売却（売却希望）",
+    buy: "物件のご購入（購入希望）"
+};
+
+let formattedTextForCopy = "";
+
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. URLパラメータまたはlocalStorageからデータ取得
+    const urlParams = new URLSearchParams(window.location.search);
+    const localDataRaw = localStorage.getItem("realEstateChatData");
+    let localData = {};
+
+    if (localDataRaw) {
+        try { localData = JSON.parse(localDataRaw); } catch(e) {}
+    }
+
+    const mode = urlParams.get("mode") || localData.mode || "";
+    const modeJP = modeNames[mode] || "お問い合わせ";
+
+    // 2. 引き継ぎテキストの構築（全履歴・全条件対応）
+    let textLines = [];
+    textLines.push(`【AIチャットからの引き継ぎ内容】`);
+    textLines.push(`ご相談区分：${modeJP}`);
+
+    // ヒアリング済みの詳細データ項目
+    let details = {};
+    try {
+        if (urlParams.get("details")) {
+            details = JSON.parse(urlParams.get("details"));
+        } else if (localData.details) {
+            details = localData.details;
+        }
+    } catch(e) {}
+
+    if (Object.keys(details).length > 0) {
+        textLines.push("\n【ヒアリング詳細】");
+        Object.keys(details).forEach(key => {
+            textLines.push(`・${key}：${details[key]}`);
+        });
+    }
+
+    // 会話履歴ログ（localStorageなどに保持されている場合）
+    const history = localData.history || [];
+    if (history.length > 0) {
+        textLines.push("\n【チャットやり取り履歴】");
+        history.forEach(item => {
+            textLines.push(`[${item.sender}] ${item.text}`);
+        });
+    }
+
+    formattedTextForCopy = textLines.join("\n");
+
+    // 3. 画面表示とリンク設定
+    const summaryEl = document.getElementById("summaryText");
+    if (summaryEl) {
+        summaryEl.innerText = formattedTextForCopy;
+    }
+
+    const ieloveLinkEl = document.getElementById("ieloveLink");
+    if (ieloveLinkEl) {
+        // いえらぶフォーム側へテキストを引継ぐパラメータ（remarks / comment / content）
+        const finalUrl = `${IELOVE_FORM_URL}?content=${encodeURIComponent(formattedTextForCopy)}`;
+        ieloveLinkEl.href = finalUrl;
+    }
+});
+
+function copySummaryText() {
+    if (!formattedTextForCopy) return;
+
+    navigator.clipboard.writeText(formattedTextForCopy).then(() => {
+        const copyBtn = document.getElementById("copyBtn");
+        copyBtn.innerText = "✅ コピーしました！";
+        copyBtn.style.backgroundColor = "#e8f5e9";
+        
+        setTimeout(() => {
+            copyBtn.innerText = "✂️ 上記の引き継ぎ内容をコピー";
+            copyBtn.style.backgroundColor = "#ffffff";
+        }, 2000);
+    }).catch(() => {
+        alert("コピーに失敗しました。手動で選択してコピーしてください。");
+    });
+}
+</script>
+
 </body>
 </html>
