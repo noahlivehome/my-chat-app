@@ -15,7 +15,8 @@ const NG_WORDS = [
 const chatState = {
     mode: null,
     step: 0,
-    data: {}
+    data: {},
+    history: []
 };
 
 // 初期表示選択肢
@@ -1671,6 +1672,7 @@ function getAIResponse(userInputText, isFromButton = false) {
 // ==========================================
 // 4. UI描画・操作イベント処理
 // ==========================================
+// Botのメッセージ追加関数（ここを上書き）
 function appendBotMessage(text) {
     const container = document.getElementById("chatMessages");
     if (!container) return;
@@ -1679,6 +1681,27 @@ function appendBotMessage(text) {
     div.innerText = text;
     container.appendChild(div);
     scrollToBottom();
+
+    // 会話履歴の配列に自動保存
+    if (chatState.history) {
+        chatState.history.push({ sender: "AIアシスタント", text: text });
+    }
+}
+
+// ユーザーのメッセージ追加関数（すぐ近くにある場合はこちらも上書き）
+function appendUserMessage(text) {
+    const container = document.getElementById("chatMessages");
+    if (!container) return;
+    const div = document.createElement("div");
+    div.className = "message user";
+    div.innerText = text;
+    container.appendChild(div);
+    scrollToBottom();
+
+    // 会話履歴の配列に自動保存
+    if (chatState.history) {
+        chatState.history.push({ sender: "お客様", text: text });
+    }
 }
 
 function appendUserMessage(text) {
