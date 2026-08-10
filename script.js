@@ -1194,7 +1194,7 @@ function getCurrentStepPrompt() {
             ]
         };
         if (step === 2) return {
-            text: "承知いたしました！ご検討中の「物件のご予算」または「借入ご希望額」はお決まりでしょうか？",
+            text: "ご検討中の「物件のご予算」または「借入ご希望額」はお決まりでしょうか？",
             options: [
                 { text: "💰 3,000万円前後", value: "loan_3000" },
                 { text: "💰 5,000万円前後", value: "loan_5000" },
@@ -1203,7 +1203,7 @@ function getCurrentStepPrompt() {
             ]
         };
         if (step === 3) return {
-            text: "ありがとうございます！金利タイプのご希望や、月々の返済額シミュレーションのご希望はございますか？",
+            text: "金利タイプのご希望や、月々の返済額シミュレーションのご希望はございますか？",
             options: [
                 { text: "📉 低金利な「変動金利」重視", value: "variable" },
                 { text: "🔒 安定の「固定金利」重視", value: "fixed" },
@@ -1228,7 +1228,7 @@ function getCurrentStepPrompt() {
             ]
         };
         if (step === 6) return {
-            text: "詳細なヒアリングへのご協力ありがとうございます！\n無理のない返済計画と最適な金融機関をご提案いたします！\n\nほかに気になる点があれば入力いただくか、下記ボタンよりお問合せへお進みください！",
+            text: "詳細なヒアリングへのご協力ありがとうございます！\n無理のない返済計画と最適な金融機関をご提案いたします！\n\nほかに気になる点があればご入力いただくか、下記ボタンよりお問合せへお進みください！",
             options: [
                 { text: "📩 この内容でお問合せへ進む", value: "contact", isPrimary: true },
                 { text: "🏠 メインメニューに戻る", value: "reset", isPrimary: false }
@@ -1257,7 +1257,7 @@ function getCurrentStepPrompt() {
             ]
         };
         if (step === 3) return {
-            text: "リフォームに関するご相談内容を受け付けました！ほかにも気になる点があれば入力いただくか、下記ボタンよりお問合せへお進みください😊",
+            text: "リフォームに関するご相談内容を受け付けました！ほかにも気になる点があればご入力いただくか、下記ボタンよりお問合せへお進みください😊",
             options: [
                 { text: "📩 この内容でお問合せへ進む", value: "contact", isPrimary: true },
                 { text: "🏠 メインメニューに戻る", value: "reset", isPrimary: false }
@@ -1283,7 +1283,7 @@ function getCurrentStepPrompt() {
             ]
         };
         if (step === 3) return {
-            text: "費用に関するヒアリング内容がまとまりました！ほかにも気になる点があれば入力いただくか、下記ボタンよりお問合せへお進みください😊",
+            text: "費用に関するヒアリング内容がまとまりました！ほかにも気になる点があればご入力いただくか、下記ボタンよりお問合せへお進みください😊",
             options: [
                 { text: "📩 この内容でお問合せへ進む", value: "contact", isPrimary: true },
                 { text: "🏠 メインメニューに戻る", value: "reset", isPrimary: false }
