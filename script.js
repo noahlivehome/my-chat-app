@@ -1,4 +1,5 @@
 // ==========================================
+// ==========================================
 // 1. 設定項目（お問い合わせ先URL / NGワード）
 // ==========================================
 const IELOVE_FORM_URL = "https://www.noahlivehome.jp/contact/";
@@ -316,7 +317,7 @@ function getSmartComment(mode, step, text) {
                     "💡中古物件ならではのお手頃価格と、自分好みの理想の内装デザインを両立する賢い買い方です。",
                     "💡解体してみて分かる「壊せる壁・壊せない壁（構造）」を事前物件調査で見極めます。",
                     "💡引き渡しからご入居までの工事期間を最短化する、無駄のない同時進行スケジュールを組みます。",
-                    "💡新築以上のクオリティを、新築よりもリーズナブルに手に入る最新のスタンダードです。"
+                    "💡新築以上のクオリティを、新築よりもリーズナブルに手に入れる最新のスタンダードです。"
                 ],
                 "🏢 賃貸・オーナー様の空室対策": [
                     "💡ターゲット層（単身・ファミリー）の好みに合わせたデザインリノベで長期空室を劇的に解消します！",
@@ -827,7 +828,7 @@ function getSmartComment(mode, step, text) {
                 ],
                 "🏢 一棟物件・土地": [
                     "💡個人エンドユーザーだけでなく、プロの不動産開発業者や投資ファンドへも同時打診が可能です！",
-                    "💡収益還元法（利回り）と原価法の両面からアプローチし、物件が持つ商業的ポテンシャルを評価します。",
+                    "💡収益還元法（利回り）と原価法の両面からアプローチし、物件が持つ最大限のポテンシャルを評価します。",
                     "💡開発事業用地としての価値が高い場合は、一般市場に出す前に高値での直接買い取り交渉も行えます。",
                     "💡税金面（譲渡所得税・特別控除）の影響が非常に大きいため、税理士監修の収支計画をセットにします。",
                     "💡権利関係や境界問題など、複雑な案件をクリアにしてスムーズな売買契約を仕立て上げます。"
@@ -1077,7 +1078,7 @@ function getCurrentStepPrompt() {
     const mode = chatState.mode;
     const step = chatState.step;
 
-    // --- ペット相談フロー (全6ステップ) ---
+  // --- ペット相談フロー (全6ステップ) ---
     if (mode === "pet") {
         if (step === 1) return {
             text: "ペットと暮らせるお住まいをお探しですね！ペット可物件は敷金が1～2ヶ月分積み増しになるケースが多めです。また、初期費用や退去時のトラブルにならないよう、物件情報などをしっかりと確認しましょう。\n飼育される（または予定している）ペットの種類や頭数を教えていただけますか？",
@@ -1132,7 +1133,7 @@ function getCurrentStepPrompt() {
         };
     }
 
-    // --- 相続・税金相談フロー (全6ステップ) ---
+// --- 相続・税金相談フロー (全6ステップ) ---
     if (mode === "tax") {
         if (step === 1) return {
             text: "不動産相続や税金に関するご相談ですね！『何から始めればいいかわからない』という場合もご安心ください！まずは現在の状況を整理するところからお手伝いします。\nまずは、どのような内容についてご検討されているか教えていただけますか？",
@@ -1184,8 +1185,7 @@ function getCurrentStepPrompt() {
             ]
         };
     }
-
-    // --- 学区・子育て相談フロー (全6ステップ) ---
+   // --- 学区・子育て相談フロー (全6ステップ) ---
     if (mode === "school") {
         if (step === 1) return {
             text: "学区や子育て環境を重視したお住まい探しですね！\nご希望の条件として、当てはまるものを教えていただけますか？",
@@ -1239,7 +1239,6 @@ function getCurrentStepPrompt() {
             ]
         };
     }
-
     // --- セキュリティ・防犯相談フロー (全6ステップ) ---
     if (mode === "security") {
         if (step === 1) return {
@@ -1294,8 +1293,7 @@ function getCurrentStepPrompt() {
             ]
         };
     }
-
-    // --- ローン相談フロー (全6ステップ) ---
+   // --- ローン相談フロー (全6ステップ) ---
     if (mode === "loan") {
         if (step === 1) return {
             text: "住宅ローンのご相談ですね！金利タイプの比較や資金計画の目安など、不動産のプロ・FPの視点から、後悔しない資金計画のポイント丁寧にご案内いたします。\nまずは、現在「住宅ローンの事前審査」はお済みでしょうか？",
@@ -1348,7 +1346,7 @@ function getCurrentStepPrompt() {
         };
     }
 
-    // --- リフォーム相談フロー (全6ステップ) ---
+   // --- リフォーム相談フロー (全6ステップ) ---
     if (mode === "reform") {
         if (step === 1) return {
             text: "リフォーム・リノベーションのご相談ですね！マイホームの修繕から『中古購入＋リノベーション』のご相談まで承っております。将来の資産価値や快適な暮らしを見据えた資金計画・施工プランをご案内いたします😊\nまずは、今回のご検討目的について教えていただけますか？",
@@ -1401,8 +1399,7 @@ function getCurrentStepPrompt() {
             ]
         };
     }
-
-    // --- 費用相談フロー (全6ステップ) ---
+   // --- 費用相談フロー (全6ステップ) ---
     if (mode === "cost") {
         if (step === 1) return {
             text: "お費用や初期費用に関するご相談ですね！\n当店の事前査定やご相談は【完全無料】ですのでご安心ください。\nまずは、具体的にどちらの費用について気になられていますか？",
@@ -1489,11 +1486,295 @@ function getCurrentStepPrompt() {
     if (mode === "buy") {
         if (step === 1) return { text: "どのような「種別」をお探しでしょうか？", options: [{ text: "🏢 新築・中古マンション", value: "buy_mansion" }, { text: "🏡 新築・中古一戸建て", value: "buy_house" }, { text: "🏞 土地", value: "buy_land" }, { text: "🏬 投資用・事業用物件", value: "buy_invest" }] };
         if (step === 2) return { text: "ご予算の「イメージ上限」をお聞かせください。", options: [{ text: "💰 3,000万円以内", value: "3000" }, { text: "💰 5,000万円以内", value: "5000" }, { text: "💰 7,000万円以内", value: "7000" }, { text: "💰 7,000万円以上", value: "over7000" }] };
-        if (step === 3) return { text: "ご希望の「エリア（駅名や市区町村）」をお選びいただくか、入力してください。", options: [{ text: "📍 赤羽・北区エリア周辺", value: "akabane" }, { text: "📍 その他東京23区内", value: "tokyo23" }, { text: "📍 埼玉県内", value: "saitama" }, { text: "💡 エリアから相談したい", value: "other" }] };
-        if (step === 4) return { text: "ご希望の「間取り」を教えていただけますか？", options: [{ text: "🛋 1LDK〜2DK", value: "1ldk" }, { text: "🛋 2LDK〜3LDK", value: "2ldk" }, { text: "🏠 4LDK以上", value: "4ldk" }, { text: "🏬 一棟・事業用", value: "building" }] };
-        if (step === 5) return { text: "物件の「築年数」についてのご希望はございますか？", options: [{ text: "✨ 新築・築浅（10年以内）", value: "new" }, { text: "🏢 築20年以内", value: "under20" }, { text: "🛠 リノベーション前提", value: "reform" }, { text: "⚖️ 特にこだわらない", value: "any" }] };
-        if (step === 6) return { text: "最後に「ご希望の条件やメッセージ」があれば教えてください！特になければ、下記ボタンよりお問合せへお進みください！", options: [{ text: "🏡 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }, { text: "🏠 メインメニューに戻る", value: "reset", isPrimary: false }] };
+        if (step === 3) return { text: "ご購入をご希望の「エリア（駅名や地域）」を教えてください。", options: [{ text: "📍 赤羽・北区エリア周辺", value: "akabane" }, { text: "📍 その他東京23区内", value: "tokyo23" }, { text: "📍 埼玉県内", value: "saitama" }, { text: "💡 エリアから相談したい", value: "other" }] };
+        if (step === 4) return { text: "ご希望の「間取りや広さ」はいかがでしょうか？", options: [{ text: "🛋 1LDK〜2DK", value: "1ldk" }, { text: "🛋 2LDK〜3LDK", value: "3ldk" }, { text: "🏠 4LDK以上", value: "4ldk" }, { text: "🏬 一棟・事業用", value: "business" }] };
+        if (step === 5) return { text: "「築年数」のご希望はございますか？", options: [{ text: "✨ 新築・築浅（10年以内）", value: "new" }, { text: "🏢 築20年以内", value: "under20" }, { text: "🛠 リノベーション前提", value: "renovation" }, { text: "⚖️ 特に拘らない", value: "any" }] };
+        if (step === 6) return { text: "最後に住宅ローンやご要望など「気になっている点」はございますか？特になければ、下記ボタンよりお問合せへお進みください！", options: [{ text: "📱 条件を引き継いでお問合せへ進む", value: "contact", isPrimary: true }, { text: "🏠 メインメニューに戻る", value: "reset", isPrimary: false }] };
     }
 
+    return { text: "まずはどのようなご相談をお望みか、下記よりお選びいただけますか？", options: initialOptions };
+}
+
+function getStepFieldName(mode, step) {
+    const fields = {
+        rent: { 1: "希望エリア", 2: "希望予算", 3: "希望間取り", 4: "築年数・広さ希望", 5: "入居時期" },
+        owner: { 1: "物件種別", 2: "物件所在地", 3: "物件の間取り", 4: "築年数", 5: "現況", 6: "ご希望の管理形態" },
+        sell: { 1: "物件種別", 2: "物件所在地", 3: "間取り・広さ", 4: "築年数", 5: "現況・売却時期" },
+        buy: { 1: "購入希望種別", 2: "ご予算上限", 3: "希望エリア", 4: "希望間取り", 5: "希望築年数" },
+        loan: { 1: "事前審査状況", 2: "借入・予算希望", 3: "金利タイプ希望" },
+        reform: { 1: "リフォーム目的", 2: "改修箇所・予算" },
+        cost: { 1: "費用相談種別", 2: "費用詳細要望" },
+        school: { 1: "学区・子育て希望", 2: "お住まい形態" },
+        pet: { 1: "ペットの種類", 2: "ペット重視ポイント" },
+        tax: { 1: "相続・税金内容", 2: "希望実行時期" },
+        security: { 1: "防犯設備希望", 2: "周辺環境重視点" }
+    };
+    return fields[mode]?.[step] || "ご相談内容";
+}
+
+// ==========================================
+// 3. AI会話ロジック（割り込み検知エンジン）
+// ==========================================
+function detectInterruptIntent(text) {
+    if (text.includes("ローン") || text.includes("借入") || text.includes("金利") || text.includes("事前審査")) return "loan";
+    if (text.includes("リフォーム") || text.includes("リノベ") || text.includes("修繕") || text.includes("工事")) return "reform";
+    if (text.includes("費用") || text.includes("料金") || text.includes("いくら") || text.includes("初期費用") || text.includes("手数料") || text.includes("敷金") || text.includes("礼金")) return "cost";
+    if (text.includes("学区") || text.includes("学校") || text.includes("小学校") || text.includes("中学校") || text.includes("子育て") || text.includes("保育園")) return "school";
+    if (text.includes("ペット") || text.includes("犬") || text.includes("猫") || text.includes("いぬ") || text.includes("ねこ") || text.includes("飼いたい")) return "pet";
+    if (text.includes("相続") || text.includes("税金") || text.includes("控除") || text.includes("贈与") || text.includes("名義")) return "tax";
+    if (text.includes("セキュリティ") || text.includes("防犯") || text.includes("オートロック") || text.includes("2階以上") || text.includes("女性")) return "security";
+    if (text.includes("売りたい") || text.includes("売却") || text.includes("査定")) return "sell";
+    if (text.includes("買いたい") || text.includes("購入")) return "buy";
+    if (text.includes("貸したい") || text.includes("オーナー") || text.includes("管理")) return "owner";
+    if (text.includes("借りたい") || text.includes("賃貸") || text.includes("部屋探し") || text.includes("引越し") || text.includes("時期")) return "rent";
+
     return null;
+}
+
+function getAIResponse(userInputText, isFromButton = false) {
+    const text = userInputText.trim();
+
+    // NGワードチェック
+    if (NG_WORDS.some(word => text.includes(word))) {
+        const currentPrompt = getCurrentStepPrompt();
+        return {
+            text: "⚠️ 不適切な表現が含まれているため処理できませんでした。\nお手数ですが別のお言葉でご入力いただくか、下記よりお選びください。",
+            options: currentPrompt.options
+        };
+    }
+
+    // メインメニューに戻る
+    if (text.includes("メインメニューに戻る")) {
+        chatState.mode = null;
+        chatState.step = 0;
+        chatState.data = {};
+        return {
+            text: "メインメニューに戻りました！\nご希望のご相談内容をお選びいただくか、ご質問を送信してくださいね！",
+            options: initialOptions
+        };
+    }
+
+    // --------------------------------------
+    // 【割り込み判定】ボタン以外からの入力時、キーワードに応じてモードを即時切替
+    // --------------------------------------
+    if (!isFromButton) {
+        const detectedMode = detectInterruptIntent(text);
+
+        if (detectedMode && detectedMode !== chatState.mode) {
+            chatState.mode = detectedMode;
+            chatState.step = 1;
+            chatState.data["相談テーマ"] = text;
+
+            const prompt = getCurrentStepPrompt();
+            return {
+                text: prompt.text,
+                options: prompt.options
+            };
+        }
+    }
+
+    // 初期状態からの通常自由入力
+    if (!isFromButton && chatState.step === 0) {
+        chatState.data["自由相談"] = text;
+        return {
+            text: `「${text}」ですね！承知いたしました。\nより詳しいご提案のため、差し支えなければご相談のカテゴリをお選びいただけますでしょうか？`,
+            options: initialOptions
+        };
+    }
+
+    // 通常の会話途中の補足テキスト
+    if (!isFromButton && chatState.mode) {
+        const key = `補足メモ(Step${chatState.step})`;
+        chatState.data[key] = text;
+
+        let aizuchi = getRandomAizuchi(text);
+        const prompt = getCurrentStepPrompt();
+
+        return {
+            text: `${aizuchi}\n\nご要望として記録いたしました！\n引き続き、下記についてお聞かせいただけますでしょうか？\n\n${prompt.text}`,
+            options: prompt.options
+        };
+    }
+
+    // --------------------------------------
+    // ボタンクリック時の進行処理
+    // --------------------------------------
+    if (chatState.step === 0) {
+        if (text.includes("借りたい")) chatState.mode = "rent";
+        else if (text.includes("貸したい")) chatState.mode = "owner";
+        else if (text.includes("売りたい")) chatState.mode = "sell";
+        else if (text.includes("買いたい")) chatState.mode = "buy";
+
+        if (chatState.mode) {
+            chatState.step = 1;
+            chatState.data = {};
+            const prompt = getCurrentStepPrompt();
+            return {
+                text: prompt.text,
+                options: prompt.options
+            };
+        }
+    }
+
+    // ステップ進行
+    if (chatState.mode) {
+        const fieldName = getStepFieldName(chatState.mode, chatState.step);
+        chatState.data[fieldName] = text;
+
+        const currentStep = chatState.step;
+        chatState.step++;
+
+        let aizuchi = getRandomAizuchi(text);
+        let comment = getSmartComment(chatState.mode, currentStep, text);
+        let prompt = getCurrentStepPrompt();
+
+        let responseText = `${aizuchi}`;
+        if (comment) responseText += `\n\n${comment}`;
+        responseText += `\n\n${prompt.text}`;
+
+        return {
+            text: responseText,
+            options: prompt.options
+        };
+    }
+
+    return {
+        text: "まずはどのようなご相談をお望みか、下記よりお選びいただけますか？",
+        options: initialOptions
+    };
+}
+
+// ==========================================
+// 4. UI描画・操作イベント処理
+// ==========================================
+function appendBotMessage(text) {
+    const container = document.getElementById("chatMessages");
+    if (!container) return;
+    const div = document.createElement("div");
+    div.className = "message bot";
+    div.innerText = text;
+    container.appendChild(div);
+    scrollToBottom();
+}
+
+function appendUserMessage(text) {
+    const container = document.getElementById("chatMessages");
+    if (!container) return;
+    const div = document.createElement("div");
+    div.className = "message user";
+    div.innerText = text;
+    container.appendChild(div);
+    scrollToBottom();
+}
+
+function renderOptions(options) {
+    const container = document.getElementById("chatOptions");
+    if (!container) return;
+    
+    container.innerHTML = "";
+    if (!options || options.length === 0) return;
+
+    const normalOptions = options.filter(opt => !opt.isPrimary);
+    const primaryOptions = options.filter(opt => opt.isPrimary);
+
+    if (normalOptions.length > 0) {
+        const gridDiv = document.createElement("div");
+        gridDiv.className = "options-grid";
+        normalOptions.forEach(opt => {
+            const btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.innerText = opt.text;
+            btn.onclick = () => handleOptionClick(opt.text);
+            gridDiv.appendChild(btn);
+        });
+        container.appendChild(gridDiv);
+    }
+
+    primaryOptions.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn primary";
+        btn.innerText = opt.text;
+        btn.onclick = () => handleOptionClick(opt.text);
+        container.appendChild(btn);
+    });
+
+    scrollToBottom();
+}
+
+function handleOptionClick(selectedText) {
+    appendUserMessage(selectedText);
+
+    if (selectedText.includes("お問合せへ進む") || selectedText.includes("予約") || selectedText.includes("申込む")) {
+        setTimeout(() => {
+            appendBotMessage("ありがとうございます！\nこれまでのご質問・ヒアリング内容をお問い合わせフォームへ自動で引き継ぎます。\n\nまもなくお問合せページへ移動しますので、お名前やご連絡先をご入力の上ご送信ください✨");
+            
+            const optContainer = document.getElementById("chatOptions");
+            if (optContainer) optContainer.innerHTML = "";
+
+            setTimeout(() => {
+                let summaryText = `【AIチャットからの引き継ぎ内容】\n`;
+                
+                const modeNames = {
+                    rent: "お部屋探し（賃貸希望）",
+                    owner: "物件の賃貸管理・貸出（オーナー様）",
+                    sell: "物件のご売却（売却希望）",
+                    buy: "物件のご購入（購入希望）",
+                    loan: "住宅ローンのご相談",
+                    reform: "リフォーム・リノベーションのご相談",
+                    cost: "初期費用・諸費用のお問合せ",
+                    school: "学区・子育て重視のお問合せ",
+                    pet: "ペット飼育可物件のご相談",
+                    tax: "不動産相続・税金のご相談",
+                    security: "セキュリティ・防犯重視のご相談"
+                };
+                
+                if (chatState.mode) summaryText += `ご相談区分：${modeNames[chatState.mode] || chatState.mode}\n`;
+                
+                Object.keys(chatState.data).forEach(key => {
+                    summaryText += `・${key} : ${chatState.data[key]}\n`;
+                });
+
+                const targetUrl = `${IELOVE_FORM_URL}?message=${encodeURIComponent(summaryText)}`;
+                window.location.href = targetUrl;
+
+            }, 1800);
+
+        }, 300);
+        return;
+    }
+
+    setTimeout(() => {
+        const response = getAIResponse(selectedText, true);
+        appendBotMessage(response.text);
+        renderOptions(response.options);
+    }, 300);
+}
+
+function sendMessage() {
+    const input = document.getElementById("userInput");
+    if (!input) return;
+    const text = input.value.trim();
+    if (text === "") return;
+
+    appendUserMessage(text);
+    input.value = "";
+
+    setTimeout(() => {
+        const response = getAIResponse(text, false);
+        appendBotMessage(response.text);
+        renderOptions(response.options);
+    }, 300);
+}
+
+function handleKeyPress(event) {
+    if (event.key === "Enter") {
+        sendMessage();
+    }
+}
+
+function scrollToBottom() {
+    const container = document.getElementById("chatMessages");
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
 }
