@@ -1077,39 +1077,39 @@ function getCurrentStepPrompt() {
     const mode = chatState.mode;
     const step = chatState.step;
 
-    // --- 1. ペット相談フロー (全6ステップ) ---
+  // --- ペット相談フロー (全6ステップ) ---
     if (mode === "pet") {
         if (step === 1) return {
-            text: "ペットと暮らせるお住まいをお探しですね！\n飼育される（または予定している）ペットの種類を教えていただけますか？",
+            text: "ペットと暮らせるお住まいをお探しですね！ペット可物件は敷金が1～2ヶ月分積み増しになるケースが多めです。また、初期費用や退去時のトラブルにならないよう、物件情報などをしっかりと確認しましょう。\n飼育される（または予定している）ペットの種類や頭数を教えていただけますか？",
             options: [
                 { text: "🐶 小型犬（1頭）", value: "small_dog" },
                 { text: "🐕 中型〜大型犬", value: "large_dog" },
                 { text: "🐱 猫（1〜2頭）", value: "cat" },
-                { text: "🐾 多頭飼い・その他", value: "multi_pet" }
+                { text: "🐾 多頭飼い・その他（大型・エキゾチック等）", value: "multi_pet" }
             ]
         };
         if (step === 2) return {
-            text: "承知いたしました！お探しのお住まい形態について教えていただけますか？",
+            text: "承知いたしました！お探しのお住まい形態（賃貸または購入）について教えていただけますか？",
             options: [
                 { text: "🏢 賃貸物件を探したい", value: "pet_rent" },
                 { text: "🏡 購入（新築・中古一戸建て）", value: "pet_house" },
                 { text: "🏢 購入（分譲マンション）", value: "pet_mansion" },
-                { text: "💡 プロに相談して決めたい", value: "pet_consult" }
+                { text: "💡 賃貸か購入かプロに相談したい", value: "pet_consult" }
             ]
         };
         if (step === 3) return {
-            text: "お部屋探しの際、特に重視したいこだわり設備や条件はございますか？",
+            text: "お部屋探しの際、ペットに関して特に重視したいこだわり設備や希望条件はございますか？",
             options: [
                 { text: "🧼 足洗い場・キャットウォーク等の専用設備", value: "pet_facility" },
-                { text: "🔇 防音性・一階・角部屋重視", value: "pet_sound" },
-                { text: "🌳 近くに公園やドッグラン・動物病院", value: "pet_park" },
-                { text: "💡 特に指定なし・おまかせ", value: "pet_none" }
+                { text: "🔇 防音性重視・1階・角部屋希望", value: "pet_sound" },
+                { text: "🌳 近くに公園・ドッグラン・動物病院がある環境", value: "pet_env" },
+                { text: "💡 特に指定なし・プロにおまかせ", value: "pet_none" }
             ]
         };
         if (step === 4) return {
-            text: "ご検討中の「ご予算（月々の賃料や購入予算）」はお決まりでしょうか？",
+            text: "ご検討中の「ご予算（月々の賃料やご購入予算）」の目安はお決まりでしょうか？",
             options: [
-                { text: "💰 賃貸：家賃10万円前後以内", value: "budget_rent_low" },
+                { text: "💰 賃貸：家賃10万円前後まで", value: "budget_rent_low" },
                 { text: "💰 賃貸：家賃15万円以上〜", value: "budget_rent_high" },
                 { text: "💰 売買：3,000万円前後〜", value: "budget_buy_low" },
                 { text: "💰 売買：5,000万円以上〜", value: "budget_buy_high" }
@@ -1124,14 +1124,13 @@ function getCurrentStepPrompt() {
             ]
         };
         if (step === 6) return {
-            text: "ペット可物件に詳しいプロの視点から、最適な物件資料をご用意いたします！\nほかに気になる点があれば入力いただくか、下記ボタンよりお問合せへお進みください😊",
+            text: "詳細なヒアリングへのご協力ありがとうございます！\nペット可物件に詳しいプロの視点から、条件に合う最適な物件資料をご用意いたします！\n\nほかに気になる点があればご入力いただくか、下記ボタンよりお問合せへお進みください😊",
             options: [
                 { text: "📩 この内容でお問合せへ進む", value: "contact", isPrimary: true },
                 { text: "🏠 メインメニューに戻る", value: "reset", isPrimary: false }
             ]
         };
     }
-
     // --- 2. 相続・税金相談フロー (全6ステップ) ---
     if (mode === "tax") {
         if (step === 1) return {
