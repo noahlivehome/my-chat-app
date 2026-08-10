@@ -66,6 +66,8 @@
             padding: 12px;
             border-radius: 8px;
             border: 1px solid #e0e0e0;
+            max-height: 250px;
+            overflow-y: auto;
         }
         /* ボタンエリア */
         .btn-group {
@@ -124,13 +126,13 @@
 
     <!-- チャット引き継ぎ内容の表示エリア -->
     <div class="summary-box">
-        <div class="summary-title">📋 ヒアリング結果一覧</div>
+        <div class="summary-title">📋 引き継ぎ内容・会話履歴</div>
         <div class="summary-content" id="summaryText">読み込み中...</div>
     </div>
 
     <!-- アクションボタン -->
     <div class="btn-group">
-        <button class="copy-btn" id="copyBtn" onclick="copySummaryText()">✂️ 上記の条件テキストをコピー</button>
+        <button class="copy-btn" id="copyBtn" onclick="copySummaryText()">✂️ 上記の引き継ぎ内容をコピー</button>
         <a id="ieloveLink" href="#" target="_blank" class="submit-btn">
             いえらぶのお問合せフォームを開く ➔
         </a>
@@ -138,15 +140,13 @@
 
     <p class="notice">
         ※ボタンを押すと別タブで「いえらぶお問合せフォーム」が開きます。<br>
-        フォームの「備考欄・ご要望欄」へ貼り付けて（または自動入力で）ご送信ください。
+        フォームの「内容（備考欄）」へ貼り付けてご送信ください。
     </p>
 </div>
 
 <script>
-// 1. 設定：御社の「いえらぶお問合せフォームURL」を入力してください
-const IELOVE_FORM_URL = "https://www.noahlivehome.jp/contact/"; // ←ここをご自身のURLに変更！
+const IELOVE_FORM_URL = "https://www.noahlivehome.jp/contact/";
 
-// 2. 相談種別の日本語表示マップ
 const modeNames = {
     rent: "お部屋探し（賃貸希望）",
     owner: "物件の賃貸管理・貸出（オーナー様）",
@@ -157,60 +157,65 @@ const modeNames = {
 let formattedTextForCopy = "";
 
 document.addEventListener("DOMContentLoaded", () => {
-    // URLパラメータの取得
+    // 1. URLパラメータまたはlocalStorageからデータ取得
     const urlParams = new URLSearchParams(window.location.search);
-    const mode = urlParams.get("mode") || "";
-    const area = urlParams.get("area") || "";
-    let details = {};
-
-    try {
-        if (urlParams.get("details")) {
-            details = JSON.parse(urlParams.get("details"));
-        }
-    } catch(e) { console.error("URL解析エラー:", e); }
-
-    // localStorageからのバックアップデータ取得
     const localDataRaw = localStorage.getItem("realEstateChatData");
-    let localData = null;
+    let localData = {};
+
     if (localDataRaw) {
         try { localData = JSON.parse(localDataRaw); } catch(e) {}
     }
 
-    // 表示用テキストの組み立て
-    const currentMode = mode || localData?.mode || "";
-    const modeJP = modeNames[currentMode] || "お問い合わせ";
+    const mode = urlParams.get("mode") || localData.mode || "";
+    const modeJP = modeNames[mode] || "お問い合わせ";
 
+    // 2. 引き継ぎテキストの構築（全履歴・全条件対応）
     let textLines = [];
-    textLines.push(`【ご相談種別】${modeJP}`);
-    
-    if (area) {
-        textLines.push(`【ご希望エリア】${area}`);
+    textLines.push(`【AIチャットからの引き継ぎ内容】`);
+    textLines.push(`ご相談区分：${modeJP}`);
+
+    // ヒアリング済みの詳細データ項目
+    let details = {};
+    try {
+        if (urlParams.get("details")) {
+            details = JSON.parse(urlParams.get("details"));
+        } else if (localData.details) {
+            details = localData.details;
+        }
+    } catch(e) {}
+
+    if (Object.keys(details).length > 0) {
+        textLines.push("\n【ヒアリング詳細】");
+        Object.keys(details).forEach(key => {
+            textLines.push(`・${key}：${details[key]}`);
+        });
     }
 
-    // 詳細条件の組み立て
-    const detailData = Object.keys(details).length > 0 ? details : (localData?.details || {});
-    Object.keys(detailData).forEach(key => {
-        textLines.push(`・${detailData[key]}`);
-    });
+    // 会話履歴ログ（localStorageなどに保持されている場合）
+    const history = localData.history || [];
+    if (history.length > 0) {
+        textLines.push("\n【チャットやり取り履歴】");
+        history.forEach(item => {
+            textLines.push(`[${item.sender}] ${item.text}`);
+        });
+    }
 
-    formattedTextForCopy = `【AIチャットからの引き継ぎ条件】\n` + textLines.join("\n");
+    formattedTextForCopy = textLines.join("\n");
 
-    // 画面のテキスト領域へ表示
+    // 3. 画面表示とリンク設定
     const summaryEl = document.getElementById("summaryText");
     if (summaryEl) {
         summaryEl.innerText = formattedTextForCopy;
     }
 
-    // いえらぶフォームURLのセット（URLパラメータで備考欄へ送る処理を付与）
     const ieloveLinkEl = document.getElementById("ieloveLink");
     if (ieloveLinkEl) {
-        // いえらぶフォームがURL引継ぎ（例: ?remarks=... や ?comment=...）に対応している場合の記述
-        const finalUrl = `${IELOVE_FORM_URL}?remarks=${encodeURIComponent(formattedTextForCopy)}`;
+        // いえらぶフォーム側へテキストを引継ぐパラメータ（remarks / comment / content）
+        const finalUrl = `${IELOVE_FORM_URL}?content=${encodeURIComponent(formattedTextForCopy)}`;
         ieloveLinkEl.href = finalUrl;
     }
 });
 
-// テキストコピー機能
 function copySummaryText() {
     if (!formattedTextForCopy) return;
 
@@ -220,10 +225,10 @@ function copySummaryText() {
         copyBtn.style.backgroundColor = "#e8f5e9";
         
         setTimeout(() => {
-            copyBtn.innerText = "✂️ 上記の条件テキストをコピー";
+            copyBtn.innerText = "✂️ 上記の引き継ぎ内容をコピー";
             copyBtn.style.backgroundColor = "#ffffff";
         }, 2000);
-    }).catch(err => {
+    }).catch(() => {
         alert("コピーに失敗しました。手動で選択してコピーしてください。");
     });
 }
